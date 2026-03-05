@@ -3,8 +3,10 @@
 <head>
     <meta charset="utf-8">
     <title>HRIS System - Login</title>
-    <link rel="stylesheet" href="{{ asset('assets/css/argon.css') }}" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> 
+    <link rel="stylesheet" href="{{ asset('assets/vendor/nucleo/css/nucleo.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('assets/vendor/@fortawesome/fontawesome-free/css/all.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('assets/css/argon.css?v=1.2.0') }}" type="text/css">
 </head>
 <body class="bg-default">
     <div class="main-content">
