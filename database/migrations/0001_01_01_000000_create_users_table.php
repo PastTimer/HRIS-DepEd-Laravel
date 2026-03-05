@@ -11,22 +11,37 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // 1. Your Custom Users Table
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->id(); 
+            $table->string('username')->unique(); 
             $table->string('password');
+            $table->string('email')->nullable();
+            $table->string('last_name');
+            $table->string('first_name');
+            $table->string('contact_no')->nullable();
+            $table->string('office')->nullable();
+            $table->string('role')->default('personnel'); 
+            $table->string('access_level')->nullable(); 
+            
+            $table->enum('status', ['active', 'inactive', 'locked'])->default('active');
+            $table->integer('failed_login_attempts')->default(0);
+            $table->timestamp('locked_until')->nullable();
+            $table->timestamp('last_login')->nullable();
+            
             $table->rememberToken();
-            $table->timestamps();
+            $table->timestamps(); 
+            $table->softDeletes(); 
         });
 
+        // 2. Default Password Resets Table
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        // 3. Default Sessions Table 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
