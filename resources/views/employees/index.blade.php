@@ -1,56 +1,89 @@
 @extends('layouts.app')
-
-@section('title', 'Personnel Masterlist')
-
+@section('title', 'Employee Directory')
 @section('content')
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col">
             <div class="card shadow">
                 <div class="card-header border-0 d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">Active Personnel</h3>
-                    <a href="/employees/create" class="btn btn-sm btn-primary">Add New Employee</a>
+                    <h3 class="mb-0"><i class="ni ni-badge mr-2 text-primary"></i> Employee Directory</h3>
+                    <a href="/employees/create" class="btn btn-sm btn-primary">
+                        <i class="ni ni-fat-add"></i> Add Personnel
+                    </a>
                 </div>
                 
+                @if(session('success'))
+                    <div class="alert alert-success m-3 alert-dismissible fade show" role="alert">
+                        <span class="alert-icon"><i class="ni ni-like-2"></i></span>
+                        <span class="alert-text"><strong>Success!</strong> {{ session('success') }}</span>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
                 <div class="table-responsive">
-                    <table class="table align-items-center table-flush">
+                    <table class="table align-items-center table-flush table-hover">
                         <thead class="thead-light">
                             <tr>
-                                <th scope="col">ID Number</th>
-                                <th scope="col">Name</th>
-                                <th scope="col">Position</th>
-                                <th scope="col">Station / School</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Actions</th>
+                                <th>Photo</th>
+                                <th>Employee ID</th>
+                                <th>Full Name</th>
+                                <th>Position</th>
+                                <th>Station</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="list">
-                            @forelse($employees as $employee)
+                        <tbody>
+                            @forelse($employees as $emp)
                             <tr>
-                                <td>{{ $employee->employee_id }}</td>
                                 <td>
-                                    <strong>{{ $employee->last_name }}, {{ $employee->first_name }}</strong>
+                                    @if($emp->photo_path)
+                                        <img src="{{ asset('storage/' . $emp->photo_path) }}" alt="avatar" class="rounded-circle img-thumbnail" style="width: 45px; height: 45px; object-fit: cover;">
+                                    @else
+                                        <img src="{{ asset('uploads/default/defaultpic.png') }}" alt="avatar" class="rounded-circle img-thumbnail" style="width: 45px; height: 45px; object-fit: cover;">
+                                    @endif
                                 </td>
+                                
+                                <td>{{ $emp->employee_id ?? 'N/A' }}</td>
+                                
                                 <td>
-                                    {{ $employee->designation ? $employee->designation->title : 'N/A' }}
+                                    <strong>{{ strtoupper($emp->last_name) }}</strong>, {{ $emp->first_name }} 
+                                    {{ $emp->name_ext }} {{ $emp->middle_name }}
                                 </td>
+                                
+                                <td>{{ $emp->designation->title ?? 'Unknown Position' }}</td>
+                                <td>{{ $emp->school->name ?? 'Unassigned' }}</td>
+                                
                                 <td>
-                                    {{ $employee->school ? $employee->school->name : 'Unassigned' }}
+                                    @if($emp->is_active)
+                                        <span class="badge badge-success">Active</span>
+                                    @else
+                                        <span class="badge badge-danger">Inactive</span>
+                                    @endif
                                 </td>
-                                <td>
-                                    <span class="badge badge-dot mr-4">
-                                        <i class="bg-success"></i>
-                                        <span class="status">Active</span>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="/employees/{{ $employee->id }}/edit" class="btn btn-sm btn-info">Edit</a>
-                                    <button class="btn btn-sm btn-danger">Delete</button>
+                                
+                                <td class="text-center">
+                                    <a href="/employees/{{ $emp->id }}/edit" class="btn btn-sm btn-info" title="Edit">
+                                        Edit
+                                    </a>
+                                    
+                                    <form method="POST" action="/employees/{{ $emp->id }}" style="display:inline;">
+                                        @csrf 
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to remove this employee record?')" title="Delete">
+                                            Delete
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4">No active personnel found.</td>
+                                <td colspan="7" class="text-center py-4">
+                                    <h4 class="text-muted mb-0">No employees found.</h4>
+                                    <p class="text-sm">Click "Add Personnel" to register a new employee.</p>
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>

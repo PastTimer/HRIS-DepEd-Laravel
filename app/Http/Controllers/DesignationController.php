@@ -9,25 +9,43 @@ class DesignationController extends Controller
 {
     public function index()
     {
-        $designations = Designation::orderBy('title', 'asc')->paginate(15);
+        $designations = Designation::withCount('employees')->paginate(10);
         return view('designations.index', compact('designations'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255|unique:designations,title',
-            'type' => 'required|in:teaching,nonteaching',
+        $validatedData = $request->validate([
+            'title'       => 'required|string|max:255|unique:designations,title',
+            'type'        => 'required|in:teaching,nonteaching',
             'description' => 'nullable|string'
         ]);
 
-        Designation::create($request->all());
+        Designation::create($validatedData);
+
         return redirect('/designations')->with('success', 'Designation added successfully.');
     }
 
     public function create()
     {
         return view('designations.create');
+    }
+
+    public function edit(Designation $designation)
+    {
+        return view('designations.edit', compact('designation'));
+    }
+
+    public function update(Request $request, Designation $designation)
+    {
+        $validatedData = $request->validate([
+            'title'       => 'required|string|max:255|unique:designations,title,' . $designation->id,
+            'type'        => 'required|in:teaching,nonteaching',
+            'description' => 'nullable|string'
+        ]);
+
+        $designation->update($validatedData);
+        return redirect('/designations')->with('success', 'Designation updated successfully.');
     }
 
     public function destroy(Designation $designation)

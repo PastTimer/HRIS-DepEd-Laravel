@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\School;
 use Illuminate\Http\Request;
+use App\Models\District;
 
 class SchoolController extends Controller
 {
@@ -15,22 +16,77 @@ class SchoolController extends Controller
 
     public function create()
     {
-        return view('schools.create');
+        $districts = District::orderBy('name')->get(); 
+        return view('schools.create', compact('districts'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'school_id' => 'required|unique:schools,school_id',
-            'name' => 'required|string|max:255',
-            'district' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
+        $validatedData = $request->validate([
+            'school_id'       => 'required|string|max:255|unique:schools,school_id',
+            'name'            => 'required|string|max:255',
+            'district'        => 'required|string|max:255',
+            'custom_district' => 'required_if:district,Other|string|max:255', 
+            'address'         => 'nullable|string'
         ]);
 
-        $validated['is_active'] = true;
+        $finalDistrict = $request->district; 
+        
+        if ($request->district === 'Other') {
+            $newDistrict = District::create([
+                'name' => $request->custom_district
+            ]);
+            $finalDistrict = $newDistrict->name;
+        } 
 
-        School::create($validated);
+        School::create([
+            'school_id' => $validatedData['school_id'],
+            'name'      => $validatedData['name'],
+            'district'  => $finalDistrict,
+            'address'   => $validatedData['address'],
+        ]);
 
         return redirect('/schools')->with('success', 'School added successfully.');
+    }
+
+    public function edit(School $school)
+    {
+        $districts = District::orderBy('name')->get(); 
+        return view('schools.edit', compact('school', 'districts'));
+    }
+
+    public function update(Request $request, School $school)
+    {
+        $validatedData = $request->validate([
+            'school_id'       => 'required|string|max:255|unique:schools,school_id,' . $school->id,
+            'name'            => 'required|string|max:255',
+            'district'        => 'required|string|max:255',
+            'custom_district' => 'required_if:district,Other|string|max:255', 
+            'address'         => 'nullable|string'
+        ]);
+
+        $finalDistrict = $request->district; 
+        
+        if ($request->district === 'Other') {
+            $newDistrict = District::create([
+                'name' => $request->custom_district
+            ]);
+            $finalDistrict = $newDistrict->name;
+        } 
+
+        $school->update([
+            'school_id' => $validatedData['school_id'],
+            'name'      => $validatedData['name'],
+            'district'  => $finalDistrict,
+            'address'   => $validatedData['address'],
+        ]);
+
+        return redirect('/schools')->with('success', 'School updated successfully.');
+    }
+
+    public function destroy(School $school)
+    {
+        $school->delete();
+        return back()->with('success', 'School removed.');
     }
 }

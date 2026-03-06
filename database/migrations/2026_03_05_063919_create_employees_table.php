@@ -6,40 +6,37 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('employees', function (Blueprint $table) {
-            $table->id(); // Replaces erefid
-            $table->string('employee_id')->unique();
+            $table->id();
+            
+            // Personal Information
+            $table->string('last_name');
             $table->string('first_name');
             $table->string('middle_name')->nullable();
-            $table->string('last_name');
-            $table->string('name_ext')->nullable(); 
-            
-            // --- FOREIGN KEYS ---
-            // nullOnDelete() means if you delete a school, the employee isn't deleted, 
-            // their school_id just becomes NULL.
-            $table->foreignId('school_id')->nullable()->constrained('schools')->nullOnDelete();
-            $table->foreignId('deployed_school_id')->nullable()->constrained('schools')->nullOnDelete();
-            $table->foreignId('designation_id')->nullable()->constrained('designations')->nullOnDelete();
-            
-            $table->string('division')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->string('active_note')->nullable();
-            $table->text('emp_notes')->nullable();
-            $table->string('employee_type')->nullable();    
-            
-            // Personal Info
+            $table->string('name_ext')->nullable(); // Jr, III, etc.
+            $table->string('gender');
+            $table->date('date_of_birth');
             $table->string('place_of_birth')->nullable();
-            $table->date('date_of_birth')->nullable();
             $table->string('civil_status')->nullable();
             $table->string('blood_type')->nullable();
-            $table->string('gender')->nullable();
             
-            // Government IDs
+            // Employment Information
+            $table->string('employee_id')->nullable()->unique();
+            $table->foreignId('designation_id')->constrained('designations')->onDelete('restrict');
+            $table->string('item_no')->nullable();
+            $table->integer('step')->default(1);
+            $table->date('last_step');
+            $table->string('sg')->nullable();
+            $table->string('employee_type'); // Regular, Contractual, Substitute
+            
+            // Station Assignment
+            $table->foreignId('school_id')->constrained('schools')->onDelete('restrict'); // Assigned Station
+            $table->unsignedBigInteger('deployed_school_id')->nullable(); // Deployed Station
+            $table->foreign('deployed_school_id')->references('id')->on('schools')->onDelete('restrict');
+            
+            // Identification Numbers
             $table->string('gsis_no')->nullable();
             $table->string('pagibig_no')->nullable();
             $table->string('philhealth_no')->nullable();
@@ -48,28 +45,17 @@ return new class extends Migration
             
             // Contact Details
             $table->string('contact_no')->nullable();
-            $table->string('email')->nullable();
-            $table->string('address')->nullable();
+            $table->string('email_address')->nullable();
+            $table->text('address')->nullable();
             
-            // Employment Details
-            $table->string('step')->nullable();
-            $table->string('item_no')->nullable();
-            $table->string('salary_grade')->nullable();
-            $table->date('last_step_date')->nullable();
-            
-            // Separation Details
-            $table->string('separation_type')->nullable();
-            $table->date('separated_date')->nullable();
-            $table->text('separated_notes')->nullable();
+            // Status & Photo
+            $table->boolean('is_active')->default(true);
+            $table->string('photo_path')->nullable(); // To store the uploaded image file path
             
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('employees');

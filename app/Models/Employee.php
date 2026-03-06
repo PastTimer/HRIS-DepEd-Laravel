@@ -1,32 +1,21 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes;
+    protected $fillable = [
+        'last_name', 'first_name', 'middle_name', 'name_ext', 
+        'gender', 'date_of_birth', 'place_of_birth', 'civil_status', 'blood_type',
+        'employee_id', 'designation_id', 'item_no', 'step', 'last_step', 'sg', 'employee_type',
+        'school_id', 'deployed_school_id',
+        'gsis_no', 'pagibig_no', 'philhealth_no', 'sss_no', 'tin_no',
+        'contact_no', 'email_address', 'address',
+        'is_active', 'photo_path'
+    ];
 
-    protected $guarded = []; // This is a shortcut that lets us fill any column safely
-
-    // 1. An Employee belongs to a School
-    public function school()
-    {
-        return $this->belongsTo(School::class, 'school_id');
-    }
-
-    // 2. An Employee belongs to a Designation (Position)
-    public function designation()
-    {
-        return $this->belongsTo(Designation::class, 'designation_id');
-    }
-
-    // 3. Optional: Get the equipment this employee is accountable for
-    public function accountableEquipment()
-    {
-        return $this->hasMany(Equipment::class, 'accountable_officer_id');
-    }
+    public function school() { return $this->belongsTo(School::class, 'school_id'); }
+    public function deployedSchool() { return $this->belongsTo(School::class, 'deployed_school_id'); }
+    public function designation() { return $this->belongsTo(Designation::class); }
 }

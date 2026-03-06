@@ -32,6 +32,12 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label class="form-control-label">Description</label>
+                                        <textarea id="description" name="description" rows="4" class="form-control"></textarea>
+                                    </div>
+                                </div>
                             </div>
                             <div class="text-right">
                                 <button type="submit" class="btn btn-success mt-4">Save Designation</button>
