@@ -8,6 +8,8 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\SpecialOrderController;
+use App\Http\Controllers\TrainingController;
 
     // --- GUEST ROUTES (Not logged in) ---
     Route::middleware('guest')->group(function () {
@@ -60,5 +62,13 @@ use App\Http\Controllers\EquipmentController;
     // Equipment Management
 
     Route::resource('equipment', EquipmentController::class);
+
+    // Special Orrder
+
+    Route::resource('specialorder', SpecialOrderController::class);
+
+    // Training 
+
+    Route::resource('training', TrainingController::class);
 
 });

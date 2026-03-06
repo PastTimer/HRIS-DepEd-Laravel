@@ -192,4 +192,9 @@ class EmployeeController extends Controller
 
         return redirect('/employees')->with('success', 'Employee record removed successfully.');
     }
+
+    public function specialOrders()
+    {
+        return $this->belongsToMany(SpecialOrder::class, 'employee_special_order', 'employee_id', 'special_order_id')->withTimestamps();
+    }
 }

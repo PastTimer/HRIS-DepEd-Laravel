@@ -63,7 +63,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('special-orders*') ? 'active' : '' }}" href="/special-orders">
+                            <a class="nav-link {{ request()->is('specialorder*') ? 'active' : '' }}" href="/specialorder">
                                 <i class="ni ni-paper-diploma text-danger"></i>
                                 <span class="nav-link-text">Special Order</span>
                             </a>
