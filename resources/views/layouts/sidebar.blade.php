@@ -26,6 +26,7 @@
             </div>
 
             <div class="collapse navbar-collapse" id="sidenav-collapse-main" style="flex-basis: auto; flex-grow: 0;">
+                
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}" href="/dashboard">
@@ -84,7 +85,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('isp*') ? 'active' : '' }}" href="#navbar-internet" data-toggle="collapse" role="button" aria-expanded="false">
+                        <a class="nav-link {{ request()->is('isp*') ? 'active' : '' }}" href="#navbar-internet" data-toggle="collapse" role="button" aria-expanded="{{ request()->is('isp*') ? 'true' : 'false' }}">
                             <i class="ni ni-world text-info"></i>
                             <span class="nav-link-text">Internet Connectivity</span>
                         </a>
@@ -103,6 +104,16 @@
                             </ul>
                         </div>
                     </li>
+
+                    @if(Auth::check() && Auth::user()->role === 'admin')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('users*') ? 'active' : '' }}" href="/users">
+                            <i class="ni ni-settings-gear-65 text-dark"></i>
+                            <span class="nav-link-text">User Accounts</span>
+                        </a>
+                    </li>
+                    @endif
+
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('reports*') ? 'active' : '' }}" href="/reports">
                             <i class="ni ni-chart-pie-35 text-orange"></i>
@@ -118,7 +129,7 @@
                     <li class="nav-item">
                         <form method="POST" action="/logout" style="display:inline;">
                             @csrf
-                            <button type="submit" class="nav-link" style="background:none; border:none; width:100%; text-align:left;">
+                            <button type="submit" class="nav-link" style="background:none; border:none; width:100%; text-align:left; cursor:pointer;">
                                 <i class="ni ni-user-run text-green"></i>
                                 <span class="nav-link-text">Log Out</span>
                             </button>

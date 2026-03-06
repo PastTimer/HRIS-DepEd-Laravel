@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\School;
 use App\Models\Designation;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -80,6 +81,12 @@ class EmployeeController extends Controller
             'photo_path'         => $photoPath,
         ]));
 
+        ActivityLog::log(
+            'CREATE', 
+            'Employee', 
+            "Created new employee: {$validatedData['first_name']} {$validatedData['last_name']}"
+        );
+
         return redirect('/employees')->with('success', 'Employee record added successfully.');
     }
 
@@ -140,10 +147,31 @@ class EmployeeController extends Controller
 
         $deployedSchool = $request->deployed_school_id ? $request->deployed_school_id : $request->school_id;
 
+        $original = $employee->getOriginal();
+
         $employee->update(array_merge($validatedData, [
             'deployed_school_id' => $deployedSchool,
             'photo_path'         => $photoPath,
         ]));
+
+        $changes = [];
+        foreach ($employee->getChanges() as $key => $newValue) {
+            if ($key !== 'updated_at') { 
+                $changes[$key] = [
+                    'old' => $original[$key] ?? null,
+                    'new' => $newValue
+                ];
+            }
+        }
+
+        if (!empty($changes)) {
+            \App\Models\ActivityLog::log(
+                'UPDATE', 
+                'Employee', 
+                "Updated employee details for: {$employee->first_name} {$employee->last_name}",
+                $changes 
+            );
+        }
 
         return redirect('/employees')->with('success', 'Employee record updated successfully.');
     }
@@ -153,6 +181,12 @@ class EmployeeController extends Controller
         if ($employee->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($employee->photo_path)) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($employee->photo_path);
         }
+
+        ActivityLog::log(
+            'DELETE', 
+            'Employee', 
+            "Permanently deleted employee: {$employee->first_name} {$employee->last_name}"
+        );
 
         $employee->delete();
 

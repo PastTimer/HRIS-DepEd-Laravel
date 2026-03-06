@@ -6,6 +6,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\EquipmentController;
 
     // --- GUEST ROUTES (Not logged in) ---
     Route::middleware('guest')->group(function () {
@@ -26,6 +28,7 @@ use App\Http\Controllers\SchoolController;
     
     // The Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index');
 
     // Personnel Module
     //Route::get('/employees', [EmployeeController::class, 'index']);
@@ -49,5 +52,13 @@ use App\Http\Controllers\SchoolController;
     //Route::post('/schools', [SchoolController::class, 'store']);
 
     Route::resource('schools', SchoolController::class);
-    
+
+    // User Management
+
+    Route::resource('users', UserController::class);
+
+    // Equipment Management
+
+    Route::resource('equipment', EquipmentController::class);
+
 });

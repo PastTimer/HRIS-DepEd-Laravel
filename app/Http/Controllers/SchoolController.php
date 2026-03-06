@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\School;
 use Illuminate\Http\Request;
 use App\Models\District;
+use App\Models\ActivityLog;
 
 class SchoolController extends Controller
 {
@@ -26,7 +27,7 @@ class SchoolController extends Controller
             'school_id'       => 'required|string|max:255|unique:schools,school_id',
             'name'            => 'required|string|max:255',
             'district'        => 'required|string|max:255',
-            'custom_district' => 'required_if:district,Other|string|max:255', 
+            'custom_district' => 'nullable|required_if:district,Other|string|max:255', 
             'address'         => 'nullable|string'
         ]);
 
@@ -46,6 +47,12 @@ class SchoolController extends Controller
             'address'   => $validatedData['address'],
         ]);
 
+        ActivityLog::log(
+            'CREATE', 
+            'School', 
+            "Created new school: {$validatedData['name']}"
+        );
+
         return redirect('/schools')->with('success', 'School added successfully.');
     }
 
@@ -61,7 +68,7 @@ class SchoolController extends Controller
             'school_id'       => 'required|string|max:255|unique:schools,school_id,' . $school->id,
             'name'            => 'required|string|max:255',
             'district'        => 'required|string|max:255',
-            'custom_district' => 'required_if:district,Other|string|max:255', 
+            'custom_district' => 'nullable|required_if:district,Other|string|max:255', 
             'address'         => 'nullable|string'
         ]);
 
@@ -74,6 +81,8 @@ class SchoolController extends Controller
             $finalDistrict = $newDistrict->name;
         } 
 
+        $original = $school->getOriginal();
+
         $school->update([
             'school_id' => $validatedData['school_id'],
             'name'      => $validatedData['name'],
@@ -81,12 +90,39 @@ class SchoolController extends Controller
             'address'   => $validatedData['address'],
         ]);
 
+        $changes = [];
+        foreach ($school->getChanges() as $key => $newValue) {
+            if ($key !== 'updated_at') { 
+                $changes[$key] = [
+                    'old' => $original[$key] ?? null,
+                    'new' => $newValue
+                ];
+            }
+        }
+
+        if (!empty($changes)) {
+            \App\Models\ActivityLog::log(
+                'UPDATE', 
+                'School Profile', 
+                "Updated school profile: {$school->name}",
+                $changes 
+            );
+        }
+
         return redirect('/schools')->with('success', 'School updated successfully.');
     }
 
     public function destroy(School $school)
     {
+
+        ActivityLog::log(
+            'DELETE', 
+            'School', 
+            "Permanently deleted school: {$school->name}"
+        );
+
         $school->delete();
+
         return back()->with('success', 'School removed.');
     }
 }

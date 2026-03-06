@@ -2,26 +2,43 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Equipment extends Model
 {
-    use HasFactory, SoftDeletes;
-    protected $guarded = [];
+    protected $fillable = [
+        'property_no', 'old_property_no', 'serial_number', 'qr_code',
+        'item', 'unit', 'brand_manufacturer', 'model', 'item_description', 'specifications',
+        'is_dcp', 'dcp_package', 'dcp_year',
+        'acquisition_cost', 'category', 'classification', 'estimated_useful_life', 'gl_sl_code', 'uacs_code',
+        'mode_acquisition', 'source_acquisition', 'donor', 'source_funds', 'allotment_class', 'received_date', 'pmp_reference',
+        'transaction_type', 'supporting_doc_type', 'supporting_doc_no', 
+        'accountable_officer_id', 'accountable_date', 'custodian_id', 'custodian_date',
+        'new_accountable_id', 'new_accountable_date', 'new_supporting_doc_type', 'new_supporting_doc_no',
+        'supplier', 'supplier_contact', 'under_warranty', 'warranty_end_date',
+        'equipment_location', 'is_functional', 'equipment_condition', 'disposition_status', 'remarks',
+        'school_id', 'created_by'
+    ];
 
-    // Hardware connections
-    public function school() { return $this->belongsTo(School::class); }
-    public function itemType() { return $this->belongsTo(ItemType::class); }
-    public function brand() { return $this->belongsTo(Brand::class); }
-    public function dcpPackage() { return $this->belongsTo(DcpPackage::class); }
+    // --- RELATIONSHIPS ---
 
-    // Personnel connections
-    public function accountableOfficer() { 
-        return $this->belongsTo(Employee::class, 'accountable_officer_id'); 
+    public function school() {
+        return $this->belongsTo(School::class, 'school_id');
     }
-    public function custodian() { 
-        return $this->belongsTo(Employee::class, 'custodian_id'); 
+
+    public function creator() {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function accountableOfficer() {
+        return $this->belongsTo(Employee::class, 'accountable_officer_id');
+    }
+
+    public function custodian() {
+        return $this->belongsTo(Employee::class, 'custodian_id');
+    }
+
+    public function newAccountableOfficer() {
+        return $this->belongsTo(Employee::class, 'new_accountable_id');
     }
 }
