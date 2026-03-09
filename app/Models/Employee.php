@@ -20,5 +20,5 @@ class Employee extends Model
     public function designation() { return $this->belongsTo(Designation::class); }
     public function equipment() {return $this->hasMany(Equipment::class, 'accountable_officer_id');}
     public function trainings() {return $this->belongsToMany(Training::class, 'employee_training');}
-    public function specialOrders() {return $this->belongsToMany(SpecialOrder::class, 'employee_special_order');}
+    public function specialOrders() {return $this->belongsToMany(SpecialOrder::class, 'employee_specialorder', 'employee_id', 'specialorder_id');}
 }

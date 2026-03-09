@@ -9,37 +9,48 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
-        Schema::create('school_internet_profiles', function (Blueprint $table) {
+        Schema::create('school_internet_profile', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('school_id')->unique();
             
-            // The Foreign Key (Unique because it's a 1-to-1 relationship)
-            $table->foreignId('school_id')->unique()->constrained('schools')->cascadeOnDelete();
-            
-            // Connectivity Status
-            $table->boolean('is_provider_available')->default(false);
-            $table->text('available_providers')->nullable();
-            $table->boolean('has_mobile_data')->default(false);
+            // Availability & Signals (Q1-Q5)
+            $table->string('is_provider_available')->nullable();
+            $table->text('available_providers')->nullable(); // Stores imploded checkbox values
+            $table->text('mobile_signals')->nullable();
+            $table->string('has_mobile_data')->nullable();
             $table->string('mobile_data_quality')->nullable();
+
+            // Subscriptions & Cost (Q6-Q9)
+            $table->text('subscribed_providers')->nullable();
+            $table->integer('total_isps')->default(0);
+            $table->decimal('total_cost', 10, 2)->default(0.00);
             
-            // Power & Infrastructure
-            $table->boolean('has_electricity')->default(false);
-            $table->text('electricity_sources')->nullable();
-            $table->boolean('is_solar_powered')->default(false);
-            $table->boolean('frequent_brownouts')->default(false);
-            
-            // Coverage
+            // Purpose & Coverage (Q10-Q17)
+            $table->text('subscription_purpose')->nullable();
             $table->integer('rooms_admin_use')->default(0);
             $table->integer('rooms_classroom_use')->default(0);
+            $table->integer('rooms_other_use')->default(0);
+            $table->integer('rooms_covered')->default(0);
             $table->integer('access_points')->default(0);
-            
-            // DICT Details
-            $table->boolean('is_dict_recipient')->default(false);
+            $table->text('insufficient_bandwidth_reason')->nullable();
+            $table->text('coverage_areas')->nullable();
+
+            // DICT & Usage (Q18-Q21)
+            $table->string('is_dict_recipient')->nullable();
             $table->string('dict_rating')->nullable();
+            $table->string('has_sufficient_bandwidth')->nullable();
+            $table->text('no_subscription_reason')->nullable();
             
+            // Power Source (Q22-Q25)
+            $table->string('has_electricity')->nullable();
+            $table->text('electricity_sources')->nullable();
+            $table->string('is_solar_powered')->nullable();
+            $table->string('frequent_brownouts')->nullable();
+
             $table->timestamps();
-            $table->softDeletes();
+            $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
         });
     }
 
@@ -48,6 +59,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('school_internet_profiles');
+        Schema::dropIfExists('isp_inventories');
     }
 };

@@ -92,12 +92,12 @@
                         <div class="collapse {{ request()->is('isp*') ? 'show' : '' }}" id="navbar-internet">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="/isp/profiles" class="nav-link {{ request()->is('isp/profiles') ? 'active text-primary font-weight-bold' : '' }}">
+                                    <a href="/internet" class="nav-link {{ request()->is('isp/profiles') ? 'active text-primary font-weight-bold' : '' }}">
                                         <span class="sidenav-normal"> Internet Profile </span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/isp/accounts" class="nav-link {{ request()->is('isp/accounts') ? 'active text-primary font-weight-bold' : '' }}">
+                                    <a href="/isp" class="nav-link {{ request()->is('isp/accounts') ? 'active text-primary font-weight-bold' : '' }}">
                                         <span class="sidenav-normal"> ISP Account </span>
                                     </a>
                                 </li>

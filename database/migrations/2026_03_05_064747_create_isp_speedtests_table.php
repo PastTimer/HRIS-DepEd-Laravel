@@ -9,25 +9,23 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('isp_speedtests', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('isp_id'); 
             
-            // Link to the specific ISP subscription
-            $table->foreignId('isp_inventory_id')->constrained('isp_inventories')->cascadeOnDelete();
-            
-            // Test Results
-            $table->decimal('download_mbps', 10, 2)->nullable();
-            $table->decimal('upload_mbps', 10, 2)->nullable();
+            $table->dateTime('test_date');
+            $table->double('download_mbps', 8, 2);
+            $table->double('upload_mbps', 8, 2);
             $table->integer('ping_ms')->nullable();
-            
-            // Metadata
-            $table->dateTime('test_date')->useCurrent();
             $table->string('tested_by')->nullable();
             $table->text('remarks_speed')->nullable();
-
             $table->timestamps();
+            $table->foreign('isp_id')
+                ->references('id')
+                ->on('isp_inventory')
+                ->onDelete('cascade');
         });
     }
 

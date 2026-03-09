@@ -10,6 +10,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SpecialOrderController;
 use App\Http\Controllers\TrainingController;
+use App\Http\Controllers\InternetProfileController;
+use App\Http\Controllers\ISPInventoryController;
 
     // --- GUEST ROUTES (Not logged in) ---
     Route::middleware('guest')->group(function () {
@@ -72,5 +74,13 @@ use App\Http\Controllers\TrainingController;
     // Training 
 
     Route::resource('training', TrainingController::class);
+
+    // Internet Profiles
+
+    Route::resource('internet', InternetProfileController::class);
+
+    // ISP Controllers
+
+    Route::resource('isp', ISPInventoryController::class);
 
 });
