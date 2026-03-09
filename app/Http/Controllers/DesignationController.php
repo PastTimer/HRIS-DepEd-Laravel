@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\ActivityLog;
+use App\Models\Employee;
 
 class DesignationController extends Controller
 {
@@ -79,14 +80,25 @@ class DesignationController extends Controller
 
     public function destroy(Designation $designation)
     {
-        ActivityLog::log(
-            'DELETE', 
-            'Designation', 
-            "Permanently deleted designation: {$designation->title}"
-        );
+        $employeeCount = $designation->employees()->count();
 
+        if ($employeeCount > 0) {
+            return redirect()->back()->with('error', 
+                "Cannot delete '{$designation->title}'. There are currently {$employeeCount} employee(s) assigned to this designation. Please reassign or remove them first."
+            );
+        }
         $designation->delete();
+        
+        return redirect()->back()->with('success', 'Designation deleted successfully.');
+    }
 
-        return back()->with('success', 'Designation removed.');
+    public function show(Designation $designation)
+    {
+        $employees = Employee::where('designation_id', $designation->id)
+            ->with('school')
+            ->orderBy('last_name')
+            ->paginate(20);
+
+        return view('designations.show', compact('designation', 'employees'));
     }
 }

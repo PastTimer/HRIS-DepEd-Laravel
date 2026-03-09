@@ -1,6 +1,17 @@
 @extends('layouts.app')
 @section('title', 'School Profile')
 @section('content')
+
+<style>
+    /* Makes it obvious the row is interactive and adds a subtle hover effect */
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+</style>
+
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col">
@@ -17,7 +28,7 @@
                 @endif
 
                 <div class="table-responsive">
-                    <table class="table align-items-center table-flush">
+                    <table class="table align-items-center table-flush table-hover">
                         <thead class="thead-light">
                             <tr>
                                 <th>School ID</th>
@@ -29,12 +40,13 @@
                         </thead>
                         <tbody>
                             @foreach($schools as $school)
-                            <tr>
+                            <tr class="clickable-row" onclick="window.location='/schools/{{ $school->id }}';">
                                 <td>{{ $school->school_id }}</td>
                                 <td><strong>{{ $school->name }}</strong></td>
                                 <td>{{ $school->district }}</td>
                                 <td>{{ Str::limit($school->address, 30) }}</td>
-                                <td>
+                                
+                                <td onclick="event.stopPropagation();">
                                     <a href="/schools/{{ $school->id }}/edit" class="btn btn-sm btn-info">Edit</a>
                                     
                                     <form method="POST" action="/schools/{{ $school->id }}" style="display:inline;">

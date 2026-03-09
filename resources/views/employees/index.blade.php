@@ -1,6 +1,17 @@
 @extends('layouts.app')
 @section('title', 'Employee Directory')
 @section('content')
+
+<style>
+    /* Makes it obvious the row is clickable */
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+</style>
+
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col">
@@ -37,7 +48,7 @@
                         </thead>
                         <tbody>
                             @forelse($employees as $emp)
-                            <tr>
+                            <tr class="clickable-row" onclick="window.location='/employees/{{ $emp->id }}';">
                                 <td>
                                     @if($emp->photo_path)
                                         <img src="{{ asset('storage/' . $emp->photo_path) }}" alt="avatar" class="rounded-circle img-thumbnail" style="width: 45px; height: 45px; object-fit: cover;">
@@ -64,7 +75,7 @@
                                     @endif
                                 </td>
                                 
-                                <td class="text-center">
+                                <td class="text-center" onclick="event.stopPropagation();">
                                     <a href="/employees/{{ $emp->id }}/edit" class="btn btn-sm btn-info" title="Edit">
                                         Edit
                                     </a>

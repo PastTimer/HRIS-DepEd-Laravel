@@ -18,4 +18,7 @@ class Employee extends Model
     public function school() { return $this->belongsTo(School::class, 'school_id'); }
     public function deployedSchool() { return $this->belongsTo(School::class, 'deployed_school_id'); }
     public function designation() { return $this->belongsTo(Designation::class); }
+    public function equipment() {return $this->hasMany(Equipment::class, 'accountable_officer_id');}
+    public function trainings() {return $this->belongsToMany(Training::class, 'employee_training');}
+    public function specialOrders() {return $this->belongsToMany(SpecialOrder::class, 'employee_special_order');}
 }

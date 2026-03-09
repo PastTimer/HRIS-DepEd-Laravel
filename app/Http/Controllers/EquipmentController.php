@@ -6,6 +6,8 @@ use App\Models\Equipment;
 use App\Models\School;
 use App\Models\Employee;
 use App\Models\ActivityLog;
+use App\Models\Training;
+use App\Models\SpecialOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -234,5 +236,27 @@ class EquipmentController extends Controller
         $equipment->delete();
 
         return redirect('/equipment')->with('success', 'Equipment record removed successfully.');
+    }
+
+    public function show(Employee $employee)
+    {
+        $employee->load([
+            'school', 
+            'deployedStation', 
+            'equipment',      
+            'trainings' => function($q) {
+                $q->where('status', 'approved'); 
+            },
+            'specialOrders',  
+        ]);
+
+        $designations = \DB::table('steplist')
+            ->where('employee_id', $employee->id)
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $files = \Storage::disk('public')->files("uploads/{$employee->id}");
+
+        return view('employee.show', compact('employee', 'designations', 'files'));
     }
 }

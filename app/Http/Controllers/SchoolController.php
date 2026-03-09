@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\School;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use App\Models\District;
 use App\Models\ActivityLog;
@@ -124,5 +125,43 @@ class SchoolController extends Controller
         $school->delete();
 
         return back()->with('success', 'School removed.');
+    }
+
+    public function show(School $school)
+    {
+        $personnel = \App\Models\Employee::where('school_id', $school->id)
+            ->where('is_active', true)
+            ->orderBy('last_name')
+            ->paginate(15);
+
+        $profile = \DB::table('school_profile')->where('schoolid', $school->id)->first();
+
+        return view('schools.show', compact('school', 'personnel', 'profile'));
+    }
+
+    public function editProfile(School $school)
+    {
+        $profile = \DB::table('school_profile')->where('schoolid', $school->id)->first();
+        return view('schools.edit_profile', compact('school', 'profile'));
+    }
+
+    public function updateProfile(Request $request, School $school)
+    {
+        $nearby = $request->has('nearby_institutions') ? implode(', ', $request->nearby_institutions) : '';
+        $paths = $request->has('access_paths') ? implode(', ', $request->access_paths) : '';
+
+        $data = $request->except(['_token', 'nearby_institutions', 'access_paths']);
+        
+        $data['nearby_institutions'] = $nearby;
+        $data['access_paths'] = $paths;
+        $data['schoolid'] = $school->id;
+        $data['updated_by'] = \Auth::id();
+
+        \DB::table('school_profile')->updateOrInsert(
+            ['schoolid' => $school->id],
+            $data
+        );
+
+        return redirect("/schools/{$school->id}")->with('success', 'Station Profile updated successfully.');
     }
 }

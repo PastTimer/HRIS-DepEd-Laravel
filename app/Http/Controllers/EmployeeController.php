@@ -197,4 +197,16 @@ class EmployeeController extends Controller
     {
         return $this->belongsToMany(SpecialOrder::class, 'employee_special_order', 'employee_id', 'special_order_id')->withTimestamps();
     }
+
+    public function show($id)
+    {
+        $employee = \App\Models\Employee::with([
+            'school', 
+            'equipment', 
+            'trainings',  
+            'specialOrders' 
+        ])->findOrFail($id);
+
+        return view('employees.show', compact('employee'));
+    }
 }

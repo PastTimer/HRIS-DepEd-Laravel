@@ -30,15 +30,16 @@ class Equipment extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function accountableOfficer() {
-        return $this->belongsTo(Employee::class, 'accountable_officer_id');
-    }
-
     public function custodian() {
         return $this->belongsTo(Employee::class, 'custodian_id');
     }
 
     public function newAccountableOfficer() {
         return $this->belongsTo(Employee::class, 'new_accountable_id');
+    }
+
+    public function officer()
+    {
+        return $this->belongsTo(Employee::class, 'accountable_officer_id');
     }
 }

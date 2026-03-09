@@ -54,6 +54,8 @@ use App\Http\Controllers\TrainingController;
     //Route::post('/schools', [SchoolController::class, 'store']);
 
     Route::resource('schools', SchoolController::class);
+    Route::get('/schools/{school}/profile/edit', [SchoolController::class, 'editProfile']);
+    Route::post('/schools/{school}/profile/update', [SchoolController::class, 'updateProfile']);
 
     // User Management
 
