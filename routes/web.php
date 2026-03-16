@@ -80,7 +80,7 @@ use App\Http\Controllers\ISPInventoryController;
     Route::resource('internet', InternetProfileController::class);
 
     // ISP Controllers
-
+    Route::post('isp/{id}/speedtest', [IspInventoryController::class, 'storeSpeedTest'])->name('isp.speedtest'); // hidden form apprently idk
     Route::resource('isp', ISPInventoryController::class);
 
 });

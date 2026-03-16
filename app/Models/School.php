@@ -31,4 +31,14 @@ class School extends Model
     {
         return $this->hasOne(SchoolInternetProfile::class, 'school_id');
     }
+
+    public function isps()
+    {
+        return $this->hasMany(IspInventory::class, 'school_id');
+    }
+
+    public function profile()
+    {
+        return $this->hasOne(SchoolProfile::class, 'schoolid');
+    }
 }

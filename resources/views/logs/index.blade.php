@@ -72,81 +72,114 @@
     <div class="row">
         <div class="col">
             <div class="card shadow">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="mb-2 mb-md-0">
                         <h3 class="mb-0 text-primary"><i class="fas fa-clipboard-list mr-2"></i> System Audit Trail</h3>
+                        <div class="text-muted text-sm mt-1">
+                            @if(Auth::check() && Auth::user()->role === 'school')
+                                <i class="fas fa-school mr-1"></i> Filtered by {{ Auth::user()->access_level }}
+                            @else
+                                <i class="fas fa-globe mr-1"></i> Showing all system logs
+                            @endif
+                        </div>
                     </div>
-                    <div class="text-muted text-sm">
-                        @if(Auth::check() && Auth::user()->role === 'school')
-                            <i class="fas fa-school mr-1"></i> Filtered by {{ Auth::user()->access_level }}
-                        @else
-                            <i class="fas fa-globe mr-1"></i> Showing all system logs
-                        @endif
+
+                    <div class="d-flex align-items-center">
+                        <form action="{{ route('logs.index') }}" method="GET" class="mb-0">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" style="min-width: 260px;" placeholder="Search user, action, module..." value="{{ request('search') }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    @if(request('search'))
+                                        <a href="{{ route('logs.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
-
+                
                 <div class="table-responsive">
                     <table class="table align-items-center table-flush table-hover">
                         <thead class="thead-light">
                             <tr>
-                                <th class="text-center">DATE & TIME</th>
-                                <th>USER</th>
-                                <th class="text-center">ACTION</th>
-                                <th class="text-center">MODULE</th>
-                                <th>DESCRIPTION</th>
-                                <th class="text-center">IP ADDRESS</th>
+                                <th style="width: 15%">Date & Time</th>
+                                <th style="width: 15%">User & IP</th>
+                                <th style="width: 15%">Action & Module</th>
+                                <th style="width: 25%">Description</th>
+                                <th style="width: 30%">Data Changes (Old &rarr; New)</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($logs as $log)
-                            <tr>
-                                <td class="text-center text-sm">
-                                    {{ $log->created_at->format('M d, Y') }} <br>
-                                    <small class="text-muted">{{ $log->created_at->format('H:i A') }}</small>
-                                </td>
-                                
-                                <td>
-                                    <span class="font-weight-bold">{{ $log->username ?? 'System' }}</span><br>
-                                    <small class="text-muted">{{ strtoupper($log->user_role ?? 'N/A') }}</small>
-                                </td>
-                                
-                                <td class="text-center">
-                                    <span class="badge badge-pill badge-{{ strtoupper($log->action_type) }}">
-                                        {{ strtoupper($log->action_type) }}
-                                    </span>
-                                </td>
-                                
-                                <td class="text-center text-sm">{{ $log->module }}</td>
-                                
-                                <td class="text-sm" style="white-space: normal; min-width: 300px;">
-                                    {{ $log->description }}
-                                    
-                                    @if(!empty($log->changes) && is_array($log->changes))
-                                        <div class="mt-2 pl-2 border-left border-info">
-                                            <small class="text-info font-weight-bold">Changes:</small><br>
-                                            @foreach($log->changes as $field => $values)
-                                                <small class="text-muted">
-                                                    &bull; <strong>{{ ucfirst(str_replace('_', ' ', $field)) }}:</strong> 
-                                                    <span class="text-danger">{{ $values['old'] ?? '(empty)' }}</span> &rarr; 
-                                                    <span class="text-success">{{ $values['new'] ?? '(empty)' }}</span>
-                                                </small><br>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </td>
-                                
-                                <td class="text-center text-sm text-muted">{{ $log->ip_address ?? 'N/A' }}</td>
-                            </tr>
+                                <tr>
+                                    <td>
+                                        <span class="text-sm font-weight-bold">{{ $log->created_at->format('M d, Y') }}</span><br>
+                                        <small class="text-muted">{{ $log->created_at->format('h:i:s A') }}</small>
+                                    </td>
+
+                                    <td>
+                                        <strong>{{ $log->username ?? 'System / Guest' }}</strong><br>
+                                        <span class="badge badge-secondary badge-sm">{{ ucfirst($log->user_role) }}</span>
+                                        <small class="text-muted d-block mt-1"><i class="fas fa-desktop mr-1"></i> {{ $log->ip_address }}</small>
+                                    </td>
+
+                                    <td>
+                                        @php
+                                            // Color code the action badge
+                                            $badgeColor = 'success'; // Default (CREATE)
+                                            if ($log->action_type === 'UPDATE') $badgeColor = 'info';
+                                            if ($log->action_type === 'DELETE') $badgeColor = 'danger';
+                                        @endphp
+                                        <span class="badge badge-{{ $badgeColor }}">{{ $log->action_type }}</span><br>
+                                        <small class="text-dark font-weight-bold">{{ $log->module }}</small>
+                                    </td>
+
+                                    <td class="text-wrap text-sm" style="max-width: 250px;">
+                                        {{ $log->description }}
+                                    </td>
+
+                                    <td>
+                                        @if($log->changes && is_array($log->changes) && count($log->changes) > 0)
+                                            <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
+                                                @foreach($log->changes as $field => $values)
+                                                    <li class="mb-1 border-bottom pb-1">
+                                                        <strong class="text-dark">{{ ucfirst(str_replace('_', ' ', $field)) }}:</strong> 
+                                                        
+                                                        <span class="text-danger"><del>{{ $values['old'] ?? 'empty' }}</del></span> 
+                                                        
+                                                        <i class="fas fa-arrow-right text-muted mx-1" style="font-size: 0.7rem;"></i> 
+                                                        
+                                                        <span class="text-success font-weight-bold">{{ $values['new'] ?? 'empty' }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <span class="text-muted text-sm"><i class="fas fa-info-circle mr-1"></i> No specific field changes recorded</span>
+                                        @endif
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
-                                    <i class="fas fa-history fa-3x mb-3"></i>
-                                    <h4>No activity logs found.</h4>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="fas fa-search fa-2x mb-3"></i>
+                                            <h4>No audit logs found</h4>
+                                            <p>Try adjusting your search criteria or check back later.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <div class="card-footer py-4">
+                    {{ $logs->appends(request()->query())->links() }}
                 </div>
                 
                 <div class="card-footer py-4">

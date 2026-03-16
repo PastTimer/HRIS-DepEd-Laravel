@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
             $table->string('username')->nullable();
             $table->string('user_role')->nullable();
             $table->string('access_level')->nullable(); 

@@ -16,6 +16,11 @@ class ActivityLog extends Model
         'changes' => 'array', 
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     /**
      * Helper function to quickly record an audit log
      */

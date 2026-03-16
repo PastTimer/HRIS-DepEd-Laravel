@@ -2,80 +2,97 @@
 @section('title', 'ISP Inventory Management')
 
 @section('content')
+<style>
+    /* Clickable row styles */
+    .isp-row { cursor: pointer; transition: background-color 0.2s; }
+    .isp-row:hover { background-color: #f6f9fc !important; box-shadow: inset 4px 0 0 #5e72e4; }
+    
+    /* Isolate the action buttons from the row click */
+    .action-cell { position: relative; z-index: 10; }
+    .action-btn-group { display: flex; justify-content: flex-end; gap: 8px; }
+</style>
+
 <div class="container-fluid mt-4">
     <div class="card shadow">
-        <div class="card-header border-0 bg-white">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h3 class="mb-0"><i class="fas fa-list-alt mr-2 text-primary"></i> ISP Inventory</h3>
-                </div>
-                <div class="col text-right">
-                    <form action="/isp" method="GET" class="d-inline-block mr-2">
-                        <div class="input-group input-group-sm">
-                            <input type="text" name="search" class="form-control" placeholder="Search Account/School..." value="{{ request('search') }}">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
-                            </div>
+        <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0"><i class="fas fa-network-wired mr-2 text-primary"></i> ISP Inventory</h3>
+            
+            <div class="d-flex align-items-center">
+                <form action="{{ route('isp.index') }}" method="GET" class="mr-3 mb-0">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="search" class="form-control" placeholder="Search school, provider, acct..." value="{{ request('search') }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ route('isp.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            @endif
                         </div>
-                    </form>
-                    <a href="/isp/create" class="btn btn-sm btn-success"><i class="fas fa-plus"></i> New ISP</a>
-                </div>
+                    </div>
+                </form>
+
+                <a href="{{ route('isp.create') }}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus mr-1"></i> New Connection
+                </a>
             </div>
         </div>
 
         <div class="table-responsive">
-            <table class="table align-items-center table-flush table-hover">
+            <table class="table align-items-center table-flush table-hover" id="ispTable">
                 <thead class="thead-light">
                     <tr>
-                        <th>School / Station</th>
-                        <th>Provider & Account</th>
-                        <th>Type & Speed</th>
-                        <th>Monthly Cost</th>
+                        <th>School Name</th>
+                        <th>Provider & Acct #</th>
+                        <th>Speed</th>
+                        <th>Monthly MRC</th>
                         <th>Status</th>
                         <th class="text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($isps as $item)
-                    <tr>
-                        <td>
-                            <strong>{{ $item->school->name ?? 'N/A' }}</strong><br>
-                            <small class="text-muted">{{ $item->school->school_id ?? '' }}</small>
-                        </td>
-                        <td>
-                            <span class="badge badge-primary">{{ $item->provider }}</span><br>
-                            <small>{{ $item->account_no ?? 'No Account #' }}</small>
-                        </td>
-                        <td>
-                            {{ $item->internet_type }}<br>
-                            <small class="text-success font-weight-bold">
-                                {{ $item->speedTests->first()->download_mbps ?? $item->plan_speed }} Mbps
-                            </small>
-                        </td>
-                        <td>₱{{ number_format($item->monthly_mrc, 2) }}</td>
-                        <td>
-                            <span class="badge badge-dot">
-                                <i class="{{ $item->status == 'Active' ? 'bg-success' : 'bg-warning' }}"></i>
-                                {{ $item->status }}
-                            </span>
-                        </td>
-                        <td class="text-right">
-                            <div class="dropdown">
-                                <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
-                                    <a class="dropdown-item" href="/internet/{{ $item->school_id }}">View School Dashboard</a>
-                                    <a class="dropdown-item" href="/isp/{{ $item->id }}/edit">Edit Connection</a>
-                                    <div class="dropdown-divider"></div>
-                                    <form action="/isp/{{ $item->id }}" method="POST" onsubmit="return confirm('Delete this record?');">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">Delete Record</button>
-                                    </form>
+                    @foreach($isps as $school)
+                        @php $activeIsp = $school->isps->first(); @endphp
+                        
+                        <tr class="{{ $activeIsp ? 'isp-row' : '' }}" 
+                            data-url="{{ $activeIsp ? route('isp.show', $activeIsp->id) : '' }}">
+                            
+                            <td>
+                                <strong>{{ $school->name }}</strong><br>
+                                <small class="text-muted">{{ $school->school_id }}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-secondary mb-1">{{ $activeIsp->provider ?? 'None' }}</span><br>
+                                <small class="text-primary font-weight-bold">{{ $activeIsp->account_no ?? 'Unassigned' }}</small>
+                            </td>
+                            <td><strong>{{ $activeIsp->plan_speed ?? '0' }}</strong> <small>Mbps</small></td>
+                            <td>₱{{ number_format($activeIsp->monthly_mrc ?? 0, 2) }}</td>
+                            <td>
+                                <span class="badge badge-dot">
+                                    <i class="{{ ($activeIsp && $activeIsp->status == 'Active') ? 'bg-success' : 'bg-warning' }}"></i>
+                                    <small>{{ $activeIsp->status ?? 'Offline' }}</small>
+                                </span>
+                            </td>
+                            <td class="text-right action-cell">
+                                <div class="action-btn-group">
+                                    @if($activeIsp)
+                                        <a href="{{ route('isp.edit', $activeIsp->id) }}" class="btn btn-icon-only btn-sm btn-outline-primary" title="Edit Account">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <form action="{{ route('isp.destroy', $activeIsp->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete this ISP record?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-icon-only btn-sm btn-outline-danger" title="Delete Account">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
                     @endforeach
                 </tbody>
             </table>
@@ -85,4 +102,26 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Find all rows that are actually clickable
+        const clickableRows = document.querySelectorAll('.isp-row');
+        
+        clickableRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // If the user clicked inside the action cell (Edit/Delete), do nothing
+                if (e.target.closest('.action-cell')) {
+                    return;
+                }
+                
+                // Otherwise, redirect to the ISP Show page
+                const targetUrl = this.getAttribute('data-url');
+                if (targetUrl) {
+                    window.location.href = targetUrl;
+                }
+            });
+        });
+    });
+</script>
 @endsection

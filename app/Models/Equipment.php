@@ -38,7 +38,7 @@ class Equipment extends Model
         return $this->belongsTo(Employee::class, 'new_accountable_id');
     }
 
-    public function officer()
+    public function accountableOfficer()
     {
         return $this->belongsTo(Employee::class, 'accountable_officer_id');
     }

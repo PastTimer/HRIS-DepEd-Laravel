@@ -13,11 +13,39 @@ use Illuminate\Support\Facades\Auth;
 
 class EquipmentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+
         $equipments = Equipment::with(['school', 'accountableOfficer'])
+            ->when($search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    
+                    // 1. Search the equipment table using your exact schema columns
+                    $q->where('item', 'like', "%{$search}%")
+                    ->orWhere('item_description', 'like', "%{$search}%")
+                    ->orWhere('property_no', 'like', "%{$search}%")
+                    ->orWhere('serial_number', 'like', "%{$search}%")
+                    ->orWhere('brand_manufacturer', 'like', "%{$search}%")
+                    ->orWhere('model', 'like', "%{$search}%")
+                    ->orWhere('equipment_condition', 'like', "%{$search}%")
+                    ->orWhere('disposition_status', 'like', "%{$search}%")
+                    
+                    // 2. Search inside the linked 'schools' table
+                    ->orWhereHas('school', function($schoolQuery) use ($search) {
+                        $schoolQuery->where('name', 'like', "%{$search}%")
+                                    ->orWhere('school_id', 'like', "%{$search}%");
+                    })
+                    
+                    // 3. Search inside the linked 'employees' table (Accountable Officer)
+                    ->orWhereHas('accountableOfficer', function($officerQuery) use ($search) {
+                        $officerQuery->where('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%");
+                    });
+                });
+            })
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(15)
+            ->appends(['search' => $search]);
 
         return view('equipments.index', compact('equipments'));
     }

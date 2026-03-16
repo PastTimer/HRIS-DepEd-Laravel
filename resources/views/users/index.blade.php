@@ -5,14 +5,30 @@
     <div class="row">
         <div class="col">
             <div class="card shadow">
-                <div class="card-header border-0 d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0">
-                        <img src="{{ asset('assets/img/brand/user.png') }}" width="35" height="35" class="mr-2" alt="icon"> 
-                        User Management
-                    </h2>
-                    <a href="/users/create" class="btn btn-primary">
-                        <i class="fas fa-user-plus mr-2"></i> Add New User
-                    </a>
+                <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-users mr-2 text-primary"></i> User Management</h3>
+                    
+                    <div class="d-flex align-items-center">
+                        <form action="{{ route('users.index') }}" method="GET" class="mr-3 mb-0">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" placeholder="Search name, username, role..." value="{{ request('search') }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    @if(request('search'))
+                                        <a href="{{ route('users.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </form>
+
+                        <a href="{{ route('users.create') }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-user-plus mr-1"></i> Add New User
+                        </a>
+                    </div>
                 </div>
                 
                 @if(session('success'))

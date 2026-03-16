@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('isp_inventory', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('school_id')->unique();
+            $table->unsignedBigInteger('school_id')->index();
             
             // Core Connection Details
             $table->string('provider'); // PLDT, Globe, Starlink, etc.

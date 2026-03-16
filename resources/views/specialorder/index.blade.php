@@ -25,15 +25,31 @@
     <div class="row">
         <div class="col">
             <div class="card shadow">
-                <div class="card-header border-0 d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 text-primary">
-                        <i class="ni ni-paper-diploma mr-2"></i> Special Order Management
-                    </h2>
-                    @if(Auth::user()->role === 'admin')
-                        <a href="/specialorder/create" class="btn btn-primary" style="background-color: #0473B4; border: none;">
-                            <i class="fas fa-plus mr-2"></i> ADD Special Order
+                <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-file-signature mr-2 text-primary"></i> Special Orders</h3>
+                    
+                    <div class="d-flex align-items-center">
+                        <form action="{{ route('specialorder.index') }}" method="GET" class="mr-3 mb-0">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" style="min-width: 280px;" 
+                                    placeholder="Search title, SO #, or personnel..." value="{{ request('search') }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    @if(request('search'))
+                                        <a href="{{ route('specialorder.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </form>
+
+                        <a href="{{ route('specialorder.create') }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-plus mr-1"></i> New Order
                         </a>
-                    @endif
+                    </div>
                 </div>
                 
                 @if(session('success'))

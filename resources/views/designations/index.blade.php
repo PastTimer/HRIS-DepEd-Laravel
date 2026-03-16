@@ -16,13 +16,32 @@
     <div class="row">
         <div class="col">
             <div class="card shadow">
-                <div class="card-header border-0 d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0"><i class="fas fa-briefcase mr-2 text-primary"></i> Designation List</h3>
-                    <a href="/designations/create" class="btn btn-sm btn-primary">
-                        <i class="fas fa-plus mr-1"></i> Add Designation
-                    </a>
-                </div>
-                
+                <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-briefcase mr-2 text-primary"></i> Designations</h3>
+                    
+                    <div class="d-flex align-items-center">
+                        <form action="{{ route('designations.index') }}" method="GET" class="mr-3 mb-0">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" style="min-width: 250px;" 
+                                    placeholder="Search title, type, or description..." value="{{ request('search') }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    @if(request('search'))
+                                        <a href="{{ route('designations.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </form>
+
+                        <a href="{{ route('designations.create') }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-plus mr-1"></i> New Designation
+                        </a>
+                    </div>
+                </div>   
                 @if(session('success'))
                     <div class="alert alert-success m-3 alert-dismissible fade show" role="alert">
                         <span class="alert-text">{{ session('success') }}</span>

@@ -11,11 +11,35 @@ use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+
         $employees = Employee::with(['school', 'designation'])
-                             ->orderBy('last_name', 'asc')
-                             ->paginate(15);
+            ->when($search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    // 1. Search Employee Table Directly
+                    $q->where('last_name', 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('employee_id', 'like', "%{$search}%")
+                    ->orWhere('item_no', 'like', "%{$search}%")
+                    ->orWhere('email_address', 'like', "%{$search}%")
+                    
+                    // 2. Search linked Designation (Job Title)
+                    ->orWhereHas('designation', function($desigQuery) use ($search) {
+                        $desigQuery->where('title', 'like', "%{$search}%");
+                    })
+                    
+                    // 3. Search linked School (Station)
+                    ->orWhereHas('school', function($schoolQuery) use ($search) {
+                        $schoolQuery->where('name', 'like', "%{$search}%")
+                                    ->orWhere('school_id', 'like', "%{$search}%");
+                    });
+                });
+            })
+            ->orderBy('last_name', 'asc')
+            ->paginate(15)
+            ->appends(['search' => $search]);
 
         return view('employees.index', compact('employees'));
     }

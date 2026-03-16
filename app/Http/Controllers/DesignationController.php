@@ -9,9 +9,22 @@ use App\Models\Employee;
 
 class DesignationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $designations = Designation::withCount('employees')->paginate(10);
+        $search = $request->input('search');
+
+        $designations = Designation::withCount('employees')
+            ->when($search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('title', 'asc')
+            ->paginate(10)
+            ->appends(['search' => $search]);
+
         return view('designations.index', compact('designations'));
     }
 

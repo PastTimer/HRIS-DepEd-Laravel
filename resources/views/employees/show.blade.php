@@ -35,7 +35,7 @@
                     <hr class="my-4">
                     
                     <div class="d-flex justify-content-between">
-                        <a href="/employee" class="btn btn-sm btn-secondary">Back to List</a>
+                        <a href="/employees" class="btn btn-sm btn-secondary">Back to List</a>
                         <span class="text-success font-weight-bold"><i class="fas fa-circle mr-1"></i> Active</span>
                     </div>
                 </div>

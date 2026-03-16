@@ -10,9 +10,31 @@ use App\Models\ActivityLog;
 
 class SchoolController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $schools = School::orderBy('name', 'asc')->paginate(15);
+        $search = $request->input('search');
+
+        $schools = School::with('profile')
+            ->when($search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    // 1. Search main School table
+                    $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('school_id', 'like', "%{$search}%")
+                    
+                    // 2. Search related School Profile table
+                    ->orWhereHas('profile', function($profileQuery) use ($search) {
+                        $profileQuery->where('school_district', 'like', "%{$search}%")
+                                    ->orWhere('sdo', 'like', "%{$search}%")
+                                    ->orWhere('head_name', 'like', "%{$search}%")
+                                    ->orWhere('address_city', 'like', "%{$search}%")
+                                    ->orWhere('address_barangay', 'like', "%{$search}%");
+                    });
+                });
+            })
+            ->orderBy('name', 'asc')
+            ->paginate(15)
+            ->appends(['search' => $search]);
+
         return view('schools.index', compact('schools'));
     }
 

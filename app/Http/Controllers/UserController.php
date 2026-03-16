@@ -12,11 +12,23 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderBy('role', 'asc')
-                     ->orderBy('last_name', 'asc')
-                     ->paginate(15);
+        $search = $request->input('search');
+
+        $users = User::when($search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('role', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('role', 'asc')
+            ->orderBy('last_name', 'asc')
+            ->paginate(15)
+            ->appends(['search' => $search]);
 
         return view('users.index', compact('users'));
     }

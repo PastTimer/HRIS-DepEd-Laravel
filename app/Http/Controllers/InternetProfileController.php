@@ -9,11 +9,21 @@ use Illuminate\Support\Facades\DB;
 
 class InternetProfileController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+
         $schools = School::where('is_active', true)
+            ->when($search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('school_id', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('name', 'asc')
-            ->paginate(15);
+            ->paginate(15)
+            ->appends(['search' => $search]);
+
         return view('internet.index', compact('schools'));
     }
 

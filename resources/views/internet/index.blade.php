@@ -11,9 +11,24 @@
 <div class="container-fluid mt-4">
     <div class="card shadow">
         <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0"><i class="fas fa-wifi mr-2 text-primary"></i> Internet Connectivity Profiles</h3>
-            <div class="search-box">
-                <input type="text" class="form-control form-control-sm" placeholder="Search school...">
+            <h3 class="mb-0"><i class="fas fa-poll-h mr-2 text-info"></i> Internet Connectivity Profiles</h3>
+            
+            <div class="d-flex align-items-center">
+                <form action="{{ route('internet.index') }}" method="GET" class="mb-0">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="search" class="form-control" placeholder="Search school name or ID..." value="{{ request('search') }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ route('internet.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
 

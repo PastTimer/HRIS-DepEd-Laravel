@@ -11,12 +11,15 @@ use Illuminate\Support\Facades\Storage;
 
 class SpecialOrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $query = SpecialOrder::with('employees');
+        $search = $request->input('search');
+        
+        // 1. Base query with relationships
+        $query = SpecialOrder::with(['employees.school']);
 
-        // Security: School-level users see only orders containing their personnel
+        // 2. Security: School-level users see only orders containing their personnel
         if ($user && $user->role === 'school') {
             $query->whereHas('employees', function($q) use ($user) {
                 $q->whereHas('school', function($sq) use ($user) {
@@ -25,8 +28,33 @@ class SpecialOrderController extends Controller
             });
         }
 
-        $totalSo = $query->count();
-        $specialorder = $query->orderBy('created_at', 'desc')->paginate(15);
+        // 3. Apply Search Logic
+        $query->when($search, function ($q) use ($search) {
+            $q->where(function($subQuery) use ($search) {
+                $subQuery->where('title', 'like', "%{$search}%")
+                        ->orWhere('so_no', 'like', "%{$search}%")
+                        ->orWhere('series_year', 'like', "%{$search}%")
+                        ->orWhere('type', 'like', "%{$search}%")
+                        // Search related Employees
+                        ->orWhereHas('employees', function($empQ) use ($search) {
+                            // Adjust these columns if your employees table uses 'name'
+                            $empQ->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                // Search Employee's School
+                                ->orWhereHas('school', function($schQ) use ($search) {
+                                    $schQ->where('name', 'like', "%{$search}%");
+                                });
+                        });
+            });
+        });
+
+        // 4. Calculate Stats (Dynamic)
+        $totalSo = (clone $query)->count();
+
+        // 5. Fetch Paginated Results
+        $specialorder = $query->orderBy('created_at', 'desc')
+                            ->paginate(15)
+                            ->appends(['search' => $search]);
 
         return view('specialorder.index', compact('specialorder', 'totalSo'));
     }

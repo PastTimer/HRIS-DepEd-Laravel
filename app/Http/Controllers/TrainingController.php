@@ -11,12 +11,15 @@ use Illuminate\Support\Facades\Storage;
 
 class TrainingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $query = Training::with('employees');
+        $search = $request->input('search');
+        
+        // 1. Base query with relationships
+        $query = Training::with(['employees.school']);
 
-        // Security: Filter by school access
+        // 2. Security: Filter by school access
         if ($user && $user->role === 'school') {
             $query->whereHas('employees', function($q) use ($user) {
                 $q->whereHas('school', function($sq) use ($user) {
@@ -25,13 +28,34 @@ class TrainingController extends Controller
             });
         }
 
+        // 3. Apply Search Logic
+        $query->when($search, function ($q) use ($search) {
+            $q->where(function($subQuery) use ($search) {
+                $subQuery->where('title', 'like', "%{$search}%")
+                        ->orWhere('trefid', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%")
+                        ->orWhereHas('employees', function($empQ) use ($search) {
+                            $empQ->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhereHas('school', function($schQ) use ($search) {
+                                    $schQ->where('name', 'like', "%{$search}%");
+                                });
+                        });
+            });
+        });
+
+        // 4. Calculate Stats based on the (potentially searched) query
         $stats = [
-            'total' => $query->count(),
+            'total' => (clone $query)->count(),
             'approved' => (clone $query)->where('status', 'approved')->count(),
             'pending' => (clone $query)->where('status', 'pending')->count()
         ];
 
-        $trainings = $query->orderBy('created_at', 'desc')->paginate(15);
+        // 5. Paginate and append search for the URL
+        $trainings = $query->orderBy('created_at', 'desc')
+                        ->paginate(15)
+                        ->appends(['search' => $search]);
+
         return view('training.index', compact('trainings', 'stats'));
     }
 
