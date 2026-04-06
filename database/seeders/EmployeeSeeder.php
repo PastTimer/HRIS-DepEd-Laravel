@@ -163,12 +163,15 @@ class EmployeeSeeder extends Seeder
             $emailAddress = $faker->unique()->safeEmail();
             $residentialAddress = $faker->address();
 
+            // Guarantee unique item_number for all personnel
+            $itemNumber = $faker->unique()->bothify('ITEM-####');
+
             $personnel = Personnel::create([
                 'emp_id' => $employeeId,
                 'assigned_school_id' => $assignedSchoolId,
                 'deployed_school_id' => $deployedSchoolId,
                 'position_id' => $positions[array_rand($positions)]->id,
-                'item_number' => $faker->optional(0.8)->bothify('ITEM-####'),
+                'item_number' => $itemNumber,
                 'current_step' => $step,
                 'last_step_increment_date' => $lastStep,
                 'employee_type' => $employeeType,

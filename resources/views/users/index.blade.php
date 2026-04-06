@@ -11,7 +11,7 @@
                     <div class="d-flex align-items-center">
                         <form action="{{ route('users.index') }}" method="GET" class="mr-3 mb-0">
                             <div class="input-group input-group-sm">
-                                <input type="text" name="search" class="form-control" placeholder="Search name, username, role..." value="{{ request('search') }}">
+                                <input type="text" name="search" class="form-control" placeholder="Search name, username, role, school, personnel..." value="{{ request('search') }}">
                                 <div class="input-group-append">
                                     <button class="btn btn-primary" type="submit">
                                         <i class="fas fa-search"></i>
@@ -61,7 +61,18 @@
                             <tr>
                                 <td><strong>{{ $user->username }}</strong></td>
                                 
-                                <td>{{ $user->first_name }} {{ $user->last_name }}</td>
+                                <td>
+                                    @php($roleName = $user->getRoleNames()->first())
+                                    @php($profile = $user->personnel?->pdsMain)
+                                    @php($personnelName = trim(($profile->first_name ?? '') . ' ' . ($profile->middle_name ?? '') . ' ' . ($profile->last_name ?? '')))
+                                    @if($profile)
+                                        {{ $personnelName !== '' ? $personnelName : strtoupper(str_replace('_', ' ', $roleName ?? 'N/A')) }}
+                                    @elseif($user->school)
+                                        {{ $user->school->name }}
+                                    @else
+                                        {{ strtoupper(str_replace('_', ' ', $roleName ?? 'N/A')) }}
+                                    @endif
+                                </td>
                                 
                                 <td>
                                     @if($user->email)
@@ -71,23 +82,35 @@
                                     @endif
                                 </td>
                                 
-                                <td>{{ $user->contact_no ?? 'N/A' }}</td>
+                                <td>
+                                    @if($user->school)
+                                        {{ $user->school->contact_landline ?? 'N/A' }}
+                                    @elseif($profile)
+                                        {{ $profile->mobile ?? 'N/A' }}
+                                    @else
+                                        {{ $user->contact_no ?? 'N/A' }}
+                                    @endif
+                                </td>
 
                                 <td>{{ $user->office }}</td>
                                 
                                 <td>
-                                    @if($user->role === 'admin')
+                                    @if($roleName === 'admin')
                                         <span class="badge badge-danger">ADMINISTRATOR</span>
-                                    @elseif($user->role === 'school')
+                                    @elseif($roleName === 'school')
                                         <span class="badge badge-warning">SCHOOL USER</span>
+                                    @elseif($roleName === 'encoding_officer')
+                                        <span class="badge badge-primary">ENCODING OFFICER</span>
                                     @else
-                                        <span class="badge badge-info">{{ strtoupper($user->role) }}</span>
+                                        <span class="badge badge-info">{{ strtoupper($roleName ?? 'N/A') }}</span>
                                     @endif
                                 </td>
                                 
                                 <td>
                                     @if($user->status === 'active')
                                         <span class="badge badge-success">Active</span>
+                                    @elseif($user->status === 'locked')
+                                        <span class="badge badge-warning">Locked</span>
                                     @else
                                         <span class="badge badge-danger">Inactive</span>
                                     @endif

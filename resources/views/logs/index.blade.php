@@ -76,8 +76,8 @@
                     <div class="mb-2 mb-md-0">
                         <h3 class="mb-0 text-primary"><i class="fas fa-clipboard-list mr-2"></i> System Audit Trail</h3>
                         <div class="text-muted text-sm mt-1">
-                            @if(Auth::check() && Auth::user()->role === 'school')
-                                <i class="fas fa-school mr-1"></i> Filtered by {{ Auth::user()->access_level }}
+                            @if(Auth::check() && Auth::user()->hasRole('school') && Auth::user()->school)
+                                <i class="fas fa-school mr-1"></i> Filtered by {{ Auth::user()->school->name }}
                             @else
                                 <i class="fas fa-globe mr-1"></i> Showing all system logs
                             @endif

@@ -48,4 +48,9 @@ class School extends Model
         return $this->hasMany(IspInventory::class, 'school_id');
     }
 
+    public function users()
+    {
+        return $this->hasMany(User::class, 'school_id');
+    }
+
 }

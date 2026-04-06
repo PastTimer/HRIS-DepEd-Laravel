@@ -28,12 +28,16 @@ class ActivityLog extends Model
     {
         if (Auth::check()) {
             $user = Auth::user();
+            $userRole = $user->getRoleNames()->first();
+            $accessLevel = $user->school?->name
+                ?? $user->personnel?->emp_id
+                ?? null;
             
             self::create([
                 'user_id'      => $user->id,
                 'username'     => $user->username,
-                'user_role'    => $user->role,
-                'access_level' => $user->access_level,
+                'user_role'    => $userRole,
+                'access_level' => $accessLevel,
                 'action_type'  => strtoupper($action_type),
                 'module'       => $module,
                 'description'  => $description,

@@ -39,4 +39,8 @@ class Personnel extends Model
     public function specialOrders() {
         return $this->belongsToMany(SpecialOrder::class, 'personnel_specialorder', 'personnel_id', 'specialorder_id');
     }
+
+    public function users() {
+        return $this->hasMany(User::class, 'personnel_id');
+    }
 }

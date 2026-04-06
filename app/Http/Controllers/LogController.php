@@ -17,9 +17,9 @@ class LogController extends Controller
         // Base query setup
         $query = ActivityLog::query();
 
-        // Security Check: Restrict 'school' users to their own logs
-        if ($user && $user->role === 'school') {
-            $query->where('access_level', $user->access_level);
+        // Security Check: Restrict school users to their own logs
+        if ($user && $user->hasRole('school') && $user->school) {
+            $query->where('access_level', $user->school->name);
         }
 
         // Apply Deep Search Filter

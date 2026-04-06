@@ -11,14 +11,20 @@
                         <i class="ni ni-circle-08"></i>
                     </span>
                     <div class="media-body ml-2 d-none d-lg-block">
+                        @php
+                            $currentUser = Auth::user();
+                            $roleName = $currentUser?->getRoleNames()->first();
+                            $accessLabel = $currentUser?->school?->name ?? $currentUser?->personnel?->emp_id;
+                            $displayName = trim(($currentUser?->first_name ?? '') . ' ' . ($currentUser?->last_name ?? ''));
+                        @endphp
                         <span class="mb-0 text-sm font-weight-bold" style="display: block; line-height: 1.2; color: #32325d;">
-                            {{ Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : 'Guest' }}
+                            {{ Auth::check() ? ($displayName !== '' ? $displayName : Auth::user()->username) : 'Guest' }}
                         </span>
                         
                         <small class="text-muted" style="display: block; font-size: 11px; margin-top: 2px;">
-                            {{ Auth::check() ? strtoupper(Auth::user()->role) : '' }}
-                            @if(Auth::check() && Auth::user()->access_level)
-                                | {{ Str::limit(Auth::user()->access_level, 15) }}
+                            {{ $roleName ? strtoupper($roleName) : '' }}
+                            @if($accessLabel)
+                                | {{ Str::limit($accessLabel, 15) }}
                             @endif
                         </small>
                     </div>
@@ -105,7 +111,7 @@
                         </div>
                     </li>
 
-                    @if(Auth::check() && Auth::user()->role === 'admin')
+                    @if(Auth::check() && Auth::user()->hasRole('admin'))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('users*') ? 'active' : '' }}" href="/users">
                             <i class="ni ni-settings-gear-65 text-dark"></i>

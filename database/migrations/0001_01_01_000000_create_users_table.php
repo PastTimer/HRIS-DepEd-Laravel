@@ -16,13 +16,9 @@ return new class extends Migration
             $table->id(); 
             $table->string('username')->unique(); 
             $table->string('password');
-            $table->string('email')->nullable();
-            $table->string('last_name');
-            $table->string('first_name');
+            $table->string('email')->nullable()->unique();
             $table->string('contact_no')->nullable();
             $table->string('office')->nullable();
-            $table->string('role')->default('personnel'); 
-            $table->string('access_level')->nullable(); 
             
             $table->enum('status', ['active', 'inactive', 'locked'])->default('active');
             $table->integer('failed_login_attempts')->default(0);
