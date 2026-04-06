@@ -114,12 +114,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($personnel as $emp)
-                                <tr class="clickable-row" style="cursor: pointer;" onclick="window.location='/employees/{{ $emp->id }}';">
-                                    <td><span class="text-dark font-weight-bold">{{ strtoupper($emp->last_name) }}</span>, {{ $emp->first_name }}</td>
-                                    <td>{{ $emp->position }}</td>
-                                    <td>{{ $emp->employee_id }}</td>
-                                    <td class="text-right">{{ $emp->contact_no ?? '---' }}</td>
+                                @forelse($personnel as $personnelRecord)
+                                @php($pds = $personnelRecord->pdsMain)
+                                <tr class="clickable-row" style="cursor: pointer;" onclick="window.location='/personnel/{{ $personnelRecord->id }}';">
+                                    <td><span class="text-dark font-weight-bold">{{ strtoupper($pds->last_name ?? 'N/A') }}</span>, {{ $pds->first_name ?? '' }}</td>
+                                    <td>{{ $personnelRecord->position->title ?? 'N/A' }}</td>
+                                    <td>{{ $personnelRecord->emp_id ?? ($pds->agency_employee_number ?? 'N/A') }}</td>
+                                    <td class="text-right">{{ $pds->mobile ?? '---' }}</td>
                                 </tr>
                                 @empty
                                 <tr><td colspan="4" class="text-center py-5">No personnel assigned.</td></tr>

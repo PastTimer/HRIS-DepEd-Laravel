@@ -57,7 +57,7 @@
                             <tr>
                                 <th>Title</th>
                                 <th>Type</th>
-                                <th class="text-center">Employee Count</th> 
+                                <th class="text-center">Personnel Count</th> 
                                 <th class="text-right">Actions</th>
                             </tr>
                         </thead>

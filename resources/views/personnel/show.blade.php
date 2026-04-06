@@ -1,38 +1,53 @@
 @extends('layouts.app')
-@section('title', 'Employee Profile')
+@section('title', 'Personnel Profile')
 
 @section('content')
+@php
+    $pds = $personnel->pdsMain;
+    $lastName = $pds->last_name ?? 'N/A';
+    $firstName = $pds->first_name ?? '';
+    $gender = $pds?->birth_sex ? ucfirst(strtolower($pds->birth_sex)) : 'N/A';
+    $civilStatus = $pds?->civil_status ? ucfirst(strtolower($pds->civil_status)) : null;
+@endphp
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-xl-4">
             <div class="card card-profile shadow mb-4">
                 <div class="card-body pt-5 text-center">
                     <div class="mb-4">
-                        <img src="{{ asset('assets/img/theme/team-4.jpg') }}" class="rounded-circle border shadow-sm" width="140">
+                        <img src="{{ $personnel->profile_photo ? asset('storage/' . $personnel->profile_photo) : asset('uploads/default/defaultpic.png') }}" class="rounded-circle border shadow-sm" width="140" style="height: 140px; object-fit: cover;">
                     </div>
-                    <h2 class="mb-0 text-dark">{{ $employee->last_name }}, {{ $employee->first_name }}</h2>
-                    <p class="text-muted mb-3">{{ $employee->position->title ?? 'N/A' }}</p>
+                    <h2 class="mb-0 text-dark">{{ $lastName }}, {{ $firstName }}</h2>
+                    <p class="text-muted mb-3">{{ $personnel->position->title ?? 'N/A' }}</p>
                     
+                    <div class="badge badge-pill badge-primary mb-4 px-4 py-2">
+                        {{ $personnel->employee_type ?? 'N/A' }}
+                    </div>
+
                     <div class="row text-left mt-2">
                         <div class="col-12 mb-2">
                             <small class="text-uppercase text-muted font-weight-bold">Station</small>
-                            <div class="h5">{{ $employee->school->name ?? 'Unassigned' }}</div>
+                            <div class="h5">{{ $personnel->school->name ?? 'Unassigned' }}</div>
                         </div>
                         <div class="col-6">
                             <small class="text-uppercase text-muted font-weight-bold">Gender</small>
-                            <div class="h5">{{ $employee->gender }}</div>
+                            <div class="h5">{{ $gender }}</div>
                         </div>
                         <div class="col-6">
                             <small class="text-uppercase text-muted font-weight-bold">Civil Status</small>
-                            <div class="h5">{{ $employee->civil_status ?? '---' }}</div>
+                            <div class="h5">{{ $civilStatus ?? '---' }}</div>
                         </div>
                     </div>
                     
                     <hr class="my-4">
                     
                     <div class="d-flex justify-content-between">
-                        <a href="/employees" class="btn btn-sm btn-secondary">Back to List</a>
-                        <span class="text-success font-weight-bold"><i class="fas fa-circle mr-1"></i> Active</span>
+                        <a href="{{ route('personnel.index') }}" class="btn btn-sm btn-secondary">Back to List</a>
+                        @if($personnel->is_active)
+                            <span class="text-success font-weight-bold"><i class="fas fa-circle mr-1"></i> Active</span>
+                        @else
+                            <span class="text-danger font-weight-bold"><i class="fas fa-circle mr-1"></i> Inactive</span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -65,25 +80,82 @@
                         <div class="tab-pane fade show active" id="pds">
                             <h6 class="heading-small text-muted mb-4">Government Identifiers</h6>
                             <div class="row mb-4">
-                                <div class="col-md-4"><strong>GSIS:</strong><br>{{ $employee->gsis_no ?? 'N/A' }}</div>
-                                <div class="col-md-4"><strong>TIN:</strong><br>{{ $employee->tin_no ?? 'N/A' }}</div>
-                                <div class="col-md-4"><strong>Pag-Ibig:</strong><br>{{ $employee->pagibig_no ?? 'N/A' }}</div>
+                                <div class="col-md-4"><strong>GSIS:</strong><br>{{ $pds->umid_id_number ?? 'N/A' }}</div>
+                                <div class="col-md-4"><strong>SSS:</strong><br>{{ $pds->sss_number ?? 'N/A' }}</div>
+                                <div class="col-md-4"><strong>TIN:</strong><br>{{ $pds->tin_number ?? 'N/A' }}</div>
+                                <div class="col-md-4"><strong>Pag-Ibig:</strong><br>{{ $pds->pagibig_number ?? 'N/A' }}</div>
                             </div>
                             
                             <hr class="my-4">
                             
                             <h6 class="heading-small text-muted mb-4">Contact & Address</h6>
                             <div class="row">
-                                <div class="col-md-6 mb-3"><strong>Email:</strong><br>{{ $employee->email ?? 'N/A' }}</div>
-                                <div class="col-md-6 mb-3"><strong>Contact Number:</strong><br>{{ $employee->contact_no ?? 'N/A' }}</div>
-                                <div class="col-md-12"><strong>Residential Address:</strong><br>{{ $employee->address ?? 'N/A' }}</div>
+                                <div class="col-md-6 mb-3"><strong>Email:</strong><br>{{ $pds->email_address ?? 'N/A' }}</div>
+                                <div class="col-md-6 mb-3"><strong>Contact Number:</strong><br>{{ $pds->mobile ?? 'N/A' }}</div>
+                                <div class="col-md-12"><strong>Residential Address:</strong><br>{{ $pds->residential_address ?? 'N/A' }}</div>
                             </div>
+
+
+
+                            <!-- TESTING: FULL PERSONNEL DATA DUMP -->
+                            <div style="background: #f6f6f6; border: 1px solid #000000; border-radius: 6px; padding: 1.5rem; margin-top: 2rem;">
+                                <h5 class="mb-3">[TEST] Ito PDS Data. pds_main = 1:1 to personnel. Other tables ay M:1 to personnel. personnel naman ay sa di covered ng pds and more acc stuff.<br>To 🏳️‍🌈🥷</h5>
+                                <div class="mb-3">
+                                    <strong>personnel</strong>
+                                    <ul class="mb-2">
+                                        @foreach($personnel->getAttributes() as $key => $val)
+                                            <li><code>{{ $key }}</code>: <span class="text-monospace">{{ is_scalar($val) ? $val : json_encode($val) }}</span></li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>pds_main</strong>
+                                    <ul class="mb-2">
+                                        @if($pds)
+                                            @foreach($pds->getAttributes() as $key => $val)
+                                                <li><code>{{ $key }}</code>: <span class="text-monospace">{{ is_scalar($val) ? $val : json_encode($val) }}</span></li>
+                                            @endforeach
+                                        @else
+                                            <li class="text-danger">No pds_main record found.</li>
+                                        @endif
+                                    </ul>
+                                </div>
+                                @foreach([
+                                    'pdsChildren' => 'pds_children',
+                                    'pdsEducation' => 'pds_education',
+                                    'pdsEligibility' => 'pds_eligibility',
+                                    'pdsWorkExperience' => 'pds_work_experience',
+                                    'pdsTraining' => 'pds_training',
+                                    'pdsReferences' => 'pds_references',
+                                    'pdsSubmissions' => 'pds_submissions',
+                                ] as $relation => $label)
+                                    <div class="mb-3">
+                                        <strong>{{ $label }}</strong>
+                                        <ul class="mb-2">
+                                            @forelse($personnel->$relation as $row)
+                                                <li>
+                                                    <ul>
+                                                        @foreach($row->getAttributes() as $key => $val)
+                                                            <li><code>{{ $key }}</code>: <span class="text-monospace">{{ is_scalar($val) ? $val : json_encode($val) }}</span></li>
+                                                        @endforeach
+                                                    </ul>
+                                                </li>
+                                            @empty
+                                                <li class="text-muted">No records.</li>
+                                            @endforelse
+                                        </ul>
+                                    </div>
+                                @endforeach
+                            </div>
+
+
+                            
                         </div>
 
                         <div class="tab-pane fade" id="inventory">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h4 class="mb-0">Assigned Assets</h4>
-                                <span class="badge badge-info">{{ $employee->equipment->count() }} Items</span>
+                                <span class="badge badge-info">{{ $personnel->equipment->count() }} Items</span>
                             </div>
                             <div class="table-responsive">
                                 <table class="table align-items-center table-flush">
@@ -95,7 +167,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse($employee->equipment as $item)
+                                        @forelse($personnel->equipment as $item)
                                         <tr>
                                             <td class="font-weight-bold">{{ $item->property_no }}</td>
                                             <td>{{ $item->item }}<br><small class="text-muted">{{ $item->brand_manufacturer }}</small></td>
@@ -114,7 +186,7 @@
                                 <div class="col-lg-6">
                                     <h4 class="mb-3 text-primary"><i class="ni ni-books mr-2"></i> Seminar History</h4>
                                     <div class="timeline timeline-one-side">
-                                        @forelse($employee->trainings as $tr)
+                                        @forelse($personnel->trainings as $tr)
                                         <div class="timeline-block mb-3">
                                             <span class="timeline-step badge-success"><i class="ni ni-check-bold"></i></span>
                                             <div class="timeline-content">
@@ -131,7 +203,7 @@
                                 <div class="col-lg-6">
                                     <h4 class="mb-3 text-danger"><i class="ni ni-paper-diploma mr-2"></i> Special Orders</h4>
                                     <div class="list-group list-group-flush">
-                                        @forelse($employee->specialOrders as $so)
+                                        @forelse($personnel->specialOrders as $so)
                                         <div class="list-group-item px-0">
                                             <div class="row align-items-center">
                                                 <div class="col">

@@ -118,9 +118,10 @@ class SchoolController extends Controller
 
     public function show(School $school)
     {
-        $personnel = \App\Models\Employee::where('school_id', $school->id)
+        $personnel = \App\Models\Personnel::with('pdsMain')
+            ->where('assigned_school_id', $school->id)
             ->where('is_active', true)
-            ->orderBy('last_name')
+            ->orderBy('id', 'desc')
             ->paginate(15);
 
         return view('schools.show', compact('school', 'personnel'));

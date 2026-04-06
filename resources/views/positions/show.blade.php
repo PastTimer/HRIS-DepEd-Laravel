@@ -31,7 +31,7 @@
                             <h3 class="mb-0">{{ strtoupper($position->title) }}</h3>
                         </div>
                         <div class="col text-right">
-                            <span class="badge badge-primary px-3 py-2">{{ $employees->total() }} Total Personnel</span>
+                            <span class="badge badge-primary px-3 py-2">{{ $personnelList->total() }} Total Personnel</span>
                             <a href="/positions" class="btn btn-sm btn-secondary ml-2">Back to List</a>
                         </div>
                     </div>
@@ -49,18 +49,19 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($employees as $emp)
-                            <tr class="clickable-row" onclick="window.location='/employees/{{ $emp->id }}';">
+                            @forelse($personnelList as $personnel)
+                            @php($pds = $personnel->pdsMain)
+                            <tr class="clickable-row" onclick="window.location='/personnel/{{ $personnel->id }}';">
                                 <td>
-                                    <span class="text-dark font-weight-bold">{{ strtoupper($emp->last_name) }}</span>, {{ $emp->first_name }}
+                                    <span class="text-dark font-weight-bold">{{ strtoupper($pds->last_name ?? 'N/A') }}</span>, {{ $pds->first_name ?? '' }}
                                 </td>
-                                <td>{{ $emp->employee_id ?? 'N/A' }}</td>
+                                <td>{{ $personnel->emp_id ?? ($pds->agency_employee_number ?? 'N/A') }}</td>
                                 <td>
                                     <i class="fas fa-school mr-2 text-muted"></i>
-                                    {{ $emp->school->name ?? 'Unassigned' }}
+                                    {{ $personnel->school->name ?? 'Unassigned' }}
                                 </td>
                                 <td>
-                                    @if($emp->is_active)
+                                    @if($personnel->is_active)
                                         <span class="badge badge-dot mr-4">
                                             <i class="bg-success"></i> <span class="status">Active</span>
                                         </span>
@@ -71,7 +72,7 @@
                                     @endif
                                 </td>
                                 <td class="text-right">
-                                    <a href="/employees/{{ $emp->id }}" class="btn btn-sm btn-icon-only text-light" title="View Profile">
+                                    <a href="/personnel/{{ $personnel->id }}" class="btn btn-sm btn-icon-only text-light" title="View Profile">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </td>
@@ -91,7 +92,7 @@
                 </div>
 
                 <div class="card-footer py-4">
-                    {{ $employees->links('pagination::bootstrap-4') }}
+                    {{ $personnelList->links('pagination::bootstrap-4') }}
                 </div>
             </div>
         </div>

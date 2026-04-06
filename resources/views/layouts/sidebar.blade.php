@@ -35,7 +35,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('employees*') ? 'active' : '' }}" href="/employees">
+                        <a class="nav-link {{ request()->is('personnel*') || request()->is('employees*') ? 'active' : '' }}" href="/personnel">
                             <i class="ni ni-single-02 text-yellow"></i>
                             <span class="nav-link-text">Personnel</span>
                         </a>

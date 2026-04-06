@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Position;
 use Illuminate\Http\Request;
 use App\Models\ActivityLog;
-use App\Models\Employee;
+use App\Models\Personnel;
 
 class PositionController extends Controller
 {
@@ -93,11 +93,11 @@ class PositionController extends Controller
 
     public function destroy(Position $position)
     {
-        $employeeCount = $position->employees()->count();
+        $personnelCount = $position->employees()->count();
 
-        if ($employeeCount > 0) {
+        if ($personnelCount > 0) {
             return redirect()->back()->with('error', 
-                "Cannot delete '{$position->title}'. There are currently {$employeeCount} employee(s) assigned to this position. Please reassign or remove them first."
+                "Cannot delete '{$position->title}'. There are currently {$personnelCount} personnel assigned to this position. Please reassign or remove them first."
             );
         }
         $position->delete();
@@ -107,11 +107,11 @@ class PositionController extends Controller
 
     public function show(Position $position)
     {
-        $employees = Employee::where('position_id', $position->id)
-            ->with('school')
-            ->orderBy('last_name')
+        $personnelList = Personnel::where('position_id', $position->id)
+            ->with(['school', 'pdsMain'])
+            ->orderBy('id', 'desc')
             ->paginate(20);
 
-        return view('positions.show', ['position' => $position, 'employees' => $employees]);
+        return view('positions.show', ['position' => $position, 'personnelList' => $personnelList]);
     }
 }

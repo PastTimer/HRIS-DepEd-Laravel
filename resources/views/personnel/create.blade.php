@@ -10,7 +10,7 @@
                 </div>
                 
                 <div class="card-body bg-secondary">
-                    <form method="POST" action="/employees" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('personnel.store') }}" enctype="multipart/form-data">
                         @csrf
 
                         <div class="card shadow-sm mb-4">
@@ -116,9 +116,9 @@
                                         @error('employee_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-6 form-group mb-3">
-                                        <label class="form-control-label">Position / Designation <span class="text-danger">*</span></label>
+                                        <label class="form-control-label">Position <span class="text-danger">*</span></label>
                                         <select name="position_id" class="form-control @error('position_id') is-invalid @enderror" required>
-                                            <option value="" disabled {{ old('position_id') === null ? 'selected' : '' }}>Select Designation</option>
+                                            <option value="" disabled {{ old('position_id') === null ? 'selected' : '' }}>Select Position</option>
                                             @foreach($positions as $position)
                                                 <option value="{{ $position->id }}" {{ old('position_id') == $position->id ? 'selected' : '' }}>
                                                     {{ $position->title }}
@@ -169,15 +169,15 @@
                                 <div class="row">
                                     <div class="col-md-6 form-group mb-3">
                                         <label class="form-control-label">Assigned Station <span class="text-danger">*</span></label>
-                                        <select name="school_id" class="form-control @error('school_id') is-invalid @enderror" required>
-                                            <option value="" disabled {{ old('school_id') === null ? 'selected' : '' }}>Select Assigned Station</option>
+                                        <select name="assigned_school_id" class="form-control @error('assigned_school_id') is-invalid @enderror" required>
+                                            <option value="" disabled {{ old('assigned_school_id') === null ? 'selected' : '' }}>Select Assigned Station</option>
                                             @foreach($schools as $school)
-                                                <option value="{{ $school->id }}" {{ old('school_id') == $school->id ? 'selected' : '' }}>
+                                                <option value="{{ $school->id }}" {{ old('assigned_school_id') == $school->id ? 'selected' : '' }}>
                                                     {{ $school->name }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        @error('school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        @error('assigned_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-6 form-group mb-3">
                                         <label class="form-control-label">Deployed Station</label>
@@ -266,8 +266,8 @@
                         </div>
 
                         <div class="d-flex justify-content-between mt-4 mb-3 px-3">
-                            <a href="/employees" class="btn btn-secondary px-5">Cancel</a>
-                            <button type="submit" class="btn btn-success px-5"><i class="ni ni-check-bold mr-2"></i> Save Employee</button>
+                            <a href="{{ route('personnel.index') }}" class="btn btn-secondary px-5">Cancel</a>
+                            <button type="submit" class="btn btn-success px-5"><i class="ni ni-check-bold mr-2"></i> Save Personnel</button>
                         </div>
                     </form>
                 </div>

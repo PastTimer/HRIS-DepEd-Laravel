@@ -15,6 +15,6 @@ class Position extends Model
     // A Position has many Employees
     public function employees()
     {
-        return $this->hasMany(Employee::class, 'position_id');
+        return $this->hasMany(Personnel::class, 'position_id');
     }
 }

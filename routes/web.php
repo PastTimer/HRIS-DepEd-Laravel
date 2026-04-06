@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\PersonnelController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\UserController;
@@ -35,11 +35,19 @@ use App\Http\Controllers\ISPInventoryController;
     Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index');
 
     // Personnel Module
-    //Route::get('/employees', [EmployeeController::class, 'index']);
-    //Route::get('/employees/create', [EmployeeController::class, 'create']);
-    //Route::post('/employees', [EmployeeController::class, 'store']);
+    //Route::get('/personnel', [PersonnelController::class, 'index']);
+    //Route::get('/personnel/create', [PersonnelController::class, 'create']);
+    //Route::post('/personnel', [PersonnelController::class, 'store']);
 
-    Route::resource('employees', EmployeeController::class);
+    Route::resource('personnel', PersonnelController::class)
+        ->parameters(['personnel' => 'personnel'])
+        ->names('personnel');
+
+    // Backward-compatible entry points while links are transitioning from /employees to /personnel.
+    Route::redirect('/employees', '/personnel');
+    Route::redirect('/employees/create', '/personnel/create');
+    Route::redirect('/employees/{personnel}', '/personnel/{personnel}');
+    Route::redirect('/employees/{personnel}/edit', '/personnel/{personnel}/edit');
 
     // Position Module
     //Route::get('/positions', [PositionController::class, 'index']);
@@ -80,7 +88,7 @@ use App\Http\Controllers\ISPInventoryController;
     Route::resource('internet', InternetProfileController::class);
 
     // ISP Controllers
-    Route::post('isp/{id}/speedtest', [IspInventoryController::class, 'storeSpeedTest'])->name('isp.speedtest'); // hidden form apprently idk
+    Route::post('isp/{id}/speedtest', [ISPInventoryController::class, 'storeSpeedTest'])->name('isp.speedtest'); // hidden form apprently idk
     Route::resource('isp', ISPInventoryController::class);
 
 });

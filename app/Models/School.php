@@ -28,7 +28,7 @@ class School extends Model
     // 1. A School has many Employees
     public function employees()
     {
-        return $this->hasMany(Employee::class, 'school_id');
+        return $this->hasMany(Personnel::class, 'assigned_school_id');
     }
 
     // 2. A School has many pieces of Equipment
