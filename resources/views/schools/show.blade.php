@@ -38,9 +38,9 @@
                     <h6 class="heading-small text-muted mb-4">General Information</h6>
                     <div class="row mb-4 pl-lg-4">
                         <div class="col-md-3"><div class="label-caps">School ID</div><div class="h5">{{ $school->school_id }}</div></div>
-                        <div class="col-md-3"><div class="label-caps">Governance Level</div><div class="h5">{{ $profile->governance_level ?? '---' }}</div></div>
-                        <div class="col-md-3"><div class="label-caps">RO / SDO</div><div class="h5">{{ $profile->ro ?? '---' }} / {{ $profile->sdo ?? '---' }}</div></div>
-                        <div class="col-md-3"><div class="label-caps">District / PSGC</div><div class="h5">{{ $profile->school_district ?? $school->district }} / {{ $profile->psgc ?? '---' }}</div></div>
+                        <div class="col-md-3"><div class="label-caps">Governance Level</div><div class="h5">{{ $school->governance_level ?? '---' }}</div></div>
+                        <div class="col-md-3"><div class="label-caps">RO / SDO</div><div class="h5">{{ $school->ro ?? '---' }} / {{ $school->sdo ?? '---' }}</div></div>
+                        <div class="col-md-3"><div class="label-caps">District / PSGC</div><div class="h5">{{ $school->district ? $school->district->name : '---' }} / {{ $school->psgc ?? '---' }}</div></div>
                     </div>
 
                     <hr class="my-4">
@@ -51,18 +51,18 @@
                             <div class="row mb-4 pl-lg-2">
                                 <div class="col-md-12 mb-3">
                                     <div class="label-caps">Full Address</div>
-                                    <div class="text-dark">{{ $profile->address_street ?? '' }} {{ $profile->address_barangay ?? '' }}, {{ $profile->address_city ?? '' }}, {{ $profile->address_province ?? '' }}</div>
+                                    <div class="text-dark">{{ $school->address_street ?? '' }} {{ $school->address_barangay ?? '' }}, {{ $school->address_city ?? '' }}, {{ $school->address_province ?? '' }}</div>
                                 </div>
-                                <div class="col-md-4"><div class="label-caps">Coordinates</div><div>{{ $profile->coordinates_lat ?? '0' }}, {{ $profile->coordinates_long ?? '0' }}</div></div>
-                                <div class="col-md-4"><div class="label-caps">Travel Time</div><div>{{ $profile->travel_time_min ?? '0' }} mins to center</div></div>
-                                <div class="col-md-4"><div class="label-caps">Access Paths</div><div><span class="badge badge-secondary">{{ $profile->access_paths ?? 'N/A' }}</span></div></div>
+                                <div class="col-md-4"><div class="label-caps">Coordinates</div><div>{{ $school->coordinates_lat ?? '0' }}, {{ $school->coordinates_long ?? '0' }}</div></div>
+                                <div class="col-md-4"><div class="label-caps">Travel Time</div><div>{{ $school->travel_time_min ?? '0' }} mins to center</div></div>
+                                <div class="col-md-4"><div class="label-caps">Access Paths</div><div><span class="badge badge-secondary">{{ $school->access_paths ?? 'N/A' }}</span></div></div>
                             </div>
 
                             <h6 class="heading-small text-muted mb-3">Communication Details</h6>
                             <div class="row mb-4 pl-lg-2">
-                                <div class="col-md-4"><div class="label-caps">Mobile 1</div><div>{{ $profile->contact_mobile1 ?? '---' }}</div></div>
-                                <div class="col-md-4"><div class="label-caps">Mobile 2</div><div>{{ $profile->contact_mobile2 ?? '---' }}</div></div>
-                                <div class="col-md-4"><div class="label-caps">Landline</div><div>{{ $profile->contact_landline ?? '---' }}</div></div>
+                                <div class="col-md-4"><div class="label-caps">Mobile 1</div><div>{{ $school->contact_mobile1 ?? '---' }}</div></div>
+                                <div class="col-md-4"><div class="label-caps">Mobile 2</div><div>{{ $school->contact_mobile2 ?? '---' }}</div></div>
+                                <div class="col-md-4"><div class="label-caps">Landline</div><div>{{ $school->contact_landline ?? '---' }}</div></div>
                             </div>
                         </div>
 
@@ -70,15 +70,14 @@
                             <h6 class="heading-small text-muted mb-3">Key Personnel</h6>
                             <div class="p-3 bg-secondary rounded mb-3">
                                 <div class="label-caps mb-1">School Head</div>
-                                <strong class="text-dark">{{ $profile->head_name ?? 'NOT SET' }}</strong><br>
-                                <small class="text-muted d-block">{{ $profile->head_position ?? '---' }}</small>
-                                <small class="text-primary">{{ $profile->head_email ?? '' }}</small><br>
-                                <small class="text-dark">{{ $profile->head_mobile ?? '' }}</small>
+                                <strong class="text-dark">{{ $school->head_name ?? 'NOT SET' }}</strong><br>
+                                <small class="text-muted d-block">{{ $school->head_position ?? '---' }}</small>
+                                <small class="text-primary">{{ $school->head_email ?? '' }}</small><br>
                             </div>
                             <div class="p-3 bg-secondary rounded mb-3">
                                 <div class="label-caps mb-1">Admin / Inventory Clerk</div>
-                                <strong>{{ $profile->admin_name ?? 'NOT SET' }}</strong><br>
-                                <small class="text-muted">{{ $profile->admin_mobile ?? '---' }}</small>
+                                <strong>{{ $school->admin_name ?? 'NOT SET' }}</strong><br>
+                                <small class="text-muted">{{ $school->admin_mobile ?? '---' }}</small>
                             </div>
                         </div>
                     </div>
@@ -88,23 +87,17 @@
                     <div class="row pl-lg-4">
                         <div class="col-md-12 mb-4">
                             <h6 class="heading-small text-muted mb-2">Nearby Institutions</h6>
-                            @if(!empty($profile->nearby_institutions))
-                                @foreach(explode(', ', $profile->nearby_institutions) as $inst)
+                            @if(!empty($school->nearby_institutions))
+                                @foreach(explode(', ', $school->nearby_institutions) as $inst)
                                     <span class="badge badge-pill badge-outline-primary mr-2 mb-2">{{ $inst }}</span>
                                 @endforeach
                             @else
                                 <span class="text-muted italic">No nearby institutions recorded.</span>
                             @endif
                         </div>
-                        
-                        <div class="col-md-12 mb-3">
-                            <label class="label-caps">Recent Developments</label>
-                            <div class="p-3 border rounded bg-white text-sm" style="white-space: pre-line;">{{ $profile->recent_developments ?? 'No recent developments recorded.' }}</div>
-                        </div>
-                        
                         <div class="col-md-12">
                             <label class="label-caps">General Notes</label>
-                            <p class="text-sm text-muted font-italic">{{ $profile->notes ?? 'None' }}</p>
+                            <p class="text-sm text-muted font-italic">{{ $school->notes ?? 'None' }}</p>
                         </div>
                     </div>
                 </div>

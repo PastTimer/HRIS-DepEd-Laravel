@@ -39,56 +39,30 @@
                             @enderror
                         </div>
 
+
                         @php
-                            $currentDistrict = old('district', $school->district);
-                            $isCustom = !$districts->contains('name', $currentDistrict) && !empty($currentDistrict);
+                            $currentDistrictId = old('district_id', $school->district_id);
                         @endphp
 
                         <div class="form-group mb-3">
-                            <label for="district" class="form-control-label">District</label>
-                            <select id="district" 
-                                    name="district" 
-                                    class="form-control @error('district') is-invalid @enderror" 
-                                    onchange="toggleCustomDistrict()" 
+                            <label for="district_id" class="form-control-label">District</label>
+                            <select id="district_id" 
+                                    name="district_id" 
+                                    class="form-control @error('district_id') is-invalid @enderror" 
                                     required>
-                                <option value="" disabled {{ empty($currentDistrict) ? 'selected' : '' }}>Select District</option>
-                                
+                                <option value="" disabled {{ empty($currentDistrictId) ? 'selected' : '' }}>Select District</option>
                                 @foreach($districts as $d)
-                                    <option value="{{ $d->name }}" {{ $currentDistrict === $d->name ? 'selected' : '' }}>
+                                    <option value="{{ $d->id }}" {{ $currentDistrictId == $d->id ? 'selected' : '' }}>
                                         {{ $d->name }}
                                     </option>
                                 @endforeach
-                                
-                                <option value="Other" {{ $isCustom || old('district') === 'Other' ? 'selected' : '' }}>Other / Custom</option>
                             </select>
-                            @error('district')
+                            @error('district_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div class="form-group mb-3" id="custom_district_wrapper" style="display: {{ $isCustom || old('district') === 'Other' ? 'block' : 'none' }};">
-                            <label for="custom_district" class="form-control-label">Specify Custom District</label>
-                            <input type="text" 
-                                   id="custom_district" 
-                                   name="custom_district" 
-                                   class="form-control @error('custom_district') is-invalid @enderror" 
-                                   value="{{ old('custom_district', $isCustom ? $school->district : '') }}"
-                                   placeholder="Enter new district name">
-                            @error('custom_district')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
 
-                        <div class="form-group mb-4">
-                            <label for="address" class="form-control-label">Address</label>
-                            <textarea id="address" 
-                                      name="address" 
-                                      rows="3" 
-                                      class="form-control @error('address') is-invalid @enderror">{{ old('address', $school->address) }}</textarea>
-                            @error('address')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
 
                         <div class="d-flex justify-content-between">
                             <a href="/schools" class="btn btn-secondary">Cancel</a>
@@ -102,21 +76,6 @@
 </div>
 
 <script>
-    function toggleCustomDistrict() {
-        var dropdown = document.getElementById('district');
-        var customWrapper = document.getElementById('custom_district_wrapper');
-        var customInput = document.getElementById('custom_district');
 
-        if (dropdown.value === 'Other') {
-            customWrapper.style.display = 'block';
-            customInput.setAttribute('required', 'required');
-        } else {
-            customWrapper.style.display = 'none';
-            customInput.removeAttribute('required');
-        }
-    }
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleCustomDistrict();
-    });
 </script>
 @endsection

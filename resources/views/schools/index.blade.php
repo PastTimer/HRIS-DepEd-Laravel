@@ -23,7 +23,7 @@
                         <form action="{{ route('schools.index') }}" method="GET" class="mr-3 mb-0">
                             <div class="input-group input-group-sm">
                                 <input type="text" name="search" class="form-control" style="min-width: 280px;" 
-                                    placeholder="Search school, district, or head..." value="{{ request('search') }}">
+                                    placeholder="Search school, district, or address..." value="{{ request('search') }}">
                                 <div class="input-group-append">
                                     <button class="btn btn-primary" type="submit">
                                         <i class="fas fa-search"></i>
@@ -65,8 +65,20 @@
                             <tr class="clickable-row" onclick="window.location='/schools/{{ $school->id }}';">
                                 <td>{{ $school->school_id }}</td>
                                 <td><strong>{{ $school->name }}</strong></td>
-                                <td>{{ $school->district }}</td>
-                                <td>{{ Str::limit($school->address, 30) }}</td>
+                                <td>{{ $school->district ? $school->district->name : '' }}</td>
+                                <td>
+                                    {{
+                                        Str::limit(
+                                            trim(
+                                                ($school->address_street ? $school->address_street . ', ' : '') .
+                                                ($school->address_barangay ? $school->address_barangay . ', ' : '') .
+                                                ($school->address_city ? $school->address_city . ', ' : '') .
+                                                ($school->address_province ? $school->address_province . ', ' : '') .
+                                                ($school->psgc ? 'PSGC: ' . $school->psgc : '')
+                                            , ', ')
+                                        , 30)
+                                    }}
+                                </td>
                                 
                                 <td onclick="event.stopPropagation();">
                                     <a href="/schools/{{ $school->id }}/edit" class="btn btn-sm btn-info">Edit</a>

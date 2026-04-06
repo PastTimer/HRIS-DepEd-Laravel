@@ -11,8 +11,19 @@ class School extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'school_id', 'name', 'address', 'district', 'is_active'
+        'school_id', 'name', 'district_id', 'governance_level', 'ro', 'sdo',
+        'address_street', 'address_barangay', 'address_city', 'address_province', 'psgc',
+        'coordinates_lat', 'coordinates_long', 'travel_time_min', 'access_paths',
+        'contact_mobile1', 'contact_mobile2', 'contact_landline',
+        'head_name', 'head_position', 'head_email',
+        'admin_name', 'admin_mobile',
+        'nearby_institutions', 'notes', 'is_active'
     ];
+    // School belongs to a District
+    public function district()
+    {
+        return $this->belongsTo(District::class, 'district_id');
+    }
 
     // 1. A School has many Employees
     public function employees()
@@ -37,8 +48,4 @@ class School extends Model
         return $this->hasMany(IspInventory::class, 'school_id');
     }
 
-    public function profile()
-    {
-        return $this->hasOne(SchoolProfile::class, 'schoolid');
-    }
 }

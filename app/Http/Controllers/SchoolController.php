@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\School;
-use App\Models\Employee;
 use Illuminate\Http\Request;
 use App\Models\District;
 use App\Models\ActivityLog;
@@ -14,21 +13,18 @@ class SchoolController extends Controller
     {
         $search = $request->input('search');
 
-        $schools = School::with('profile')
+        $schools = School::query()
             ->when($search, function ($query, $search) {
                 $query->where(function($q) use ($search) {
-                    // 1. Search main School table
                     $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('school_id', 'like', "%{$search}%")
-                    
-                    // 2. Search related School Profile table
-                    ->orWhereHas('profile', function($profileQuery) use ($search) {
-                        $profileQuery->where('school_district', 'like', "%{$search}%")
-                                    ->orWhere('sdo', 'like', "%{$search}%")
-                                    ->orWhere('head_name', 'like', "%{$search}%")
-                                    ->orWhere('address_city', 'like', "%{$search}%")
-                                    ->orWhere('address_barangay', 'like', "%{$search}%");
-                    });
+                      ->orWhere('school_id', 'like', "%{$search}%")
+                      ->orWhereHas('district', function($dq) use ($search) {
+                          $dq->where('name', 'like', "%{$search}%");
+                      })
+                      ->orWhere('address_street', 'like', "%{$search}%")
+                      ->orWhere('address_barangay', 'like', "%{$search}%")
+                      ->orWhere('address_city', 'like', "%{$search}%")
+                      ->orWhere('address_province', 'like', "%{$search}%");
                 });
             })
             ->orderBy('name', 'asc')
@@ -46,29 +42,14 @@ class SchoolController extends Controller
 
     public function store(Request $request)
     {
+
         $validatedData = $request->validate([
-            'school_id'       => 'required|string|max:255|unique:schools,school_id',
-            'name'            => 'required|string|max:255',
-            'district'        => 'required|string|max:255',
-            'custom_district' => 'nullable|required_if:district,Other|string|max:255', 
-            'address'         => 'nullable|string'
+            'school_id'   => 'required|string|max:255|unique:schools,school_id',
+            'name'        => 'required|string|max:255',
+            'district_id' => 'required|exists:districts,id',
         ]);
 
-        $finalDistrict = $request->district; 
-        
-        if ($request->district === 'Other') {
-            $newDistrict = District::create([
-                'name' => $request->custom_district
-            ]);
-            $finalDistrict = $newDistrict->name;
-        } 
-
-        School::create([
-            'school_id' => $validatedData['school_id'],
-            'name'      => $validatedData['name'],
-            'district'  => $finalDistrict,
-            'address'   => $validatedData['address'],
-        ]);
+        School::create($validatedData);
 
         ActivityLog::log(
             'CREATE', 
@@ -87,31 +68,17 @@ class SchoolController extends Controller
 
     public function update(Request $request, School $school)
     {
-        $validatedData = $request->validate([
-            'school_id'       => 'required|string|max:255|unique:schools,school_id,' . $school->id,
-            'name'            => 'required|string|max:255',
-            'district'        => 'required|string|max:255',
-            'custom_district' => 'nullable|required_if:district,Other|string|max:255', 
-            'address'         => 'nullable|string'
-        ]);
 
-        $finalDistrict = $request->district; 
-        
-        if ($request->district === 'Other') {
-            $newDistrict = District::create([
-                'name' => $request->custom_district
-            ]);
-            $finalDistrict = $newDistrict->name;
-        } 
+        $validatedData = $request->validate([
+            'school_id'   => 'required|string|max:255|unique:schools,school_id,' . $school->id,
+            'name'        => 'required|string|max:255',
+            'district_id' => 'required|exists:districts,id',
+            'address'     => 'nullable|string'
+        ]);
 
         $original = $school->getOriginal();
 
-        $school->update([
-            'school_id' => $validatedData['school_id'],
-            'name'      => $validatedData['name'],
-            'district'  => $finalDistrict,
-            'address'   => $validatedData['address'],
-        ]);
+        $school->update($validatedData);
 
         $changes = [];
         foreach ($school->getChanges() as $key => $newValue) {
@@ -156,15 +123,13 @@ class SchoolController extends Controller
             ->orderBy('last_name')
             ->paginate(15);
 
-        $profile = \DB::table('school_profile')->where('schoolid', $school->id)->first();
-
-        return view('schools.show', compact('school', 'personnel', 'profile'));
+        return view('schools.show', compact('school', 'personnel'));
     }
 
     public function editProfile(School $school)
     {
-        $profile = \DB::table('school_profile')->where('schoolid', $school->id)->first();
-        return view('schools.edit_profile', compact('school', 'profile'));
+        $districts = \App\Models\District::orderBy('name')->get();
+        return view('schools.edit_profile', compact('school', 'districts'));
     }
 
     public function updateProfile(Request $request, School $school)
@@ -173,17 +138,11 @@ class SchoolController extends Controller
         $paths = $request->has('access_paths') ? implode(', ', $request->access_paths) : '';
 
         $data = $request->except(['_token', 'nearby_institutions', 'access_paths']);
-        
         $data['nearby_institutions'] = $nearby;
         $data['access_paths'] = $paths;
-        $data['schoolid'] = $school->id;
-        $data['updated_by'] = \Auth::id();
 
-        \DB::table('school_profile')->updateOrInsert(
-            ['schoolid' => $school->id],
-            $data
-        );
+        $school->update($data);
 
-        return redirect("/schools/{$school->id}")->with('success', 'Station Profile updated successfully.');
+        return redirect("/schools/{$school->id}")->with('success', 'School profile updated successfully.');
     }
 }
