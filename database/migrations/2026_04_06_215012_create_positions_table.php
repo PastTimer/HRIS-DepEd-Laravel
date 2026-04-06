@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('designations', function (Blueprint $table) {
+        Schema::create('positions', function (Blueprint $table) {
             $table->id(); 
-            $table->string('title'); // Replaces ddesignation
+            $table->string('title');
             $table->text('description')->nullable();
-            $table->string('type'); // teaching or nonteaching
+            $table->string('type'); // Teaching, Non-teaching, or Related Teaching
             $table->boolean('is_active')->default(true);
             
             $table->timestamps();
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('designations');
+        Schema::dropIfExists('positions');
     }
 };

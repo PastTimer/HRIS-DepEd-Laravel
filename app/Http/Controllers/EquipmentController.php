@@ -278,13 +278,13 @@ class EquipmentController extends Controller
             'specialOrders',  
         ]);
 
-        $designations = \DB::table('steplist')
+        $positions = \DB::table('steplist')
             ->where('employee_id', $employee->id)
             ->orderBy('date', 'desc')
             ->get();
 
         $files = \Storage::disk('public')->files("uploads/{$employee->id}");
 
-        return view('employee.show', compact('employee', 'designations', 'files'));
+        return view('employee.show', compact('employee', 'positions', 'files'));
     }
 }

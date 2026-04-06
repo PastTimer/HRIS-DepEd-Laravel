@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Designation')
+@section('title', 'Add Position')
 @section('content')
 <div class="container-fluid mt-4">
     <div class="row">
@@ -7,12 +7,12 @@
             <div class="card shadow">
                 <div class="card-header bg-white border-0">
                     <div class="row align-items-center">
-                        <div class="col-8"><h3 class="mb-0">Add New Designation</h3></div>
-                        <div class="col-4 text-right"><a href="/designations" class="btn btn-sm btn-primary">Back to List</a></div>
+                        <div class="col-8"><h3 class="mb-0">Add New Position</h3></div>
+                        <div class="col-4 text-right"><a href="/positions" class="btn btn-sm btn-primary">Back to List</a></div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/designations">
+                    <form method="POST" action="/positions">
                         @csrf
                         <div class="pl-lg-4">
                             <div class="row">
@@ -27,8 +27,9 @@
                                         <label class="form-control-label">Position Type *</label>
                                         <select name="type" class="form-control" required>
                                             <option value="" disabled selected>Select Type</option>
-                                            <option value="teaching">Teaching</option>
-                                            <option value="nonteaching">Non-Teaching</option>
+                                            <option value="Teaching">Teaching</option>
+                                            <option value="Non-teaching">Non-teaching</option>
+                                            <option value="Related Teaching">Related Teaching</option>
                                         </select>
                                     </div>
                                 </div>
@@ -40,7 +41,7 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <button type="submit" class="btn btn-success mt-4">Save Designation</button>
+                                <button type="submit" class="btn btn-success mt-4">Save Position</button>
                             </div>
                         </div>
                     </form>

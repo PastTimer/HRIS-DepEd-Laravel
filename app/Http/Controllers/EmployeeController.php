@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\School;
-use App\Models\Designation;
+use App\Models\Position;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,7 @@ class EmployeeController extends Controller
     {
         $search = $request->input('search');
 
-        $employees = Employee::with(['school', 'designation'])
+        $employees = Employee::with(['school', 'position'])
             ->when($search, function ($query, $search) {
                 $query->where(function($q) use ($search) {
                     // 1. Search Employee Table Directly
@@ -25,8 +25,8 @@ class EmployeeController extends Controller
                     ->orWhere('item_no', 'like', "%{$search}%")
                     ->orWhere('email_address', 'like', "%{$search}%")
                     
-                    // 2. Search linked Designation (Job Title)
-                    ->orWhereHas('designation', function($desigQuery) use ($search) {
+                    // 2. Search linked Position (Job Title)
+                    ->orWhereHas('position', function($desigQuery) use ($search) {
                         $desigQuery->where('title', 'like', "%{$search}%");
                     })
                     
@@ -47,8 +47,8 @@ class EmployeeController extends Controller
     public function create()
     {
         $schools = School::where('is_active', true)->orderBy('name')->get();
-        $designations = Designation::orderBy('title')->get();
-        return view('employees.create', compact('schools', 'designations'));
+        $positions = Position::orderBy('title')->get();
+        return view('employees.create', compact('schools', 'positions'));
     }
 
     public function store(Request $request)
@@ -67,7 +67,7 @@ class EmployeeController extends Controller
             
             // Employment
             'employee_id'    => 'nullable|string|max:255|unique:employees,employee_id',
-            'designation_id' => 'required|exists:designations,id',
+            'position_id' => 'required|exists:positions,id',
             'item_no'        => 'nullable|string|max:255',
             'step'           => 'required|integer|min:1',
             'last_step'      => 'required|date',
@@ -117,9 +117,9 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         $schools = School::orderBy('name')->get();
-        $designations = Designation::orderBy('title')->get();
+        $positions = Position::orderBy('title')->get();
 
-        return view('employees.edit', compact('employee', 'schools', 'designations'));
+        return view('employees.edit', compact('employee', 'schools', 'positions'));
     }
 
     public function update(Request $request, Employee $employee)
@@ -136,7 +136,7 @@ class EmployeeController extends Controller
             'blood_type'     => 'nullable|string|max:10',
             
             'employee_id'    => 'nullable|string|max:255|unique:employees,employee_id,' . $employee->id,
-            'designation_id' => 'required|exists:designations,id',
+            'position_id' => 'required|exists:positions,id',
             'item_no'        => 'nullable|string|max:255',
             'step'           => 'required|integer|min:1',
             'last_step'      => 'required|date',

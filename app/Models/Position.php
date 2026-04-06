@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
-class Designation extends Model
+class Position extends Model
 {
     protected $fillable = [
         'title',
@@ -14,9 +12,9 @@ class Designation extends Model
         'description',
     ];
 
-    // Add this relationship: A Designation has many Employees
+    // A Position has many Employees
     public function employees()
     {
-        return $this->hasMany(Employee::class);
+        return $this->hasMany(Employee::class, 'position_id');
     }
 }

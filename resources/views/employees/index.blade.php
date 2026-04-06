@@ -84,7 +84,7 @@
                                     {{ $emp->name_ext }} {{ $emp->middle_name }}
                                 </td>
                                 
-                                <td>{{ $emp->designation->title ?? 'Unknown Position' }}</td>
+                                <td>{{ $emp->position->title ?? 'Unknown Position' }}</td>
                                 <td>{{ $emp->school->name ?? 'Unassigned' }}</td>
                                 
                                 <td>

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\PositionController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EquipmentController;
@@ -41,14 +41,14 @@ use App\Http\Controllers\ISPInventoryController;
 
     Route::resource('employees', EmployeeController::class);
 
-    // Designation Module
-    //Route::get('/designations', [DesignationController::class, 'index']);
-    //Route::get('/designations/create', [DesignationController::class, 'create']);
-    //Route::post('/designations', [DesignationController::class, 'store']);
-    //Route::put('/designations/{designation}', [DesignationController::class, 'update']);
-    //Route::delete('/designations/{designation}', [DesignationController::class, 'destroy']); 
+    // Position Module
+    //Route::get('/positions', [PositionController::class, 'index']);
+    //Route::get('/positions/create', [PositionController::class, 'create']);
+    //Route::post('/positions', [PositionController::class, 'store']);
+    //Route::put('/positions/{position}', [PositionController::class, 'update']);
+    //Route::delete('/positions/{position}', [PositionController::class, 'destroy']); 
 
-    Route::resource('designations', DesignationController::class);
+    Route::resource('positions', PositionController::class);
 
     // School Profile Module
     //Route::get('/schools', [SchoolController::class, 'index']);

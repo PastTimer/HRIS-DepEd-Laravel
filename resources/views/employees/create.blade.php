@@ -117,15 +117,15 @@
                                     </div>
                                     <div class="col-md-6 form-group mb-3">
                                         <label class="form-control-label">Position / Designation <span class="text-danger">*</span></label>
-                                        <select name="designation_id" class="form-control @error('designation_id') is-invalid @enderror" required>
-                                            <option value="" disabled {{ old('designation_id') === null ? 'selected' : '' }}>Select Designation</option>
-                                            @foreach($designations as $designation)
-                                                <option value="{{ $designation->id }}" {{ old('designation_id') == $designation->id ? 'selected' : '' }}>
-                                                    {{ $designation->title }}
+                                        <select name="position_id" class="form-control @error('position_id') is-invalid @enderror" required>
+                                            <option value="" disabled {{ old('position_id') === null ? 'selected' : '' }}>Select Designation</option>
+                                            @foreach($positions as $position)
+                                                <option value="{{ $position->id }}" {{ old('position_id') == $position->id ? 'selected' : '' }}>
+                                                    {{ $position->title }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        @error('designation_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        @error('position_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-3 form-group mb-3">
                                         <label class="form-control-label">Item No.</label>

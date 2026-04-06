@@ -11,12 +11,8 @@
                         <img src="{{ asset('assets/img/theme/team-4.jpg') }}" class="rounded-circle border shadow-sm" width="140">
                     </div>
                     <h2 class="mb-0 text-dark">{{ $employee->last_name }}, {{ $employee->first_name }}</h2>
-                    <p class="text-muted mb-3">{{ $employee->position }}</p>
+                    <p class="text-muted mb-3">{{ $employee->position->title ?? 'N/A' }}</p>
                     
-                    <div class="badge badge-pill badge-primary mb-4 px-4 py-2">
-                        {{ $employee->etype }}
-                    </div>
-
                     <div class="row text-left mt-2">
                         <div class="col-12 mb-2">
                             <small class="text-uppercase text-muted font-weight-bold">Station</small>

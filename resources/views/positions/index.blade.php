@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Designations')
+@section('title', 'Positions')
 @section('content')
 
 <style>
@@ -17,10 +17,10 @@
         <div class="col">
             <div class="card shadow">
                 <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0"><i class="fas fa-briefcase mr-2 text-primary"></i> Designations</h3>
+                    <h3 class="mb-0"><i class="fas fa-briefcase mr-2 text-primary"></i> Positions</h3>
                     
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('designations.index') }}" method="GET" class="mr-3 mb-0">
+                        <form action="{{ route('positions.index') }}" method="GET" class="mr-3 mb-0">
                             <div class="input-group input-group-sm">
                                 <input type="text" name="search" class="form-control" style="min-width: 250px;" 
                                     placeholder="Search title, type, or description..." value="{{ request('search') }}">
@@ -29,7 +29,7 @@
                                         <i class="fas fa-search"></i>
                                     </button>
                                     @if(request('search'))
-                                        <a href="{{ route('designations.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                        <a href="{{ route('positions.index') }}" class="btn btn-outline-danger" title="Clear Search">
                                             <i class="fas fa-times"></i>
                                         </a>
                                     @endif
@@ -37,8 +37,8 @@
                             </div>
                         </form>
 
-                        <a href="{{ route('designations.create') }}" class="btn btn-sm btn-success">
-                            <i class="fas fa-plus mr-1"></i> New Designation
+                        <a href="{{ route('positions.create') }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-plus mr-1"></i> New Position
                         </a>
                     </div>
                 </div>   
@@ -62,26 +62,26 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($designations as $d)
-                            <tr class="clickable-row" onclick="window.location='/designations/{{ $d->id }}';">
-                                <td><strong>{{ $d->title }}</strong></td>
-                                <td><span class="badge badge-info">{{ strtoupper($d->type) }}</span></td>
+                            @foreach($positions as $p)
+                            <tr class="clickable-row" onclick="window.location='/positions/{{ $p->id }}';">
+                                <td><strong>{{ $p->title }}</strong></td>
+                                <td><span class="badge badge-info">{{ strtoupper($p->type) }}</span></td>
                                 
                                 <td class="text-center">
                                     <span class="badge badge-pill badge-secondary">
-                                        {{ $d->employees_count ?? 0 }}
+                                        {{ $p->employees_count ?? 0 }}
                                     </span>
                                 </td> 
                                 
                                 <td class="text-right" onclick="event.stopPropagation();">
-                                    <a href="/designations/{{ $d->id }}/edit" class="btn btn-sm btn-info">
+                                    <a href="/positions/{{ $p->id }}/edit" class="btn btn-sm btn-info">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
                                     
-                                    <form method="POST" action="/designations/{{ $d->id }}" style="display:inline;">
+                                    <form method="POST" action="/positions/{{ $p->id }}" style="display:inline;">
                                         @csrf 
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this designation? This may affect assigned personnel.')">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this position? This may affect assigned personnel.')">
                                             <i class="fas fa-trash"></i> Delete
                                         </button>
                                     </form>
@@ -93,7 +93,7 @@
                 </div>
                 
                 <div class="card-footer py-4">
-                    {{ $designations->links('pagination::bootstrap-4') }}
+                    {{ $positions->links('pagination::bootstrap-4') }}
                 </div>
             </div>
         </div>

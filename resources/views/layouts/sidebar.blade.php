@@ -47,9 +47,9 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('designations*') ? 'active' : '' }}" href="/designations">
+                        <a class="nav-link {{ request()->is('positions*') ? 'active' : '' }}" href="/positions">
                             <i class="ni ni-badge text-default"></i>
-                            <span class="nav-link-text">Designation</span>
+                            <span class="nav-link-text">Position</span>
                         </a>
                     </li>
                 </ul>

@@ -24,7 +24,7 @@ return new class extends Migration
             
             // Employment Information
             $table->string('employee_id')->nullable()->unique();
-            $table->foreignId('designation_id')->constrained('designations')->onDelete('restrict');
+            $table->foreignId('position_id')->constrained('positions')->onDelete('restrict');
             $table->string('item_no')->nullable();
             $table->integer('step')->default(1);
             $table->date('last_step');

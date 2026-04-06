@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\School;
-use App\Models\Designation;
+use App\Models\Position;
 use App\Models\Employee;
 use App\Models\District; 
 use Faker\Factory as Faker;
@@ -56,13 +56,71 @@ class EmployeeSeeder extends Seeder
             ]);
         }
 
-        // 3. Create Standard Designations
-        $designations = [];
-        $titles = ['Teacher I', 'Teacher II', 'Teacher III', 'Master Teacher I', 'Principal I'];
-        foreach ($titles as $title) {
-            $designations[] = Designation::create([
-                'title' => $title,
-                'type' => str_contains($title, 'Principal') ? 'nonteaching' : 'teaching',
+        // 3. Create All Positions (from hr10.sql)
+        $positionData = [
+            ['Accountant I', '', 'Non-teaching'],
+            ['Accountant III', '', 'Non-teaching'],
+            ['Administrative Aide I', '', 'Non-teaching'],
+            ['Administrative Aide III', '', 'Non-teaching'],
+            ['Administrative Aide IV', '', 'Non-teaching'],
+            ['Administrative Aide VI', '', 'Non-teaching'],
+            ['Administrative Assistant I', '', 'Non-teaching'],
+            ['Administrative Assistant II', '', 'Non-teaching'],
+            ['Administrative Assistant III', '', 'Non-teaching'],
+            ['Administrative Officer I', '', 'Non-teaching'],
+            ['Administrative Officer II', '', 'Non-teaching'],
+            ['Administrative Officer IV', '', 'Non-teaching'],
+            ['Administrative Officer V', '', 'Non-teaching'],
+            ['Assistant Principal II', '', 'Non-teaching'],
+            ['Assistant Schools Division Superintendent', '', 'Non-teaching'],
+            ['Attorney III', '', 'Non-teaching'],
+            ['Chief Education Supervisor', '', 'Non-teaching'],
+            ['Dentist II', '', 'Non-teaching'],
+            ['Education Program Specialist II', '', 'Non-teaching'],
+            ['Education Program Supervisor', '', 'Non-teaching'],
+            ['Engineer III', '', 'Non-teaching'],
+            ['Guidance Coordinator III', '', 'Non-teaching'],
+            ['Guidance Counselor I', '', 'Non-teaching'],
+            ['Guidance Counselor II', '', 'Non-teaching'],
+            ['Guidance Counselor III', '', 'Non-teaching'],
+            ['Head Teacher II', '', 'Non-teaching'],
+            ['Head Teacher III', '', 'Non-teaching'],
+            ['Head Teacher IV', '', 'Non-teaching'],
+            ['Head Teacher VI', '', 'Non-teaching'],
+            ['Information Technology Officer I', '', 'Non-teaching'],
+            ['Librarian II', '', 'Non-teaching'],
+            ['Master Teacher I', '', 'Teaching'],
+            ['Master Teacher II', '', 'Teaching'],
+            ['Medical Officer III', '', 'Non-teaching'],
+            ['Nurse II', '', 'Non-teaching'],
+            ['Planning Officer III', '', 'Non-teaching'],
+            ['Principal I', '', 'Non-teaching'],
+            ['Principal II', '', 'Non-teaching'],
+            ['Principal III', '', 'Non-teaching'],
+            ['Principal IV', '', 'Non-teaching'],
+            ['Project Development Officer II', '', 'Non-teaching'],
+            ['Project Development OfficerI', '', 'Non-teaching'],
+            ['Public Schools District Supervisor', '', 'Non-teaching'],
+            ['Registrar 1', '', 'Non-teaching'],
+            ['School Librarian', '', 'Non-teaching'],
+            ['Schools Division Superintendent', '', 'Non-teaching'],
+            ['Security Guard I', '', 'Non-teaching'],
+            ['Security Guard II', '', 'Non-teaching'],
+            ['Senior Education Program Specialist ', '', 'Non-teaching'],
+            ['Special Science Teacher I', '', 'Teaching'],
+            ['SPET I', '', 'Teaching'],
+            ['SPET II', '', 'Teaching'],
+            ['SPET III', '', 'Teaching'],
+            ['Teacher I', '', 'Teaching'],
+            ['Teacher II', '', 'Teaching'],
+            ['Teacher III', '', 'Teaching'],
+        ];
+        $positions = [];
+        foreach ($positionData as $row) {
+            $positions[] = Position::create([
+                'title' => $row[0],
+                'description' => $row[1],
+                'type' => $row[2],
                 'is_active' => true,
             ]);
         }
@@ -78,7 +136,7 @@ class EmployeeSeeder extends Seeder
                 'date_of_birth' => $faker->dateTimeBetween('-50 years', '-20 years')->format('Y-m-d'), 
                 
                 'school_id' => $schools[array_rand($schools)]->id,
-                'designation_id' => $designations[array_rand($designations)]->id,
+                'position_id' => $positions[array_rand($positions)]->id,
                 
                 'step' => $faker->numberBetween(1, 8),
                 'last_step' => $faker->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
