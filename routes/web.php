@@ -13,6 +13,8 @@ use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\InternetProfileController;
 use App\Http\Controllers\IspInventoryController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AgeMonitoringController;
+use App\Http\Controllers\StepMonitoringController;
 
     // --- GUEST ROUTES (Not logged in) ---
     Route::middleware('guest')->group(function () {
@@ -73,4 +75,16 @@ use App\Http\Controllers\ReportController;
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('report.index');
     Route::get('reports/generate', [ReportController::class, 'generate'])->name('report.generate');
+
+    // Monitoring
+    Route::prefix('monitoring')->name('monitoring.')->group(function () {
+        Route::get('/', fn () => redirect()->route('monitoring.step.year'))->name('index');
+
+        Route::get('/step/year', [StepMonitoringController::class, 'year'])->name('step.year');
+        Route::get('/step/month', [StepMonitoringController::class, 'month'])->name('step.month');
+
+        Route::get('/age/actual', [AgeMonitoringController::class, 'actual'])->name('age.actual');
+        Route::get('/age/year', [AgeMonitoringController::class, 'year'])->name('age.year');
+        Route::get('/age/group', [AgeMonitoringController::class, 'ageGroup'])->name('age.group');
+    });
 });
