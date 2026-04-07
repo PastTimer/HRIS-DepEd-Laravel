@@ -26,7 +26,7 @@ class EquipmentSeeder extends Seeder
             $equipmentId = DB::table('equipment')->insertGetId([
                 'property_no' => 'PROP-' . $faker->unique()->numberBetween(1000, 9999),
                 'old_property_no' => $faker->optional()->numerify('OLD-####'), // optional
-                'serial_number' => $faker->optional()->bothify('SN-####??'), // optional
+                'serial_number' => $faker->unique()->bothify('SN-####??'),
                 'qr_code' => $faker->uuid,
                 'item' => $faker->randomElement(['Laptop', 'Desktop', 'Printer', 'Projector', 'Tablet']),
                 'unit' => $faker->randomElement(['Piece', 'Set (bundled)', 'Lot']),

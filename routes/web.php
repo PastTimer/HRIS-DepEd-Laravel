@@ -12,6 +12,7 @@ use App\Http\Controllers\SpecialOrderController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\InternetProfileController;
 use App\Http\Controllers\IspInventoryController;
+use App\Http\Controllers\ReportController;
 
     // --- GUEST ROUTES (Not logged in) ---
     Route::middleware('guest')->group(function () {
@@ -68,4 +69,8 @@ use App\Http\Controllers\IspInventoryController;
 
     // Districts CRUD
     Route::resource('districts', App\Http\Controllers\DistrictController::class);
+
+    // Reports
+    Route::get('reports', [ReportController::class, 'index'])->name('report.index');
+    Route::get('reports/generate', [ReportController::class, 'generate'])->name('report.generate');
 });
