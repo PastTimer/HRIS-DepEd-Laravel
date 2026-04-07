@@ -44,21 +44,21 @@
                 </thead>
                 <tbody>
                     @foreach($schools as $s)
-                    <tr class="clickable-row" onclick="window.location='/internet/{{ $s->id }}';">
+                    <tr class="clickable-row" onclick="window.location='{{ route('internet.show', $s->id) }}';">
                         <td>
                             <strong>{{ $s->name }}</strong><br>
                             <small class="text-muted">{{ $s->school_id }}</small>
                         </td>
-                        <td>{{ $s->district }}</td>
+                        <td>{{ optional($s->district)->name ?? 'N/A' }}</td>
                         <td>
-                            @if($s->profile_updated)
-                                <span class="badge badge-success">Updated: {{ date('M d, Y', strtotime($s->profile_updated)) }}</span>
+                            @if($s->internetProfile && $s->internetProfile->updated_at)
+                                <span class="badge badge-success">Updated: {{ $s->internetProfile->updated_at->format('M d, Y') }}</span>
                             @else
                                 <span class="badge badge-warning">Pending Survey</span>
                             @endif
                         </td>
                         <td class="text-right">
-                            <a href="/internet/{{ $s->id }}" class="btn btn-sm btn-primary">
+                            <a href="{{ route('internet.show', $s->id) }}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-eye mr-1"></i> View Profile
                             </a>
                         </td>

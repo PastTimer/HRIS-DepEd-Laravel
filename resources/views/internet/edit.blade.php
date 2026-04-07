@@ -9,7 +9,7 @@
                 <h3 class="mb-0"><i class="fas fa-network-wired mr-2 text-primary"></i> Connectivity Profile: {{ $school->name }}</h3>
                 <small class="text-muted">Station ID: {{ $school->school_id }}</small>
             </div>
-            <a href="/internet" class="btn btn-sm btn-secondary">Back to Dashboard</a>
+            <a href="{{ route('internet.index') }}" class="btn btn-sm btn-secondary">Back to Dashboard</a>
         </div>
         
         <div class="card-body bg-secondary">
@@ -20,7 +20,7 @@
                 .label-caps { font-size: 0.65rem; text-transform: uppercase; letter-spacing: .025em; color: #8898aa; font-weight: 700; }
             </style>
 
-            <form method="POST" action="/internet/{{ $school->id }}">
+            <form method="POST" action="{{ route('internet.update', $school->id) }}">
                 @csrf
                 @method('PUT')  
                 <div class="survey-section">
@@ -40,7 +40,7 @@
                         <div class="col-lg-6">
                             <label class="survey-q">2. What internet service provider(s) are available?</label>
                             @php $saved_av = explode(',', $profile->available_providers ?? ''); @endphp
-                            @foreach(['PLDT', 'Globe', 'Smart', 'SkyCable', 'Converge', 'Starlink', 'DITO', 'Others'] as $p)
+                            @foreach(['PLDT', 'Globe', 'Smart', 'Converge', 'Starlink', 'SkyCable', 'DITO', 'Others'] as $p)
                             <div class="custom-control custom-checkbox custom-control-inline">
                                 <input type="checkbox" name="available_providers[]" value="{{ $p }}" class="custom-control-input others-trigger" id="av_{{ $p }}" {{ in_array($p, $saved_av) ? 'checked' : '' }} data-target="av_others_input">
                                 <label class="custom-control-label" for="av_{{ $p }}">{{ $p }}</label>
@@ -81,18 +81,18 @@
                         <div class="col-lg-6">
                             <label class="survey-q">6. Do you subscribe to any ISP?</label>
                             <div class="custom-control custom-radio custom-control-inline">
-                                <input type="radio" id="subYes" name="has_subscription" value="Yes" class="custom-control-input" {{ ($profile->total_isps ?? 0) > 0 ? 'checked' : '' }}>
+                                <input type="radio" id="subYes" name="is_subscribed" value="Yes" class="custom-control-input" {{ ($profile->is_subscribed ?? '') == 'Yes' ? 'checked' : '' }}>
                                 <label class="custom-control-label" for="subYes">Yes</label>
                             </div>
                             <div class="custom-control custom-radio custom-control-inline">
-                                <input type="radio" id="subNo" name="has_subscription" value="No" class="custom-control-input" {{ ($profile->total_isps ?? 0) == 0 ? 'checked' : '' }}>
+                                <input type="radio" id="subNo" name="is_subscribed" value="No" class="custom-control-input" {{ ($profile->is_subscribed ?? '') == 'No' ? 'checked' : '' }}>
                                 <label class="custom-control-label" for="subNo">No</label>
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <label class="survey-q">7. Specify subscribed provider(s)</label>
                             @php $saved_sub = explode(',', $profile->subscribed_providers ?? ''); @endphp
-                            @foreach(['PLDT', 'Globe', 'Smart', 'Starlink', 'Converge', 'Others'] as $sp)
+                            @foreach(['PLDT', 'Globe', 'Smart', 'Converge', 'Starlink', 'SkyCable', 'DITO', 'Others'] as $sp)
                             <div class="custom-control custom-checkbox custom-control-inline">
                                 <input type="checkbox" name="subscribed_providers[]" value="{{ $sp }}" class="custom-control-input others-trigger" id="sub_{{ $sp }}" {{ in_array($sp, $saved_sub) ? 'checked' : '' }} data-target="sub_others_input">
                                 <label class="custom-control-label" for="sub_{{ $sp }}">{{ $sp }}</label>

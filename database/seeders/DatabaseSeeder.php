@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-// use Database\Seeders\InternetAndIspSeeder;
+use Database\Seeders\InternetAndIspSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             EmployeeSeeder::class,
             UserSeeder::class,
-            // InternetAndIspSeeder::class,
+            InternetAndIspSeeder::class,
             EquipmentSeeder::class,
         ]);
     }

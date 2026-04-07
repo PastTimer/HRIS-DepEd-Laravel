@@ -34,7 +34,7 @@
                         <div class="col-lg-6 form-group">
                             <label class="form-control-label">Internet Service Provider</label>
                             <select name="provider" class="form-control" required>
-                                @foreach(['PLDT', 'Globe', 'Smart', 'Converge', 'Starlink', 'DICT', 'SkyCable', 'DITO', 'Others'] as $provider)
+                                @foreach(['PLDT', 'Globe', 'Smart', 'Converge', 'Starlink', 'SkyCable', 'DITO', 'Others'] as $provider)
                                     <option value="{{ $provider }}" {{ $isp->provider == $provider ? 'selected' : '' }}>{{ $provider }}</option>
                                 @endforeach
                             </select>
@@ -49,7 +49,7 @@
                         <div class="col-lg-4 form-group">
                             <label class="form-control-label">Connection Type</label>
                             <select name="internet_type" class="form-control">
-                                @foreach(['Fiber' => 'Fiber Optics', 'DSL' => 'DSL', 'Cable' => 'Cable Internet', 'Wireless/LTS' => 'Fixed Wireless / LTE', 'Satellite' => 'Satellite', 'Mobile Data' => 'Mobile Data / Pocket WiFi', 'Leased Line' => 'Leased Line'] as $val => $label)
+                                @foreach(['Fiber' => 'Fiber Optics', 'DSL' => 'DSL', 'Cable' => 'Cable Internet', 'Wireless/LTE' => 'Fixed Wireless / LTE', 'Satellite' => 'Satellite', 'Mobile Data' => 'Mobile Data / Pocket WiFi', 'Leased Line' => 'Leased Line'] as $val => $label)
                                     <option value="{{ $val }}" {{ $isp->internet_type == $val ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
@@ -64,18 +64,41 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-lg-6 form-group">
-                            <label class="form-control-label">Plan Bandwidth / Max Speed (Mbps)</label>
-                            <input type="text" name="plan_speed" class="form-control" value="{{ $isp->plan_speed }}">
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Purpose of Subscription</label>
+                            <input type="text" name="purpose" class="form-control" value="{{ $isp->purpose }}">
                         </div>
-                        <div class="col-lg-6 form-group">
-                            <label class="form-control-label">Monthly Cost (MRC)</label>
-                            <input type="number" step="0.01" name="monthly_mrc" class="form-control" value="{{ $isp->monthly_mrc }}">
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Mode of Acquisition</label>
+                            <input type="text" name="acquisition_mode" class="form-control" value="{{ $isp->acquisition_mode }}">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Donor</label>
+                            <input type="text" name="donor" class="form-control" value="{{ $isp->donor }}">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Source of Funds</label>
+                            <input type="text" name="fund_source" class="form-control" value="{{ $isp->fund_source }}">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-lg-6 form-group">
+                            <label class="form-control-label">Plan Bandwidth / Max Speed (Mbps)</label>
+                            <input type="text" name="plan_speed" class="form-control" value="{{ $isp->plan_speed }}">
+                        </div>
+                        <div class="col-lg-6 form-group">
+                            <label class="form-control-label">Minimum Guaranteed Speed (Mbps)</label>
+                            <input type="text" name="min_speed" class="form-control" value="{{ $isp->min_speed }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Monthly Cost (MRC)</label>
+                            <input type="number" step="0.01" name="monthly_mrc" class="form-control" value="{{ $isp->monthly_mrc }}">
+                        </div>
+                        <div class="col-lg-4 form-group">
                             <label class="form-control-label">Status</label>
                             <select name="status" class="form-control">
                                 <option value="Active" {{ $isp->status == 'Active' ? 'selected' : '' }}>Active</option>
@@ -83,9 +106,102 @@
                                 <option value="Pending" {{ $isp->status == 'Pending' ? 'selected' : '' }}>Pending Installation</option>
                             </select>
                         </div>
-                        <div class="col-lg-6 form-group">
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Area Coverage</label>
+                            <select name="area_coverage" class="form-control">
+                                <option value="Admin Office" {{ $isp->area_coverage == 'Admin Office' ? 'selected' : '' }}>Admin Office Only</option>
+                                <option value="Faculty" {{ $isp->area_coverage == 'Faculty' ? 'selected' : '' }}>Faculty Room</option>
+                                <option value="Computer Lab" {{ $isp->area_coverage == 'Computer Lab' ? 'selected' : '' }}>Computer Lab</option>
+                                <option value="Classrooms" {{ $isp->area_coverage == 'Classrooms' ? 'selected' : '' }}>Classrooms</option>
+                                <option value="Whole School" {{ $isp->area_coverage == 'Whole School' ? 'selected' : '' }}>Whole School (Campus-wide)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Installation Date</label>
+                            <input type="date" name="installation_date" class="form-control" value="{{ optional($isp->installation_date)->format('Y-m-d') }}">
+                        </div>
+                        <div class="col-lg-4 form-group">
                             <label class="form-control-label">Contract End Date</label>
-                            <input type="date" name="contract_end_date" class="form-control" value="{{ $isp->contract_end_date }}">
+                            <input type="date" name="contract_end_date" class="form-control" value="{{ optional($isp->contract_end_date)->format('Y-m-d') }}">
+                        </div>
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">IP Configuration</label>
+                            <select name="ip_type" class="form-control">
+                                <option value="Dynamic" {{ $isp->ip_type == 'Dynamic' ? 'selected' : '' }}>Dynamic IP</option>
+                                <option value="Static" {{ $isp->ip_type == 'Static' ? 'selected' : '' }}>Static IP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6 form-group">
+                            <label class="form-control-label">Public IP Address</label>
+                            <input type="text" name="public_ip" class="form-control" value="{{ $isp->public_ip }}" placeholder="x.x.x.x">
+                        </div>
+                        <div class="col-lg-6 form-group">
+                            <label class="form-control-label">Package Inclusions</label>
+                            <textarea name="package_inclusion" rows="2" class="form-control">{{ $isp->package_inclusion }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-control-label">Remarks</label>
+                        <textarea name="remarks" rows="2" class="form-control">{{ $isp->remarks }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Access Points (Count)</label>
+                            <input type="number" name="access_points_count" class="form-control" min="0" value="{{ $isp->access_points_count }}">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Access Points Location</label>
+                            <input type="text" name="access_points_loc" class="form-control" value="{{ $isp->access_points_loc }}">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Admin Rooms Covered</label>
+                            <input type="number" name="admin_rooms_covered" class="form-control" min="0" value="{{ $isp->admin_rooms_covered }}">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Classrooms Covered</label>
+                            <input type="number" name="classrooms_covered" class="form-control" min="0" value="{{ $isp->classrooms_covered }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Admin Connectivity Rating (1-5)</label>
+                            <input type="number" name="admin_connectivity_rating" class="form-control" min="1" max="5" value="{{ $isp->admin_connectivity_rating }}">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Classroom Connectivity Rating (1-5)</label>
+                            <input type="number" name="classroom_connectivity_rating" class="form-control" min="1" max="5" value="{{ $isp->classroom_connectivity_rating }}">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Signal Quality</label>
+                            <input type="text" name="signal_quality" class="form-control" value="{{ $isp->signal_quality }}">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">ISP Service Rating (1-5)</label>
+                            <input type="number" name="isp_service_rating" class="form-control" min="1" max="5" value="{{ $isp->isp_service_rating }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Active ISP Counter</label>
+                            <input type="number" name="active_isp_counter" class="form-control" min="0" value="{{ $isp->active_isp_counter }}">
+                        </div>
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Admin Counter (Custom)</label>
+                            <input type="number" name="active_custom_counter_2" class="form-control" min="0" value="{{ $isp->active_custom_counter_2 }}">
+                        </div>
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Classroom Counter (Custom)</label>
+                            <input type="number" name="active_custom_counter_3" class="form-control" min="0" value="{{ $isp->active_custom_counter_3 }}">
                         </div>
                     </div>
                 </div>

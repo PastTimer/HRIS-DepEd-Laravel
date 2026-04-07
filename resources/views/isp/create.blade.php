@@ -37,7 +37,7 @@
                             <label class="form-control-label">Internet Service Provider</label>
                             <select name="provider" class="form-control" required>
                                 <option value="">Select Provider...</option>
-                                @foreach(['PLDT', 'Globe', 'Smart', 'Converge', 'Starlink', 'DICT', 'SkyCable', 'DITO', 'Others'] as $provider)
+                                @foreach(['PLDT', 'Globe', 'Smart', 'Converge', 'Starlink', 'SkyCable', 'DITO', 'Others'] as $provider)
                                     <option value="{{ $provider }}">{{ $provider }}</option>
                                 @endforeach
                             </select>
@@ -55,7 +55,7 @@
                                 <option value="Fiber">Fiber Optics</option>
                                 <option value="DSL">DSL</option>
                                 <option value="Cable">Cable Internet</option>
-                                <option value="Wireless/LTS">Fixed Wireless / LTE</option>
+                                <option value="Wireless/LTE">Fixed Wireless / LTE</option>
                                 <option value="Satellite">Satellite</option>
                                 <option value="Mobile Data">Mobile Data / Pocket WiFi</option>
                                 <option value="Leased Line">Leased Line</option>
@@ -128,6 +128,59 @@
                     <div class="form-group">
                         <label class="form-control-label">Package Inclusions</label>
                         <textarea name="package_inclusion" rows="2" class="form-control" placeholder="e.g. With Landline, Static IP, Mesh Units..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Access Points (Count)</label>
+                            <input type="number" name="access_points_count" class="form-control" min="0" value="0">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Access Points Location</label>
+                            <input type="text" name="access_points_loc" class="form-control" placeholder="e.g. Admin Office, ICT Room">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Admin Rooms Covered</label>
+                            <input type="number" name="admin_rooms_covered" class="form-control" min="0" value="0">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Classrooms Covered</label>
+                            <input type="number" name="classrooms_covered" class="form-control" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Admin Connectivity Rating (1-5)</label>
+                            <input type="number" name="admin_connectivity_rating" class="form-control" min="1" max="5">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Classroom Connectivity Rating (1-5)</label>
+                            <input type="number" name="classroom_connectivity_rating" class="form-control" min="1" max="5">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">Signal Quality</label>
+                            <input type="text" name="signal_quality" class="form-control" placeholder="e.g. Good">
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label class="form-control-label">ISP Service Rating (1-5)</label>
+                            <input type="number" name="isp_service_rating" class="form-control" min="1" max="5">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Active ISP Counter</label>
+                            <input type="number" name="active_isp_counter" class="form-control" min="0" value="0">
+                        </div>
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Admin Counter (Custom)</label>
+                            <input type="number" name="active_custom_counter_2" class="form-control" min="0" value="0">
+                        </div>
+                        <div class="col-lg-4 form-group">
+                            <label class="form-control-label">Classroom Counter (Custom)</label>
+                            <input type="number" name="active_custom_counter_3" class="form-control" min="0" value="0">
+                        </div>
                     </div>
                 </div>
 

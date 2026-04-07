@@ -13,11 +13,11 @@ return new class extends Migration
             $table->unsignedBigInteger('school_id')->index();
             
             // Core Connection Details
-            $table->string('provider'); // PLDT, Globe, Starlink, etc.
-            $table->string('account_no')->nullable();
-            $table->string('internet_type')->nullable(); // Fiber, Satellite, LTE
-            $table->string('subscription_type')->default('Postpaid'); // Postpaid/Prepaid
-            $table->string('status')->default('Active'); // Active, Inactive, Pending
+            $table->string('provider');                     // [Select] PLDT, Globe, Starlink, etc.
+            $table->string('account_no')->nullable();       // Text
+            $table->string('internet_type')->nullable();    // [Select] Fiber, Satellite, LTE
+            $table->string('subscription_type')->default('Postpaid');   // [Select] Postpaid/Prepaid
+            $table->string('status')->default('Active');                // [Select] Active, Inactive, Pending
             
             // Financial & Acquisition
             $table->string('purpose')->nullable();

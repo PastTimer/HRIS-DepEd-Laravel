@@ -11,7 +11,7 @@ use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SpecialOrderController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\InternetProfileController;
-use App\Http\Controllers\ISPInventoryController;
+use App\Http\Controllers\IspInventoryController;
 
     // --- GUEST ROUTES (Not logged in) ---
     Route::middleware('guest')->group(function () {
@@ -85,10 +85,10 @@ use App\Http\Controllers\ISPInventoryController;
 
     // Internet Profiles
 
-    Route::resource('internet', InternetProfileController::class);
+    Route::resource('internet', InternetProfileController::class)->only(['index', 'show', 'update']);
 
     // ISP Controllers
-    Route::post('isp/{id}/speedtest', [ISPInventoryController::class, 'storeSpeedTest'])->name('isp.speedtest'); // hidden form apprently idk
-    Route::resource('isp', ISPInventoryController::class);
+    Route::post('isp/{id}/speedtest', [IspInventoryController::class, 'storeSpeedTest'])->name('isp.speedtest');
+    Route::resource('isp', IspInventoryController::class);
 
 });
