@@ -35,60 +35,37 @@ use App\Http\Controllers\IspInventoryController;
     Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index');
 
     // Personnel Module
-    //Route::get('/personnel', [PersonnelController::class, 'index']);
-    //Route::get('/personnel/create', [PersonnelController::class, 'create']);
-    //Route::post('/personnel', [PersonnelController::class, 'store']);
-
     Route::resource('personnel', PersonnelController::class)
         ->parameters(['personnel' => 'personnel'])
         ->names('personnel');
 
-    // Backward-compatible entry points while links are transitioning from /employees to /personnel.
-    Route::redirect('/employees', '/personnel');
-    Route::redirect('/employees/create', '/personnel/create');
-    Route::redirect('/employees/{personnel}', '/personnel/{personnel}');
-    Route::redirect('/employees/{personnel}/edit', '/personnel/{personnel}/edit');
-
     // Position Module
-    //Route::get('/positions', [PositionController::class, 'index']);
-    //Route::get('/positions/create', [PositionController::class, 'create']);
-    //Route::post('/positions', [PositionController::class, 'store']);
-    //Route::put('/positions/{position}', [PositionController::class, 'update']);
-    //Route::delete('/positions/{position}', [PositionController::class, 'destroy']); 
-
     Route::resource('positions', PositionController::class);
 
-    // School Profile Module
-    //Route::get('/schools', [SchoolController::class, 'index']);
-    //Route::get('/schools/create', [SchoolController::class, 'create']);
-    //Route::post('/schools', [SchoolController::class, 'store']);
-
+    // School Management
     Route::resource('schools', SchoolController::class);
     Route::get('/schools/{school}/profile/edit', [SchoolController::class, 'editProfile']);
     Route::post('/schools/{school}/profile/update', [SchoolController::class, 'updateProfile']);
 
     // User Management
-
     Route::resource('users', UserController::class);
 
     // Equipment Management
-
     Route::resource('equipment', EquipmentController::class);
 
-    // Special Orrder
-
+    // Special Order
     Route::resource('specialorder', SpecialOrderController::class);
 
     // Training 
-
     Route::resource('training', TrainingController::class);
 
     // Internet Profiles
-
     Route::resource('internet', InternetProfileController::class)->only(['index', 'show', 'update']);
 
     // ISP Controllers
     Route::post('isp/{id}/speedtest', [IspInventoryController::class, 'storeSpeedTest'])->name('isp.speedtest');
     Route::resource('isp', IspInventoryController::class);
 
+    // Districts CRUD
+    Route::resource('districts', App\Http\Controllers\DistrictController::class);
 });

@@ -46,7 +46,7 @@
                             <tr>
                                 <th>Property No.</th>
                                 <th>Item / Article</th>
-                                <th>Assigned Station</th>
+                                <th>Assigned School</th>
                                 <th>Accountable Officer</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Actions</th>

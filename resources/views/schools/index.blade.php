@@ -37,6 +37,9 @@
                             </div>
                         </form>
 
+                        <a href="{{ route('districts.index') }}" class="btn btn-sm btn-secondary mr-2">
+                            <i class="fas fa-map-marker-alt mr-1"></i> Districts
+                        </a>
                         <a href="{{ route('schools.create') }}" class="btn btn-sm btn-success">
                             <i class="fas fa-plus mr-1"></i> New School
                         </a>
