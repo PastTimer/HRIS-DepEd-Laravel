@@ -16,7 +16,7 @@
                 </div>
                 
                 <div class="card-body">
-                    <form method="POST" action="/equipment/{{ $equipment->id }}">
+                    <form method="POST" action="{{ route('equipment.update', $equipment->id) }}">
                         @csrf
                         @method('PUT')
 
@@ -236,8 +236,9 @@
                                     <label class="form-control-label">Accountable Officer</label>
                                     <select name="accountable_officer_id" class="form-control">
                                         <option value="">-- Select Personnel --</option>
-                                        @foreach($employees as $emp)
-                                            <option value="{{ $emp->id }}" {{ old('accountable_officer_id', $equipment->accountable_officer_id) == $emp->id ? 'selected' : '' }}>{{ $emp->last_name }}, {{ $emp->first_name }}</option>
+                                        @foreach($employees as $personnel)
+                                            @php($pds = $personnel->pdsMain)
+                                            <option value="{{ $personnel->id }}" {{ old('accountable_officer_id', $equipment->accountable_officer_id) == $personnel->id ? 'selected' : '' }}>{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -251,8 +252,9 @@
                                     <label class="form-control-label">Custodian / End User</label>
                                     <select name="custodian_id" class="form-control">
                                         <option value="">-- Select Personnel --</option>
-                                        @foreach($employees as $emp)
-                                            <option value="{{ $emp->id }}" {{ old('custodian_id', $equipment->custodian_id) == $emp->id ? 'selected' : '' }}>{{ $emp->last_name }}, {{ $emp->first_name }}</option>
+                                        @foreach($employees as $personnel)
+                                            @php($pds = $personnel->pdsMain)
+                                            <option value="{{ $personnel->id }}" {{ old('custodian_id', $equipment->custodian_id) == $personnel->id ? 'selected' : '' }}>{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -265,20 +267,21 @@
 
                         <div class="form-section shadow-sm border-warning">
                             <h5 class="text-warning"><i class="fas fa-exchange-alt mr-2"></i> Movement Tracking</h5>
-                            <p class="text-muted small">Update this section if the equipment is being transferred to a new employee or disposed of.</p>
+                            <p class="text-muted small">Update this section if the equipment is being transferred to new personnel or disposed of.</p>
                             <div class="row">
                                 <div class="col-md-6 form-group mb-3">
                                     <label class="form-control-label">Received by (New Accountable Officer / Custodian)</label>
                                     <select name="new_accountable_id" class="form-control">
                                         <option value="">-- Select Personnel --</option>
-                                        @foreach($employees as $emp)
-                                            <option value="{{ $emp->id }}" {{ old('new_accountable_id', $equipment->new_accountable_id) == $emp->id ? 'selected' : '' }}>{{ $emp->last_name }}, {{ $emp->first_name }}</option>
+                                        @foreach($employees as $personnel)
+                                            @php($pds = $personnel->pdsMain)
+                                            <option value="{{ $personnel->id }}" {{ old('new_accountable_id') == $personnel->id ? 'selected' : '' }}>{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-6 form-group mb-3">
                                     <label class="form-control-label">Date received by New Personnel</label>
-                                    <input type="date" name="new_accountable_date" class="form-control" value="{{ old('new_accountable_date', $equipment->new_accountable_date) }}">
+                                    <input type="date" name="new_accountable_date" class="form-control" value="{{ old('new_accountable_date') }}">
                                 </div>
                             </div>
                             <div class="row">
@@ -287,13 +290,13 @@
                                     <select name="new_supporting_doc_type" class="form-control">
                                         <option value="">-- Select --</option>
                                         @foreach(['Property Acknowledgment Receipt (PAR)', 'Inventory Custodian Slip (ICS)', 'Report of Receipt and Stock Position (RRSP)', 'Return and Receipt of Property/Equipment (RRPE)', 'Waste Material Report (WMR)'] as $doc)
-                                            <option value="{{ $doc }}" {{ old('new_supporting_doc_type', $equipment->new_supporting_doc_type) == $doc ? 'selected' : '' }}>{{ $doc }}</option>
+                                            <option value="{{ $doc }}" {{ old('new_supporting_doc_type') == $doc ? 'selected' : '' }}>{{ $doc }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-4 form-group mb-3">
                                     <label class="form-control-label">Document No.</label>
-                                    <input type="text" name="new_supporting_doc_no" class="form-control" value="{{ old('new_supporting_doc_no', $equipment->new_supporting_doc_no) }}">
+                                    <input type="text" name="new_supporting_doc_no" class="form-control" value="{{ old('new_supporting_doc_no') }}">
                                 </div>
                             </div>
                         </div>
@@ -369,15 +372,16 @@
                             <div class="row">
                                 <div class="col-md-12 form-group mb-3">
                                     <label class="form-control-label required">School</label>
-                                    @if(Auth::user()->role === 'school')
-                                        @php $userSchool = $schools->where('name', Auth::user()->access_level)->first(); @endphp
-                                        <input type="hidden" name="school_id" value="{{ $userSchool->id ?? '' }}">
-                                        <input type="text" class="form-control" value="{{ Auth::user()->access_level }}" readonly>
+                                    @if(Auth::user()->hasRole('school') && Auth::user()->school)
+                                        <input type="hidden" name="school_id" value="{{ Auth::user()->school->id }}">
+                                        <input type="text" class="form-control" value="{{ Auth::user()->school->name }}" readonly>
                                     @else
                                         <select name="school_id" class="form-control @error('school_id') is-invalid @enderror" required>
                                             <option value="">-- Select School --</option>
                                             @foreach($schools as $school)
-                                                <option value="{{ $school->id }}" {{ old('school_id', $equipment->school_id) == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                <option value="{{ $school->id }}" {{ old('school_id', $equipment->school_id) == $school->id ? 'selected' : '' }}>
+                                                    {{ $school->name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     @endif
@@ -391,7 +395,7 @@
                                 <button type="submit" class="btn btn-success btn-lg px-5">
                                     <i class="ni ni-check-bold mr-2"></i> Update Equipment
                                 </button>
-                                <a href="/equipment" class="btn btn-secondary btn-lg px-5 ml-3">
+                                <a href="{{ route('equipment.index') }}" class="btn btn-secondary btn-lg px-5 ml-3">
                                     <i class="ni ni-bold-left mr-2"></i> Cancel
                                 </a>
                             </div>

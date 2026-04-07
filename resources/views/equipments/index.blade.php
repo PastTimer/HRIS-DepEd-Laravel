@@ -73,7 +73,7 @@
                                 
                                 <td>
                                     @if($equipment->accountableOfficer)
-                                        {{ $equipment->accountableOfficer->last_name }}, {{ $equipment->accountableOfficer->first_name }}
+                                        {{ optional($equipment->accountableOfficer->pdsMain)->last_name ?? 'N/A' }}, {{ optional($equipment->accountableOfficer->pdsMain)->first_name ?? '' }}
                                     @else
                                         <span class="text-muted">None</span>
                                     @endif
@@ -90,11 +90,15 @@
                                 </td>
                                 
                                 <td class="text-center">
-                                    <a href="/equipment/{{ $equipment->id }}/edit" class="btn btn-sm btn-info" title="Edit">
+                                    <a href="{{ route('equipment.show', $equipment->id) }}" class="btn btn-sm btn-primary" title="View">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+
+                                    <a href="{{ route('equipment.edit', $equipment->id) }}" class="btn btn-sm btn-info" title="Edit">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
                                     
-                                    <form method="POST" action="/equipment/{{ $equipment->id }}" style="display:inline;">
+                                    <form method="POST" action="{{ route('equipment.destroy', $equipment->id) }}" style="display:inline;">
                                         @csrf 
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to remove this equipment from the inventory?')" title="Delete">

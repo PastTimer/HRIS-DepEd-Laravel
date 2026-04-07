@@ -16,7 +16,7 @@
                 </div>
                 
                 <div class="card-body">
-                    <form method="POST" action="/equipment">
+                    <form method="POST" action="{{ route('equipment.store') }}">
                         @csrf
 
                         <div class="form-section shadow-sm">
@@ -272,11 +272,12 @@
                                     <label class="form-control-label">Accountable Officer</label>
                                     <select name="accountable_officer_id" class="form-control">
                                         <option value="">-- Select Personnel --</option>
-                                        @foreach($employees as $emp)
-                                            <option value="{{ $emp->id }}" {{ old('accountable_officer_id') == $emp->id ? 'selected' : '' }}>{{ $emp->last_name }}, {{ $emp->first_name }}</option>
+                                        @foreach($employees as $personnel)
+                                            @php($pds = $personnel->pdsMain)
+                                            <option value="{{ $personnel->id }}" {{ old('accountable_officer_id') == $personnel->id ? 'selected' : '' }}>{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}</option>
                                         @endforeach
                                     </select>
-                                    <small class="form-text text-muted">Choose the employee accountable for the equipment.</small>
+                                    <small class="form-text text-muted">Choose the personnel accountable for the equipment.</small>
                                 </div>
                                 <div class="col-md-6 form-group mb-3">
                                     <label class="form-control-label">Date assigned to / received by Accountable Officer</label>
@@ -290,8 +291,9 @@
                                     <label class="form-control-label">Custodian / End User</label>
                                     <select name="custodian_id" class="form-control">
                                         <option value="">-- Select Personnel --</option>
-                                        @foreach($employees as $emp)
-                                            <option value="{{ $emp->id }}" {{ old('custodian_id') == $emp->id ? 'selected' : '' }}>{{ $emp->last_name }}, {{ $emp->first_name }}</option>
+                                        @foreach($employees as $personnel)
+                                            @php($pds = $personnel->pdsMain)
+                                            <option value="{{ $personnel->id }}" {{ old('custodian_id') == $personnel->id ? 'selected' : '' }}>{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}</option>
                                         @endforeach
                                     </select>
                                     <small class="form-text text-muted">Select the Custodian or End User if different from the Accountable Officer.</small>
@@ -312,8 +314,9 @@
                                     <label class="form-control-label">Received by (New Accountable Officer / Custodian / End User)</label>
                                     <select name="new_accountable_id" class="form-control">
                                         <option value="">-- Select Personnel --</option>
-                                        @foreach($employees as $emp)
-                                            <option value="{{ $emp->id }}" {{ old('new_accountable_id') == $emp->id ? 'selected' : '' }}>{{ $emp->last_name }}, {{ $emp->first_name }}</option>
+                                        @foreach($employees as $personnel)
+                                            @php($pds = $personnel->pdsMain)
+                                            <option value="{{ $personnel->id }}" {{ old('new_accountable_id') == $personnel->id ? 'selected' : '' }}>{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}</option>
                                         @endforeach
                                     </select>
                                     <small class="form-text text-muted">Choose the new Accountable Officer, Custodian, or End User for transferred equipment.</small>
@@ -423,10 +426,9 @@
                             <div class="row">
                                 <div class="col-md-12 form-group mb-3">
                                     <label class="form-control-label required">School</label>
-                                    @if(Auth::user()->role === 'school')
-                                        @php $userSchool = $schools->where('name', Auth::user()->access_level)->first(); @endphp
-                                        <input type="hidden" name="school_id" value="{{ $userSchool->id ?? '' }}">
-                                        <input type="text" class="form-control" value="{{ Auth::user()->access_level }}" readonly>
+                                    @if(Auth::user()->hasRole('school') && Auth::user()->school)
+                                        <input type="hidden" name="school_id" value="{{ Auth::user()->school->id }}">
+                                        <input type="text" class="form-control" value="{{ Auth::user()->school->name }}" readonly>
                                     @else
                                         <select name="school_id" class="form-control @error('school_id') is-invalid @enderror" required>
                                             <option value="">-- Select School --</option>
@@ -446,7 +448,7 @@
                                 <button type="submit" class="btn btn-primary btn-lg px-5" style="background-color: #0473B4; border: none;">
                                     <i class="ni ni-fat-add mr-2"></i> Add Equipment
                                 </button>
-                                <a href="/equipment" class="btn btn-secondary btn-lg px-5 ml-3">
+                                <a href="{{ route('equipment.index') }}" class="btn btn-secondary btn-lg px-5 ml-3">
                                     <i class="ni ni-bold-left mr-2"></i> Back to List
                                 </a>
                             </div>

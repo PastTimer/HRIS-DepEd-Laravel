@@ -14,10 +14,19 @@ class Equipment extends Model
         'mode_acquisition', 'source_acquisition', 'donor', 'source_funds', 'allotment_class', 'received_date', 'pmp_reference',
         'transaction_type', 'supporting_doc_type', 'supporting_doc_no', 
         'accountable_officer_id', 'accountable_date', 'custodian_id', 'custodian_date',
-        'new_accountable_id', 'new_accountable_date', 'new_supporting_doc_type', 'new_supporting_doc_no',
         'supplier', 'supplier_contact', 'under_warranty', 'warranty_end_date',
         'equipment_location', 'is_functional', 'equipment_condition', 'disposition_status', 'remarks',
         'school_id', 'created_by'
+    ];
+
+    protected $casts = [
+        'is_dcp' => 'boolean',
+        'under_warranty' => 'boolean',
+        'is_functional' => 'boolean',
+        'received_date' => 'date',
+        'accountable_date' => 'date',
+        'custodian_date' => 'date',
+        'warranty_end_date' => 'date',
     ];
 
     // --- RELATIONSHIPS ---
@@ -31,15 +40,16 @@ class Equipment extends Model
     }
 
     public function custodian() {
-        return $this->belongsTo(Employee::class, 'custodian_id');
-    }
-
-    public function newAccountableOfficer() {
-        return $this->belongsTo(Employee::class, 'new_accountable_id');
+        return $this->belongsTo(Personnel::class, 'custodian_id');
     }
 
     public function accountableOfficer()
     {
-        return $this->belongsTo(Employee::class, 'accountable_officer_id');
+        return $this->belongsTo(Personnel::class, 'accountable_officer_id');
+    }
+
+    public function movements()
+    {
+        return $this->hasMany(\App\Models\EquipmentMovement::class, 'equipment_id')->latest('movement_date')->latest('id');
     }
 }
