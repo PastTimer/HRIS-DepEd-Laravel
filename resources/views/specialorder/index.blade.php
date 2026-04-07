@@ -72,7 +72,7 @@
                                 <th class="text-center">Personnel Included</th>
                                 <th class="text-center">Type</th>
                                 <th class="text-center">Attachment</th>
-                                @if(Auth::user()->role === 'admin')
+                                @if(Auth::user()->hasRole('admin'))
                                     <th class="text-center">Action</th>
                                 @endif
                             </tr>
@@ -118,7 +118,7 @@
                                     @endif
                                 </td>
                                 
-                                @if(Auth::user()->role === 'admin')
+                                @if(Auth::user()->hasRole('admin'))
                                 <td class="text-center">
                                     <a href="/specialorder/{{ $so->id }}/edit" class="btn btn-sm btn-info" title="Edit">
                                         <i class="fas fa-edit"></i>
@@ -136,7 +136,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="{{ Auth::user()->role === 'admin' ? '7' : '6' }}" class="text-center py-5">
+                                <td colspan="{{ Auth::user()->hasRole('admin') ? '7' : '6' }}" class="text-center py-5">
                                     <i class="ni ni-paper-diploma fa-3x text-muted mb-3 d-block"></i>
                                     <h4 class="text-muted mb-0">No Special Orders found.</h4>
                                 </td>

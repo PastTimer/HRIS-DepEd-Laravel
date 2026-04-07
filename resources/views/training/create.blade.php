@@ -31,15 +31,16 @@
                     <div class="card-header border-0"><input type="text" id="empSearch" class="form-control" placeholder="Search..." onkeyup="filterTable()"></div>
                     <div style="max-height: 600px; overflow-y: auto;">
                         <table class="table" id="empTable">
-                            @foreach($employees as $emp)
+                            @foreach($employees as $personnel)
+                            @php($pds = $personnel->pdsMain)
                             <tr>
                                 <td width="40">
-                                    <input type="checkbox" name="employee_ids[]" value="{{ $emp->id }}" 
+                                    <input type="checkbox" name="employee_ids[]" value="{{ $personnel->id }}" 
                                         class="emp-check" 
-                                        data-name="{{ $emp->last_name }}, {{ $emp->first_name }}">
+                                        data-name="{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}">
                                 </td>
                                 <td class="font-weight-bold">
-                                    {{ $emp->last_name }}, {{ $emp->first_name }}
+                                    {{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}
                                 </td>
                             </tr>
                             @endforeach

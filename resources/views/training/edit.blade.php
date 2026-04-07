@@ -95,20 +95,21 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($employees as $emp)
+                                @foreach($employees as $personnel)
+                                @php($pds = $personnel->pdsMain)
                                 <tr>
                                     <td class="text-center">
                                         <div class="custom-control custom-checkbox">
-                                            <input type="checkbox" name="employee_ids[]" value="{{ $emp->id }}" 
+                                            <input type="checkbox" name="employee_ids[]" value="{{ $personnel->id }}" 
                                                    class="custom-control-input emp-check" 
-                                                   id="check_{{ $emp->id }}" 
-                                                   data-name="{{ $emp->last_name }}, {{ $emp->first_name }}"
-                                                   {{ $training->employees->contains($emp->id) ? 'checked' : '' }}>
-                                            <label class="custom-control-label" for="check_{{ $emp->id }}"></label>
+                                                   id="check_{{ $personnel->id }}" 
+                                                   data-name="{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}"
+                                                   {{ $training->employees->contains($personnel->id) ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="check_{{ $personnel->id }}"></label>
                                         </div>
                                     </td>
                                     <td class="name-cell font-weight-bold" style="font-size: 0.85rem;">
-                                        {{ $emp->last_name }}, {{ $emp->first_name }}
+                                        {{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}
                                     </td>
                                 </tr>
                                 @endforeach

@@ -10,13 +10,18 @@ class SpecialOrder extends Model
 
     protected $fillable = ['title', 'so_no', 'series_year', 'type', 'file_path', 'created_by'];
 
-    public function employees()
+    public function personnel()
     {
         return $this->belongsToMany(
-            Employee::class, 
-            'employee_specialorder', 
-            'specialorder_id', 
-            'employee_id'
+            Personnel::class,
+            'personnel_specialorder',
+            'specialorder_id',
+            'personnel_id'
         );
+    }
+
+    public function employees()
+    {
+        return $this->personnel();
     }
 }

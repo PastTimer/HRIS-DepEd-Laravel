@@ -29,8 +29,8 @@
             <div class="d-flex align-items-center">
                 <form action="{{ route('training.index') }}" method="GET" class="mr-3 mb-0">
                     <div class="input-group input-group-sm">
-                        <input type="text" name="search" class="form-control" style="min-width: 250px;" 
-                               placeholder="Search title, ID, or employee..." value="{{ request('search') }}">
+                           <input type="text" name="search" class="form-control" style="min-width: 250px;" 
+                               placeholder="Search title, ID, or personnel..." value="{{ request('search') }}">
                         <div class="input-group-append">
                             <button class="btn btn-primary" type="submit">
                                 <i class="fas fa-search"></i>

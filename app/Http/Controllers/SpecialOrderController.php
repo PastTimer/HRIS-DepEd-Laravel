@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SpecialOrder;
-use App\Models\Employee;
+use App\Models\Personnel;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,11 +20,9 @@ class SpecialOrderController extends Controller
         $query = SpecialOrder::with(['employees.school']);
 
         // 2. Security: School-level users see only orders containing their personnel
-        if ($user && $user->role === 'school') {
+        if ($user && $user->hasRole('school') && $user->school_id) {
             $query->whereHas('employees', function($q) use ($user) {
-                $q->whereHas('school', function($sq) use ($user) {
-                    $sq->where('name', $user->access_level);
-                });
+                $q->where('assigned_school_id', $user->school_id);
             });
         }
 
@@ -35,15 +33,14 @@ class SpecialOrderController extends Controller
                         ->orWhere('so_no', 'like', "%{$search}%")
                         ->orWhere('series_year', 'like', "%{$search}%")
                         ->orWhere('type', 'like', "%{$search}%")
-                        // Search related Employees
+                        // Search related Personnel
                         ->orWhereHas('employees', function($empQ) use ($search) {
-                            // Adjust these columns if your employees table uses 'name'
-                            $empQ->where('first_name', 'like', "%{$search}%")
-                                ->orWhere('last_name', 'like', "%{$search}%")
-                                // Search Employee's School
-                                ->orWhereHas('school', function($schQ) use ($search) {
-                                    $schQ->where('name', 'like', "%{$search}%");
-                                });
+                            $empQ->whereHas('pdsMain', function ($pdsQ) use ($search) {
+                                $pdsQ->where('first_name', 'like', "%{$search}%")
+                                     ->orWhere('last_name', 'like', "%{$search}%");
+                            })->orWhereHas('school', function($schQ) use ($search) {
+                                $schQ->where('name', 'like', "%{$search}%");
+                            });
                         });
             });
         });
@@ -61,7 +58,7 @@ class SpecialOrderController extends Controller
 
     public function create()
     {
-        $employees = Employee::where('is_active', true)->orderBy('last_name')->get();
+        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
         return view('specialorder.create', compact('employees'));
     }
 
@@ -99,7 +96,7 @@ class SpecialOrderController extends Controller
     public function edit(SpecialOrder $specialorder)
     {
         $specialorder->load('employees');
-        $employees = Employee::where('is_active', true)->orderBy('last_name')->get();
+        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
         return view('specialorder.edit', compact('specialorder', 'employees'));
     }
 

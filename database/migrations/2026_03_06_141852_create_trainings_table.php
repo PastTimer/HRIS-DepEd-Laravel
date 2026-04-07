@@ -21,10 +21,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('employee_training', function (Blueprint $table) {
+        Schema::create('personnel_training', function (Blueprint $table) {
             $table->id();
             $table->foreignId('training_id')->constrained('trainings')->onDelete('cascade');
-            $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
+            $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -34,6 +34,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('personnel_training');
         Schema::dropIfExists('trainings');
     }
 };

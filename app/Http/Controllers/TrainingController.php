@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Training;
-use App\Models\Employee;
+use App\Models\Personnel;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,11 +20,9 @@ class TrainingController extends Controller
         $query = Training::with(['employees.school']);
 
         // 2. Security: Filter by school access
-        if ($user && $user->role === 'school') {
+        if ($user && $user->hasRole('school') && $user->school_id) {
             $query->whereHas('employees', function($q) use ($user) {
-                $q->whereHas('school', function($sq) use ($user) {
-                    $sq->where('name', $user->access_level);
-                });
+                $q->where('assigned_school_id', $user->school_id);
             });
         }
 
@@ -35,11 +33,12 @@ class TrainingController extends Controller
                         ->orWhere('trefid', 'like', "%{$search}%")
                         ->orWhere('status', 'like', "%{$search}%")
                         ->orWhereHas('employees', function($empQ) use ($search) {
-                            $empQ->where('first_name', 'like', "%{$search}%")
-                                ->orWhere('last_name', 'like', "%{$search}%")
-                                ->orWhereHas('school', function($schQ) use ($search) {
-                                    $schQ->where('name', 'like', "%{$search}%");
-                                });
+                            $empQ->whereHas('pdsMain', function ($pdsQ) use ($search) {
+                                $pdsQ->where('first_name', 'like', "%{$search}%")
+                                     ->orWhere('last_name', 'like', "%{$search}%");
+                            })->orWhereHas('school', function($schQ) use ($search) {
+                                $schQ->where('name', 'like', "%{$search}%");
+                            });
                         });
             });
         });
@@ -61,7 +60,7 @@ class TrainingController extends Controller
 
     public function create()
     {
-        $employees = Employee::where('is_active', true)->orderBy('last_name')->get();
+        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
         return view('training.create', compact('employees'));
     }
 
@@ -100,7 +99,7 @@ class TrainingController extends Controller
     public function edit(Training $training)
     {
         $training->load('employees');
-        $employees = Employee::where('is_active', true)->orderBy('last_name')->get();
+        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
         return view('training.edit', compact('training', 'employees'));
     }
 

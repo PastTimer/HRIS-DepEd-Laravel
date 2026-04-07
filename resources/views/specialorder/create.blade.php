@@ -51,7 +51,7 @@
                         <div class="form-group mb-3">
                             <label class="form-control-label">Selected Personnel <span class="text-danger">*</span></label>
                             <textarea rows="6" id="empn_display" class="form-control bg-white" readonly placeholder="Select personnel from the list on the right..."></textarea>
-                            @error('employee_ids') <small class="text-danger font-weight-bold mt-2 d-block">Please select at least one employee from the list.</small> @enderror
+                            @error('employee_ids') <small class="text-danger font-weight-bold mt-2 d-block">Please select at least one personnel entry from the list.</small> @enderror
                         </div>
 
                         <div class="form-group mb-4">
@@ -86,20 +86,21 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($employees as $emp)
+                                @foreach($employees as $personnel)
+                                @php($pds = $personnel->pdsMain)
                                 <tr>
                                     <td class="text-center">
                                         <div class="custom-control custom-checkbox">
-                                            <input type="checkbox" name="employee_ids[]" value="{{ $emp->id }}" 
+                                            <input type="checkbox" name="employee_ids[]" value="{{ $personnel->id }}" 
                                                    class="custom-control-input personnel-checkbox" 
-                                                   id="check_{{ $emp->id }}" 
-                                                   data-name="{{ $emp->last_name }}, {{ $emp->first_name }}"
-                                                   {{ (is_array(old('employee_ids')) && in_array($emp->id, old('employee_ids'))) ? 'checked' : '' }}>
-                                            <label class="custom-control-label" for="check_{{ $emp->id }}"></label>
+                                                   id="check_{{ $personnel->id }}" 
+                                                   data-name="{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}"
+                                                   {{ (is_array(old('employee_ids')) && in_array($personnel->id, old('employee_ids'))) ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="check_{{ $personnel->id }}"></label>
                                         </div>
                                     </td>
                                     <td class="name-cell font-weight-bold">
-                                        {{ $emp->last_name }}, {{ $emp->first_name }}
+                                        {{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}
                                     </td>
                                 </tr>
                                 @endforeach

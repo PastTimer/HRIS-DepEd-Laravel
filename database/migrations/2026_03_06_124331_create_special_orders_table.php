@@ -21,17 +21,17 @@ return new class extends Migration
         });
 
         // 2. The Pivot Table 
-        Schema::create('employee_specialorder', function (Blueprint $table) {
+        Schema::create('personnel_specialorder', function (Blueprint $table) {
             $table->id();
             $table->foreignId('specialorder_id')->constrained('specialorder')->onDelete('cascade');
-            $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
+            $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('employee_specialorder');
+        Schema::dropIfExists('personnel_specialorder');
         Schema::dropIfExists('specialorder');
     }
 };
