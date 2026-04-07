@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Inventory Management')
 @section('content')
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4" data-ajax-content>
     <div class="row">
         <div class="col">
             <div class="card shadow">
@@ -9,7 +9,7 @@
                     <h3 class="mb-0"><i class="fas fa-desktop mr-2 text-primary"></i> Equipment Inventory</h3>
                     
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('equipment.index') }}" method="GET" class="mr-3 mb-0">
+                        <form action="{{ route('equipment.index') }}" method="GET" class="mr-3 mb-0" data-ajax-search-form>
                             <div class="input-group input-group-sm">
                                 <input type="text" name="search" class="form-control" style="min-width: 250px;" placeholder="Search item, serial no, school, or officer..." value="{{ request('search') }}">
                                 <div class="input-group-append">
@@ -17,7 +17,7 @@
                                         <i class="fas fa-search"></i>
                                     </button>
                                     @if(request('search'))
-                                        <a href="{{ route('equipment.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                        <a href="{{ route('equipment.index') }}" class="btn btn-outline-danger" title="Clear Search" data-ajax-clear-search>
                                             <i class="fas fa-times"></i>
                                         </a>
                                     @endif

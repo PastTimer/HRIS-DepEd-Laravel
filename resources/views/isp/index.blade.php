@@ -12,13 +12,13 @@
     .action-btn-group { display: flex; justify-content: flex-end; gap: 8px; }
 </style>
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4" data-ajax-content>
     <div class="card shadow">
         <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
             <h3 class="mb-0"><i class="fas fa-network-wired mr-2 text-primary"></i> ISP Inventory</h3>
             
             <div class="d-flex align-items-center">
-                <form action="{{ route('isp.index') }}" method="GET" class="mr-3 mb-0">
+                <form action="{{ route('isp.index') }}" method="GET" class="mr-3 mb-0" data-ajax-search-form>
                     <div class="input-group input-group-sm">
                         <input type="text" name="search" class="form-control" placeholder="Search school, provider, acct..." value="{{ request('search') }}">
                         <div class="input-group-append">
@@ -26,7 +26,7 @@
                                 <i class="fas fa-search"></i>
                             </button>
                             @if(request('search'))
-                                <a href="{{ route('isp.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                <a href="{{ route('isp.index') }}" class="btn btn-outline-danger" title="Clear Search" data-ajax-clear-search>
                                     <i class="fas fa-times"></i>
                                 </a>
                             @endif
@@ -104,24 +104,16 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Find all rows that are actually clickable
-        const clickableRows = document.querySelectorAll('.isp-row');
-        
-        clickableRows.forEach(row => {
-            row.addEventListener('click', function(e) {
-                // If the user clicked inside the action cell (Edit/Delete), do nothing
-                if (e.target.closest('.action-cell')) {
-                    return;
-                }
-                
-                // Otherwise, redirect to the ISP Show page
-                const targetUrl = this.getAttribute('data-url');
-                if (targetUrl) {
-                    window.location.href = targetUrl;
-                }
-            });
-        });
+    document.addEventListener('click', function (e) {
+        var row = e.target.closest('.isp-row');
+        if (!row || e.target.closest('.action-cell')) {
+            return;
+        }
+
+        var targetUrl = row.getAttribute('data-url');
+        if (targetUrl) {
+            window.location.href = targetUrl;
+        }
     });
 </script>
 @endsection

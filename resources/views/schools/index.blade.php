@@ -12,7 +12,7 @@
     }
 </style>
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4" data-ajax-content>
     <div class="row">
         <div class="col">
             <div class="card shadow">
@@ -20,7 +20,7 @@
                     <h3 class="mb-0"><i class="fas fa-school mr-2 text-primary"></i> School Directory</h3>
                     
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('schools.index') }}" method="GET" class="mr-3 mb-0">
+                        <form action="{{ route('schools.index') }}" method="GET" class="mr-3 mb-0" data-ajax-search-form>
                             <div class="input-group input-group-sm">
                                 <input type="text" name="search" class="form-control" style="min-width: 280px;" 
                                     placeholder="Search school, district, or address..." value="{{ request('search') }}">
@@ -29,7 +29,7 @@
                                         <i class="fas fa-search"></i>
                                     </button>
                                     @if(request('search'))
-                                        <a href="{{ route('schools.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                        <a href="{{ route('schools.index') }}" class="btn btn-outline-danger" title="Clear Search" data-ajax-clear-search>
                                             <i class="fas fa-times"></i>
                                         </a>
                                     @endif

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4" data-ajax-content>
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="card card-stats shadow border-0">
@@ -27,7 +27,7 @@
             <h3 class="mb-0"><i class="fas fa-chalkboard-teacher mr-2 text-primary"></i> Training & Seminars</h3>
             
             <div class="d-flex align-items-center">
-                <form action="{{ route('training.index') }}" method="GET" class="mr-3 mb-0">
+                <form action="{{ route('training.index') }}" method="GET" class="mr-3 mb-0" data-ajax-search-form>
                     <div class="input-group input-group-sm">
                            <input type="text" name="search" class="form-control" style="min-width: 250px;" 
                                placeholder="Search title, ID, or personnel..." value="{{ request('search') }}">
@@ -36,7 +36,7 @@
                                 <i class="fas fa-search"></i>
                             </button>
                             @if(request('search'))
-                                <a href="{{ route('training.index') }}" class="btn btn-outline-danger" title="Clear Search">
+                                <a href="{{ route('training.index') }}" class="btn btn-outline-danger" title="Clear Search" data-ajax-clear-search>
                                     <i class="fas fa-times"></i>
                                 </a>
                             @endif

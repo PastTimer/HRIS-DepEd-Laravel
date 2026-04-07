@@ -15,7 +15,7 @@ class ReportController extends Controller
     {
         $schools = [];
         if (auth()->user()->hasRole('admin')) {
-            $schools = School::where('is_active', true)->orderBy('name')->get();
+            $schools = School::where('is_active', true)->orderBy('name')->select(['id', 'name'])->get();
         }
         return view('report.index', compact('schools'));
     }
@@ -58,6 +58,7 @@ class ReportController extends Controller
         if ($school_filter) {
             $query->where('e.school_id', $school_filter);
         }
+
         $equipment = $query->orderBy('s.name')->orderBy('e.item')->orderBy('e.property_no')->get();
 
         // Load template

@@ -58,7 +58,12 @@ class SpecialOrderController extends Controller
 
     public function create()
     {
-        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
+        $employees = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type'])
+            ->limit(100)
+            ->get();
         return view('specialorder.create', compact('employees'));
     }
 
@@ -96,7 +101,13 @@ class SpecialOrderController extends Controller
     public function edit(SpecialOrder $specialorder)
     {
         $specialorder->load('employees');
-        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
+        // For large datasets, consider AJAX search instead of loading all
+        $employees = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type'])
+            ->limit(100)
+            ->get();
         return view('specialorder.edit', compact('specialorder', 'employees'));
     }
 

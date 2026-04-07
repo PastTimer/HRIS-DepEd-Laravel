@@ -13,16 +13,46 @@ class AgeMonitoringController extends Controller
      */
     public function actual(Request $request)
     {
-        $rows = $this->buildAgeRows('actual');
-        $ageChart = $this->buildAgeChart($rows, 'age');
-        $page = $request->input('page', 1);
         $perPage = 10;
-        $pagedRows = $rows->forPage($page, $perPage);
+        $page = $request->input('page', 1);
+        $today = now();
+        $query = Personnel::with(['pdsMain', 'position', 'school'])
+            ->where('is_active', true)
+            ->whereHas('pdsMain', function ($q) {
+                $q->whereNotNull('birth_date');
+            });
+
+        $rows = $query->get()->map(function (Personnel $person) use ($today) {
+            $main = $person->pdsMain;
+            $birthDate = $main ? \Carbon\Carbon::parse($main->birth_date) : null;
+            $age = $birthDate ? $birthDate->age : null;
+            $name = $main ? trim(implode(' ', array_filter([
+                $main->last_name ? $main->last_name . ',' : null,
+                $main->first_name,
+                $main->middle_name,
+                $main->extension_name,
+            ]))) : 'Unnamed Personnel';
+            return collect([
+                'emp_id' => $person->emp_id,
+                'name' => $name !== '' ? $name : 'Unnamed Personnel',
+                'birth_date' => $birthDate ? $birthDate->format('m/d/Y') : null,
+                'age' => $age,
+                'gender' => $main ? $main->birth_sex : 'Unknown',
+                'position' => optional($person->position)->title ?? '-',
+                'employee_type' => $person->employee_type ?: 'Unknown',
+                'station' => optional($person->school)->name ?? '-',
+            ]);
+        })->sortBy('name')->values();
+
+        $total = $rows->count();
+        $pagedRows = $rows->forPage($page, $perPage)->values();
+        $ageChart = $this->buildAgeChart($rows, 'age');
+
         return view('monitoring.agemonitoringactual', [
             'rows' => $pagedRows,
             'ageChart' => json_encode($ageChart),
             'currentYear' => now()->year,
-            'total' => $rows->count(),
+            'total' => $total,
             'perPage' => $perPage,
             'currentPage' => $page,
         ]);
@@ -33,16 +63,46 @@ class AgeMonitoringController extends Controller
      */
     public function year(Request $request)
     {
-        $rows = $this->buildAgeRows('year');
-        $ageChart = $this->buildAgeChart($rows, 'age');
-        $page = $request->input('page', 1);
         $perPage = 10;
-        $pagedRows = $rows->forPage($page, $perPage);
+        $page = $request->input('page', 1);
+        $today = now();
+        $query = Personnel::with(['pdsMain', 'position', 'school'])
+            ->where('is_active', true)
+            ->whereHas('pdsMain', function ($q) {
+                $q->whereNotNull('birth_date');
+            });
+
+        $rows = $query->get()->map(function (Personnel $person) use ($today) {
+            $main = $person->pdsMain;
+            $birthDate = $main ? \Carbon\Carbon::parse($main->birth_date) : null;
+            $age = $birthDate ? ((int) $today->year - (int) $birthDate->year) : null;
+            $name = $main ? trim(implode(' ', array_filter([
+                $main->last_name ? $main->last_name . ',' : null,
+                $main->first_name,
+                $main->middle_name,
+                $main->extension_name,
+            ]))) : 'Unnamed Personnel';
+            return collect([
+                'emp_id' => $person->emp_id,
+                'name' => $name !== '' ? $name : 'Unnamed Personnel',
+                'birth_date' => $birthDate ? $birthDate->format('m/d/Y') : null,
+                'age' => $age,
+                'gender' => $main ? $main->birth_sex : 'Unknown',
+                'position' => optional($person->position)->title ?? '-',
+                'employee_type' => $person->employee_type ?: 'Unknown',
+                'station' => optional($person->school)->name ?? '-',
+            ]);
+        })->sortBy('name')->values();
+
+        $total = $rows->count();
+        $pagedRows = $rows->forPage($page, $perPage)->values();
+        $ageChart = $this->buildAgeChart($rows, 'age');
+
         return view('monitoring.agemonitoringyear', [
             'rows' => $pagedRows,
             'ageChart' => json_encode($ageChart),
             'currentYear' => now()->year,
-            'total' => $rows->count(),
+            'total' => $total,
             'perPage' => $perPage,
             'currentPage' => $page,
         ]);

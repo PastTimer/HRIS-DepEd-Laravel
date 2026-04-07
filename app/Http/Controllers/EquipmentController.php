@@ -66,7 +66,12 @@ class EquipmentController extends Controller
     public function create()
     {
         $schools = $this->schoolsForCurrentUser();
-        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
+        $employees = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type'])
+            ->limit(100)
+            ->get();
         $items = self::ITEM_OPTIONS;
         $brands = self::BRAND_OPTIONS;
         $packages = self::PACKAGE_OPTIONS;
@@ -98,7 +103,13 @@ class EquipmentController extends Controller
     public function edit(Equipment $equipment)
     {
         $schools = $this->schoolsForCurrentUser();
-        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
+        // For large datasets, consider AJAX search instead of loading all
+        $employees = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type'])
+            ->limit(100)
+            ->get();
         $items = self::ITEM_OPTIONS;
         $brands = self::BRAND_OPTIONS;
         $packages = self::PACKAGE_OPTIONS;

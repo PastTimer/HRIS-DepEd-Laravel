@@ -60,7 +60,12 @@ class TrainingController extends Controller
 
     public function create()
     {
-        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
+        $employees = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type'])
+            ->limit(100)
+            ->get();
         return view('training.create', compact('employees'));
     }
 
@@ -99,7 +104,13 @@ class TrainingController extends Controller
     public function edit(Training $training)
     {
         $training->load('employees');
-        $employees = Personnel::with('pdsMain')->where('is_active', true)->orderBy('id')->get();
+        // For large datasets, consider AJAX search instead of loading all
+        $employees = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type'])
+            ->limit(100)
+            ->get();
         return view('training.edit', compact('training', 'employees'));
     }
 
