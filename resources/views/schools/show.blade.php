@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Station Profile: ' . $school->name)
+@section('title', 'School Profile: ' . $school->name)
 
 @section('content')
 <style>
@@ -20,7 +20,7 @@
                     <a class="nav-link active py-3" data-toggle="tab" href="#school_profile"><i class="ni ni-building mr-2"></i> STAKEHOLDER PROFILE</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-3" data-toggle="tab" href="#personnel_list"><i class="ni ni-badge mr-2"></i> STATION PERSONNEL</a>
+                    <a class="nav-link py-3" data-toggle="tab" href="#personnel_list"><i class="ni ni-badge mr-2"></i>PERSONNEL LIST</a>
                 </li>
             </ul>
         </div>

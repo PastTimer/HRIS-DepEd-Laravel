@@ -54,10 +54,11 @@
             <table class="table align-items-center table-flush table-hover">
                 <thead class="thead-light">
                     <tr>
-                        <th>Ref ID & Title</th>
-                        <th class="text-center">Duration</th>
-                        <th class="text-center">Date Range</th>
-                        <th class="text-center">Status</th>
+                        <th>Personnel</th>
+                        <th>Title</th>
+                        <th class="text-center">Sponsor</th>
+                        <th class="text-center">Start Date</th>
+                        <th class="text-center">End Date</th>
                         <th class="text-right">Action</th>
                     </tr>
                 </thead>
@@ -66,45 +67,22 @@
                     @forelse($trainings as $tr)
                     <tr>
                         <td>
-                            <span class="text-xs text-muted font-weight-bold">{{ $tr->trefid }}</span><br>
-                            <span class="font-weight-bold text-dark">{{ Str::limit($tr->title, 50) }}</span>
+                            @if($tr->personnel && $tr->personnel->pdsMain)
+                                <span class="font-weight-bold text-dark">{{ $tr->personnel->pdsMain->last_name }}, {{ $tr->personnel->pdsMain->first_name }}</span>
+                            @else
+                                <span class="text-muted">N/A</span>
+                            @endif
                         </td>
-                        <td class="text-center">
-                            <span class="badge badge-secondary">{{ $tr->hours }} Hours</span>
-                        </td>
-                        <td class="text-center text-sm">
-                            {{ \Carbon\Carbon::parse($tr->date_from)->format('M d') }} - 
-                            {{ \Carbon\Carbon::parse($tr->date_to)->format('M d, Y') }}
-                        </td>
-                        <td class="text-center">
-                            @php
-                                $badgeClass = [
-                                    'approved' => 'success',
-                                    'pending' => 'warning',
-                                    'denied' => 'danger'
-                                ][$tr->status] ?? 'secondary';
-                            @endphp
-                            <span class="badge badge-dot mr-4">
-                                <i class="bg-{{ $badgeClass }}"></i>
-                                <span class="status">{{ ucfirst($tr->status) }}</span>
-                            </span>
-                        </td>
+                        <td>{{ Str::limit($tr->title, 50) }}</td>
+                        <td class="text-center">{{ $tr->sponsor }}</td>
+                        <td class="text-center">{{ $tr->start_date ? \Carbon\Carbon::parse($tr->start_date)->format('M d, Y') : '' }}</td>
+                        <td class="text-center">{{ $tr->end_date ? \Carbon\Carbon::parse($tr->end_date)->format('M d, Y') : '' }}</td>
                         <td class="text-right">
                             <div class="d-flex justify-content-end align-items-center">
-                                @if($tr->file_path)
-                                    <a href="{{ asset('storage/' . $tr->file_path) }}" 
-                                    target="_blank" 
-                                    class="btn btn-sm btn-outline-danger mr-2" 
-                                    title="View Certificate">
-                                        <i class="fas fa-file-pdf"></i>
-                                    </a>
-                                @endif
-
                                 <a href="{{ route('training.edit', $tr->id) }}" 
                                 class="btn btn-sm btn-info mr-2">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-
                                 <form action="{{ route('training.destroy', $tr->id) }}" method="POST" class="d-inline">
                                     @csrf 
                                     @method('DELETE')
@@ -133,8 +111,8 @@
         </div>
         
         @if($trainings->hasPages())
-            <div class="card-footer py-4">
-                {{ $trainings->links() }}
+            <div class="card-footer py-4 d-flex justify-content-center">
+                {{ $trainings->links('pagination::bootstrap-4') }}
             </div>
         @endif
     </div>

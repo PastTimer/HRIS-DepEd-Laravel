@@ -97,7 +97,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer py-4">
+                <div class="card-footer py-4 d-flex justify-content-center">
                     {{ $schools->links('pagination::bootstrap-4') }}
                 </div>
             </div>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 <div class="container-fluid mt-4">
-    <form method="POST" action="/training" enctype="multipart/form-data">
+    <form method="POST" action="/training">
         @csrf
         <div class="row">
             <div class="col-xl-8">
@@ -11,18 +11,21 @@
                         <div class="form-group"><label>Title</label><textarea name="title" class="form-control" rows="3" required></textarea></div>
                         <div class="row">
                             <div class="col-md-4"><label>Total Hours</label><input type="number" name="hours" class="form-control" required></div>
-                            <div class="col-md-4"><label>Date From</label><input type="date" name="date_from" class="form-control" required></div>
-                            <div class="col-md-4"><label>Date To</label><input type="date" name="date_to" class="form-control" required></div>
+                            <div class="col-md-4"><label>Start Date</label><input type="date" name="start_date" class="form-control" required></div>
+                            <div class="col-md-4"><label>End Date</label><input type="date" name="end_date" class="form-control" required></div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6"><label>Type</label><input type="text" name="type" class="form-control" placeholder="e.g. Managerial, Supervisory, Technical, etc." required></div>
+                            <div class="col-md-6"><label>Sponsor</label><input type="text" name="sponsor" class="form-control" placeholder="e.g. DepEd, CHED" required></div>
                         </div>
                         <div class="form-group mt-3">
                             <label>Selected Personnel</label>
                             <textarea id="selected_names" class="form-control bg-white" rows="6" readonly placeholder="Select from the list on the right..."></textarea>
                         </div>
-                        <div class="form-group">
-                            <label>Attachment</label>
-                            <input type="file" name="file" class="form-control h-auto">
+                        <div class="text-right">
+                            <a href="/training" class="btn btn-secondary mr-2">Back</a>
+                            <button type="submit" class="btn btn-primary px-5">Save Training</button>
                         </div>
-                        <div class="text-right"><button type="submit" class="btn btn-primary px-5">Save Training</button></div>
                     </div>
                 </div>
             </div>

@@ -12,7 +12,7 @@
     .badge-VIEW   { background-color: #fb6340; color: white; }
 </style>
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4" data-ajax-content>
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card card-stats h-100 shadow-sm">
@@ -85,7 +85,7 @@
                     </div>
 
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('logs.index') }}" method="GET" class="mb-0">
+                        <form action="{{ route('logs.index') }}" method="GET" class="mb-0" data-ajax-search-form>
                             <div class="input-group input-group-sm">
                                 <input type="text" name="search" class="form-control" style="min-width: 260px;" placeholder="Search user, action, module..." value="{{ request('search') }}">
                                 <div class="input-group-append">
@@ -178,10 +178,6 @@
                     </table>
                 </div>
 
-                <div class="card-footer py-4">
-                    {{ $logs->appends(request()->query())->links() }}
-                </div>
-                
                 <div class="card-footer py-4">
                     {{ $logs->links('pagination::bootstrap-4') }}
                 </div>

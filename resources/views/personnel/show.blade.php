@@ -99,7 +99,7 @@
 
                             <!-- TESTING: FULL PERSONNEL DATA DUMP -->
                             <div style="background: #f6f6f6; border: 1px solid #000000; border-radius: 6px; padding: 1.5rem; margin-top: 2rem;">
-                                <h5 class="mb-3">[TEST] Ito PDS Data. pds_main = 1:1 to personnel. Other tables ay M:1 to personnel. personnel naman ay sa di covered ng pds and more acc stuff.<br>To 🏳️‍🌈🥷</h5>
+                                <h5 class="mb-3">[TEST] PDS Data <br> pds_main = 1:1 to personnel <br> other tables = M:1 to personnel <br> personnel = not covered in pds</h5>
                                 <div class="mb-3">
                                     <strong>personnel</strong>
                                     <ul class="mb-2">
