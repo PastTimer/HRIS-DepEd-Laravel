@@ -8,9 +8,11 @@ use App\Models\Personnel;
 use App\Models\Position;
 use App\Models\School;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PersonnelController extends Controller
 {
@@ -260,6 +262,33 @@ class PersonnelController extends Controller
         );
 
         return redirect()->route('personnel.index')->with('success', 'Personnel record added successfully.');
+    }
+
+    public function exportPds(Personnel $personnel)
+    {
+        $this->assertPersonnelRecordAccess($personnel);
+
+        $personnel->load([
+            'pdsMain',
+            'pdsChildren',
+            'pdsEducation',
+            'pdsEligibility',
+            'pdsWorkExperience',
+            'pdsTraining',
+            'pdsReferences',
+        ]);
+
+        $pdf = Pdf::loadView('personnel.pds_export', compact('personnel'))
+            ->setPaper('a4', 'portrait');
+
+        $lastName = $personnel->pdsMain?->last_name;
+        $firstName = $personnel->pdsMain?->first_name;
+
+        $namePart = trim(implode(' ', array_filter([$lastName, $firstName])));
+        $baseName = filled($namePart) ? Str::slug($namePart, '_') : 'personnel_' . $personnel->id;
+        $filename = 'PDS_' . $baseName . '_' . now()->format('Ymd_His') . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     public function edit(Personnel $personnel)

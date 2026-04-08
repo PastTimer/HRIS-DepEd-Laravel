@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/personnel/{personnel}', [PersonnelController::class, 'show'])->name('personnel.show');
+        Route::get('/personnel/{personnel}/pds/export', [PersonnelController::class, 'exportPds'])->name('personnel.pds.export');
     });
 
     // Positions (Admin only)

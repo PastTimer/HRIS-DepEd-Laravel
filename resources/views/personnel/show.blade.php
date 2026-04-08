@@ -45,6 +45,7 @@
                     
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('personnel.index') }}" class="btn btn-sm btn-secondary">Back to List</a>
+                        <a href="{{ route('personnel.pds.export', $personnel->id) }}" class="btn btn-sm btn-primary">Export PDS PDF</a>
                         @if($personnel->is_active)
                             <span class="text-success font-weight-bold"><i class="fas fa-circle mr-1"></i> Active</span>
                         @else

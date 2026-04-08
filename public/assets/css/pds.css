@@ -1,0 +1,379 @@
+@page { margin: 12px 14px; }
+body {
+    font-family: DejaVu Sans, sans-serif;
+    font-size: 8px;
+    color: #000;
+    margin: 0;
+}
+
+.page {
+    position: relative;
+    height: 1045px;
+    border: 1px solid #000;
+    box-sizing: border-box;
+    padding: 0;
+    page-break-after: always;
+    overflow: hidden;
+}
+
+.page-inner {
+    height: 100%;
+    box-sizing: border-box;
+    padding: 0;
+}
+
+.page-title {
+    background: #8f8f8f;
+    color: #fff;
+    font-size: 11px;
+    line-height: 1;
+    padding: 4px 8px 5px;
+    font-style: italic;
+    font-weight: 700;
+    border-bottom: 1px solid #000;
+}
+
+.pds-top {
+    padding: 4px 8px 3px;
+}
+
+.pds-meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.pds-meta-table td {
+    border: none;
+    padding: 0;
+    vertical-align: top;
+}
+
+.pds-meta {
+    font-size: 7px;
+    line-height: 1.1;
+    text-align: right;
+}
+
+.pds-main-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: .4px;
+    margin-top: 2px;
+}
+
+.pds-notice {
+    font-size: 7px;
+    line-height: 1.15;
+    margin-top: 2px;
+}
+
+.pds-notice b {
+    font-weight: 700;
+}
+
+.note-continue {
+    color: #c00;
+    font-size: 7px;
+    font-style: italic;
+    text-align: center;
+    text-transform: none;
+}
+
+.split-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.split-table td {
+    border: none;
+    padding: 0;
+    vertical-align: top;
+}
+
+.split-table td + td {
+    border-left: 1px solid #000;
+}
+
+.section-title {
+    background: #cfcfcf;
+    color: #000;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .2px;
+    padding: 4px 8px;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+}
+
+.section-title-dark {
+    background: #8f8f8f;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .2px;
+    padding: 4px 8px;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+}
+
+.section-title-note {
+    font-weight: 400;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.section-body {
+    padding: 0;
+}
+
+.grid,
+.matrix,
+.subtable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.grid td,
+.grid th,
+.matrix td,
+.matrix th,
+.subtable td,
+.subtable th {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    vertical-align: top;
+    word-wrap: break-word;
+}
+
+.label-cell {
+    background: #dedede;
+    font-size: 7px;
+    text-transform: uppercase;
+    line-height: 1.1;
+}
+
+.value-cell {
+    background: #fff;
+    font-size: 8px;
+    line-height: 1.15;
+    min-height: 16px;
+}
+
+.label-note {
+    display: block;
+    margin-top: 2px;
+    font-size: 7px;
+    font-weight: 400;
+    line-height: 1.1;
+    text-transform: none;
+    text-align: center;
+}
+
+.name-ext-cell {
+    padding: 0 !important;
+}
+
+.name-ext-label {
+    font-size: 6px;
+    line-height: 1.05;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 2px 3px 1px;
+    border-bottom: 1px solid #000;
+}
+
+.name-ext-value {
+    padding: 2px 4px;
+    min-height: 14px;
+}
+
+.address-label-cell {
+    position: relative;
+    padding-bottom: 14px;
+}
+
+.zip-caption {
+    position: absolute;
+    left: 4px;
+    bottom: 2px;
+    font-size: 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.address-wrap {
+    padding: 0 !important;
+}
+
+.address-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.address-table td {
+    border: 1px solid #000;
+    padding: 0;
+    vertical-align: top;
+    position: relative;
+    height: 12px;
+    overflow: hidden;
+}
+
+.address-table tr:first-child td { border-top: 0; }
+.address-table tr:last-child td { border-bottom: 0; }
+.address-table td:first-child { border-left: 0; }
+.address-table td:last-child { border-right: 0; }
+
+.field-value {
+    font-size: 7px;
+    line-height: 1.0;
+    white-space: nowrap;
+    overflow: hidden;
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    top: 1px;
+}
+
+.field-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1px;
+    margin: 0;
+    font-size: 5.5px;
+    line-height: 1.0;
+    font-style: italic;
+    text-align: center;
+    text-transform: none;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.country-hint {
+    display: block;
+    margin-top: 8px;
+    font-size: 7px;
+    line-height: 1.1;
+    text-transform: none;
+    text-align: center;
+}
+
+.center {
+    text-align: center;
+}
+
+.right {
+    text-align: right;
+}
+
+.small {
+    font-size: 7px;
+}
+
+.muted {
+    color: #333;
+}
+
+.spacer {
+    height: 2px;
+}
+
+.signature-strip {
+    width: 100%;
+    display: table;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin: 6px 0 0;
+    page-break-inside: avoid;
+}
+
+.signature-strip-cell {
+    display: table-cell;
+    border: 1px solid #000;
+    padding: 4px 6px;
+    height: 34px;
+    vertical-align: bottom;
+}
+
+.signature-strip-label {
+    background: #dedede;
+    font-size: 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.signature-strip-value {
+    background: #fff;
+}
+
+.signature-line {
+    display: block;
+    border-bottom: 1px solid #000;
+    height: 16px;
+    margin-bottom: 3px;
+}
+
+.signature-note {
+    color: #c00;
+    font-size: 7px;
+    font-style: italic;
+    text-align: center;
+    line-height: 1.1;
+    margin-top: 2px;
+    text-transform: none;
+}
+
+.photo-box {
+    width: 85px;
+    height: 85px;
+    border: 1px solid #000;
+    text-align: center;
+    line-height: 85px;
+    font-size: 8px;
+    font-weight: 700;
+    background: #fff;
+}
+
+.two-column td { width: 25%; }
+.three-column td { width: 33.333%; }
+.four-column td { width: 25%; }
+.five-column td { width: 20%; }
+
+.row-height td { height: 22px; }
+.row-height-short td { height: 18px; }
+.row-height-tall td { height: 30px; }
+
+.question-cell {
+    background: #dedede;
+    font-size: 7px;
+    line-height: 1.15;
+}
+
+.details-label {
+    font-size: 7px;
+    line-height: 1.1;
+    margin-bottom: 2px;
+}
+
+.fill-line {
+    display: block;
+    border-bottom: 1px solid #000;
+    height: 11px;
+    margin: 3px 0;
+}
+
+.fill-line.tight {
+    height: 10px;
+    margin: 2px 0;
+}
