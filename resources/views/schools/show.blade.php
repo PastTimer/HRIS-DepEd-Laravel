@@ -13,7 +13,10 @@
         <div class="card-header bg-white border-0 pb-0">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="mb-0"><i class="fas fa-school mr-2 text-primary"></i> {{ $school->name }}</h3>
+                @php $user = Auth::user(); @endphp
+                @if($user && $user->hasRole('admin'))
                 <a href="/schools" class="btn btn-sm btn-secondary">Back to List</a>
+                @endif
             </div>
             <ul class="nav nav-pills nav-fill flex-column flex-sm-row" id="schoolTabs" role="tablist">
                 <li class="nav-item">
@@ -30,9 +33,11 @@
                 
                 <div class="tab-pane fade show active" id="school_profile">
                     <div class="text-right mb-4">
+                        @if($user && ($user->hasRole('admin') || $user->hasRole('school')))
                         <a href="/schools/{{ $school->id }}/profile/edit" class="btn btn-primary btn-sm">
                             <i class="fas fa-edit mr-1"></i> Edit Stakeholder Data
                         </a>
+                        @endif
                     </div>
 
                     <h6 class="heading-small text-muted mb-4">General Information</h6>

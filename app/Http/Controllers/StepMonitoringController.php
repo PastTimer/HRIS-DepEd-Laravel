@@ -4,9 +4,21 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Personnel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class StepMonitoringController extends Controller
 {
+    private function schoolScopeId(): ?int
+    {
+        $user = Auth::user();
+
+        if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer'))) {
+            return $user->school_id ? (int) $user->school_id : null;
+        }
+
+        return null;
+    }
+
     /**
      * Backward-compatible endpoint.
      */
@@ -93,8 +105,13 @@ class StepMonitoringController extends Controller
 
     private function basePersonnelQuery()
     {
+        $schoolId = $this->schoolScopeId();
+
         return Personnel::with(['pdsMain', 'position', 'school'])
             ->where('is_active', true)
+            ->when($schoolId, function ($query) use ($schoolId) {
+                $query->where('assigned_school_id', $schoolId);
+            })
             ->orderBy('emp_id');
     }
 

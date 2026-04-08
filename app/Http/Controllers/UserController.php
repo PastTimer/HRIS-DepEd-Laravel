@@ -15,6 +15,38 @@ class UserController extends Controller
 {
     private const SUPPORTED_ROLES = ['admin', 'school', 'encoding_officer', 'personnel'];
 
+    private function isSchoolUser(): bool
+    {
+        return Auth::check() && Auth::user()->hasRole('school');
+    }
+
+    private function schoolUserId(): ?int
+    {
+        return $this->isSchoolUser() && Auth::user()->school_id ? (int) Auth::user()->school_id : null;
+    }
+
+    private function canSchoolUserManageTarget(User $user): bool
+    {
+        $schoolId = $this->schoolUserId();
+        if (!$schoolId) {
+            return false;
+        }
+
+        if ($user->hasAnyRole(['admin', 'school', 'encoding_officer'])) {
+            return false;
+        }
+
+        $assignedSchoolId = (int) optional($user->personnel)->assigned_school_id;
+        return $assignedSchoolId === $schoolId;
+    }
+
+    private function assertSchoolUserCanManageTarget(User $user): void
+    {
+        if ($this->isSchoolUser()) {
+            abort_if(!$this->canSchoolUserManageTarget($user), 403);
+        }
+    }
+
     private function resolveLinkedStatus(?int $schoolId, ?int $personnelId, string $fallback = 'active'): string
     {
         if ($personnelId) {
@@ -116,8 +148,17 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $schoolId = $this->schoolUserId();
 
         $users = User::with(['roles', 'school', 'personnel.pdsMain'])
+            ->when($schoolId, function ($query) use ($schoolId) {
+                $query->where(function ($q) use ($schoolId) {
+                    $q->where('school_id', $schoolId)
+                        ->orWhereHas('personnel', function ($pq) use ($schoolId) {
+                            $pq->where('assigned_school_id', $schoolId);
+                        });
+                });
+            })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -144,6 +185,8 @@ class UserController extends Controller
 
     public function create()
     {
+        $schoolId = $this->schoolUserId();
+
         $linkedSchoolIds = User::role('school')->whereNotNull('school_id')->pluck('school_id')->toArray();
         $linkedEOIds = User::role('encoding_officer')->whereNotNull('school_id')->pluck('school_id')->toArray();
         $availableSchoolUsers = School::whereNotIn('id', $linkedSchoolIds)->orderBy('name')->get(['id', 'name']);
@@ -151,10 +194,18 @@ class UserController extends Controller
 
         $linkedPersonnelIds = User::role('personnel')->whereNotNull('personnel_id')->pluck('personnel_id')->toArray();
         $personnelList = Personnel::with('pdsMain:id,personnel_id,first_name,last_name')
+            ->when($schoolId, function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            })
             ->whereNotIn('id', $linkedPersonnelIds)
             ->orderBy('id', 'desc')->get(['id', 'emp_id']);
 
-        $roles = self::SUPPORTED_ROLES;
+        $roles = $this->isSchoolUser() ? ['personnel'] : self::SUPPORTED_ROLES;
+
+        if ($schoolId) {
+            $availableSchoolUsers = collect();
+            $availableEncodingOfficerSchools = collect();
+        }
 
         return view('users.create', [
             'availableSchoolUsers' => $availableSchoolUsers,
@@ -166,6 +217,8 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $schoolId = $this->schoolUserId();
+
         $validatedData = $request->validate([
             'username'     => 'required|string|max:255|unique:users,username',
             'email'        => 'nullable|email|max:255|unique:users,email',
@@ -179,6 +232,19 @@ class UserController extends Controller
         $linkErrors = $this->normalizeLinking($validatedData);
         if ($linkErrors) {
             return back()->withErrors($linkErrors)->withInput();
+        }
+
+        if ($schoolId) {
+            if (($validatedData['role'] ?? null) !== 'personnel' || empty($validatedData['personnel_id'])) {
+                return back()->withErrors(['role' => 'School users can only create personnel-linked accounts for their school.'])->withInput();
+            }
+
+            $personnel = Personnel::find($validatedData['personnel_id']);
+            if (!$personnel || (int) $personnel->assigned_school_id !== $schoolId) {
+                return back()->withErrors(['personnel_id' => 'Selected personnel is not assigned to your school.'])->withInput();
+            }
+
+            $validatedData['school_id'] = null;
         }
 
         $status = $this->resolveLinkedStatus(
@@ -210,8 +276,11 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        $this->assertSchoolUserCanManageTarget($user);
+
         $user->load(['roles', 'school', 'personnel.pdsMain']);
         $currentRole = $user->getRoleNames()->first();
+        $schoolId = $this->schoolUserId();
 
         $linkedSchoolIds = User::role('school')
             ->where('id', '!=', $user->id)
@@ -244,6 +313,9 @@ class UserController extends Controller
             ->pluck('personnel_id')
             ->toArray();
         $personnelList = Personnel::with('pdsMain:id,personnel_id,first_name,last_name')
+            ->when($schoolId, function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            })
             ->where(function ($q) use ($linkedPersonnelIds, $user) {
                 $q->whereNotIn('id', $linkedPersonnelIds);
                 if (!empty($user->personnel_id)) {
@@ -252,7 +324,12 @@ class UserController extends Controller
             })
             ->orderBy('id', 'desc')->get(['id', 'emp_id']);
 
-        $roles = self::SUPPORTED_ROLES;
+        $roles = $this->isSchoolUser() ? ['personnel'] : self::SUPPORTED_ROLES;
+
+        if ($schoolId) {
+            $availableSchoolUsers = collect();
+            $availableEncodingOfficerSchools = collect();
+        }
 
         // Build $schoolOptions for the view
         $schoolOptions = [];
@@ -290,6 +367,9 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        $this->assertSchoolUserCanManageTarget($user);
+
+        $schoolId = $this->schoolUserId();
         $validatedData = $request->validate([
             'office'       => 'required|string|max:255',
             'username'     => 'required|string|max:255|unique:users,username,' . $user->id,
@@ -303,6 +383,19 @@ class UserController extends Controller
         $linkErrors = $this->normalizeLinking($validatedData, $user);
         if ($linkErrors) {
             return back()->withErrors($linkErrors)->withInput();
+        }
+
+        if ($schoolId) {
+            if (($validatedData['role'] ?? null) !== 'personnel' || empty($validatedData['personnel_id'])) {
+                return back()->withErrors(['role' => 'School users can only manage personnel-linked accounts for their school.'])->withInput();
+            }
+
+            $personnel = Personnel::find($validatedData['personnel_id']);
+            if (!$personnel || (int) $personnel->assigned_school_id !== $schoolId) {
+                return back()->withErrors(['personnel_id' => 'Selected personnel is not assigned to your school.'])->withInput();
+            }
+
+            $validatedData['school_id'] = null;
         }
 
         $status = $this->resolveLinkedStatus(
@@ -353,6 +446,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        $this->assertSchoolUserCanManageTarget($user);
+
         if (Auth::id() === $user->id) {
             return redirect('/users')->with('error', 'You cannot delete your own account.');
         }

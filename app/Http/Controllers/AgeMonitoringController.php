@@ -5,19 +5,36 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Personnel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AgeMonitoringController extends Controller
 {
+    private function schoolScopeId(): ?int
+    {
+        $user = Auth::user();
+
+        if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer'))) {
+            return $user->school_id ? (int) $user->school_id : null;
+        }
+
+        return null;
+    }
+
     /**
      * Show age monitoring using actual age calculation.
      */
     public function actual(Request $request)
     {
+
         $perPage = 10;
         $page = $request->input('page', 1);
+        $schoolId = $this->schoolScopeId();
         $today = now();
         $query = Personnel::with(['pdsMain', 'position', 'school'])
             ->where('is_active', true)
+            ->when($schoolId, function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            })
             ->whereHas('pdsMain', function ($q) {
                 $q->whereNotNull('birth_date');
             });
@@ -66,8 +83,12 @@ class AgeMonitoringController extends Controller
         $perPage = 10;
         $page = $request->input('page', 1);
         $today = now();
+        $schoolId = $this->schoolScopeId();
         $query = Personnel::with(['pdsMain', 'position', 'school'])
             ->where('is_active', true)
+            ->when($schoolId, function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            })
             ->whereHas('pdsMain', function ($q) {
                 $q->whereNotNull('birth_date');
             });
@@ -150,9 +171,13 @@ class AgeMonitoringController extends Controller
     private function buildAgeRows(string $mode)
     {
         $today = now();
+        $schoolId = $this->schoolScopeId();
 
         return Personnel::with(['pdsMain', 'position', 'school'])
             ->where('is_active', true)
+            ->when($schoolId, function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            })
             ->get()
             ->filter(fn (Personnel $person) => $person->pdsMain && $person->pdsMain->birth_date)
             ->map(function (Personnel $person) use ($mode, $today) {

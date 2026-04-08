@@ -10,9 +10,45 @@ use App\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class PersonnelController extends Controller
 {
+    private function schoolScopeId(): ?int
+    {
+        $user = Auth::user();
+
+        if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer'))) {
+            return $user->school_id ? (int) $user->school_id : null;
+        }
+
+        return null;
+    }
+
+    private function assertCanWritePersonnel(): void
+    {
+        $user = Auth::user();
+
+        if ($user && ($user->hasRole('encoding_officer') || $user->hasRole('personnel'))) {
+            abort(403);
+        }
+    }
+
+    private function assertPersonnelRecordAccess(Personnel $personnel): void
+    {
+        $user = Auth::user();
+
+        if ($user && $user->hasRole('personnel')) {
+            abort_if((int) $user->personnel_id !== (int) $personnel->id, 403);
+            return;
+        }
+
+        $schoolId = $this->schoolScopeId();
+        if ($schoolId) {
+            abort_if((int) $personnel->assigned_school_id !== $schoolId, 403);
+        }
+    }
+
     private function personnelPayload(array $validatedData, ?string $photoPath): array
     {
         return [
@@ -56,9 +92,18 @@ class PersonnelController extends Controller
 
     public function index(Request $request)
     {
+        $user = Auth::user();
+        if ($user && $user->hasRole('personnel') && $user->personnel_id) {
+            return redirect()->route('personnel.show', $user->personnel_id);
+        }
+
         $search = $request->input('search');
+        $schoolId = $this->schoolScopeId();
 
         $personnelList = Personnel::with(['school', 'position', 'pdsMain'])
+            ->when($schoolId, function ($query) use ($schoolId) {
+                $query->where('assigned_school_id', $schoolId);
+            })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('emp_id', 'like', "%{$search}%")
@@ -87,7 +132,14 @@ class PersonnelController extends Controller
 
     public function create()
     {
+        $this->assertCanWritePersonnel();
+
+        $schoolId = $this->schoolScopeId();
         $schools = School::where('is_active', true)->orderBy('name')->get();
+        if ($schoolId) {
+            $schools = $schools->where('id', $schoolId)->values();
+        }
+
         $positions = Position::orderBy('title')->get();
 
         return view('personnel.create', compact('schools', 'positions'));
@@ -95,6 +147,9 @@ class PersonnelController extends Controller
 
     public function store(Request $request)
     {
+        $this->assertCanWritePersonnel();
+
+        $schoolId = $this->schoolScopeId();
         $validatedData = $request->validate([
             // Personal (PDS)
             'last_name' => 'required|string|max:255',
@@ -134,6 +189,13 @@ class PersonnelController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
+        if ($schoolId) {
+            abort_if((int) $validatedData['assigned_school_id'] !== $schoolId, 403);
+            if (!empty($validatedData['deployed_school_id'])) {
+                abort_if((int) $validatedData['deployed_school_id'] !== $schoolId, 403);
+            }
+        }
+
         $photoPath = null;
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('employee_photos', 'public');
@@ -159,8 +221,16 @@ class PersonnelController extends Controller
 
     public function edit(Personnel $personnel)
     {
+        $this->assertCanWritePersonnel();
+        $this->assertPersonnelRecordAccess($personnel);
+
         $personnel->load('pdsMain');
+        $schoolId = $this->schoolScopeId();
         $schools = School::orderBy('name')->get();
+        if ($schoolId) {
+            $schools = $schools->where('id', $schoolId)->values();
+        }
+
         $positions = Position::orderBy('title')->get();
 
         return view('personnel.edit', compact('personnel', 'schools', 'positions'));
@@ -168,6 +238,10 @@ class PersonnelController extends Controller
 
     public function update(Request $request, Personnel $personnel)
     {
+        $this->assertCanWritePersonnel();
+        $this->assertPersonnelRecordAccess($personnel);
+
+        $schoolId = $this->schoolScopeId();
         $validatedData = $request->validate([
             // Personal (PDS)
             'last_name' => 'required|string|max:255',
@@ -206,6 +280,13 @@ class PersonnelController extends Controller
             'is_active' => 'required|boolean',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
+
+        if ($schoolId) {
+            abort_if((int) $validatedData['assigned_school_id'] !== $schoolId, 403);
+            if (!empty($validatedData['deployed_school_id'])) {
+                abort_if((int) $validatedData['deployed_school_id'] !== $schoolId, 403);
+            }
+        }
 
         $photoPath = $personnel->profile_photo;
 
@@ -251,6 +332,9 @@ class PersonnelController extends Controller
 
     public function destroy(Personnel $personnel)
     {
+        $this->assertCanWritePersonnel();
+        $this->assertPersonnelRecordAccess($personnel);
+
         if ($personnel->profile_photo && Storage::disk('public')->exists($personnel->profile_photo)) {
             Storage::disk('public')->delete($personnel->profile_photo);
         }
@@ -276,6 +360,8 @@ class PersonnelController extends Controller
             'trainings',
             'specialOrders',
         ])->findOrFail($id);
+
+        $this->assertPersonnelRecordAccess($personnel);
 
         return view('personnel.show', compact('personnel'));
     }

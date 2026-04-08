@@ -37,9 +37,12 @@
                             </div>
                         </form>
 
+                        @php $user = Auth::user(); @endphp
+                        @if($user && ($user->hasRole('admin') || $user->hasRole('school')))
                         <a href="{{ route('personnel.create') }}" class="btn btn-sm btn-success">
                             <i class="fas fa-plus mr-1"></i> Add Personnel
                         </a>
+                        @endif
                     </div>
                 </div>
                 
@@ -97,10 +100,10 @@
                                 </td>
                                 
                                 <td class="text-center" onclick="event.stopPropagation();">
+                                    @if($user && ($user->hasRole('admin') || $user->hasRole('school')))
                                     <a href="/personnel/{{ $personnel->id }}/edit" class="btn btn-sm btn-info" title="Edit">
                                         Edit
                                     </a>
-                                    
                                     <form method="POST" action="/personnel/{{ $personnel->id }}" style="display:inline;">
                                         @csrf 
                                         @method('DELETE')
@@ -108,6 +111,7 @@
                                             Delete
                                         </button>
                                     </form>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

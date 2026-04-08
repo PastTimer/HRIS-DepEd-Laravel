@@ -16,6 +16,19 @@
                             $roleName = $currentUser?->getRoleNames()->first();
                             $accessLabel = $currentUser?->school?->name ?? $currentUser?->personnel?->emp_id;
                             $displayName = trim(($currentUser?->first_name ?? '') . ' ' . ($currentUser?->last_name ?? ''));
+
+                            $isAdmin = $currentUser?->hasRole('admin');
+                            $isSchool = $currentUser?->hasRole('school');
+                            $isEO = $currentUser?->hasRole('encoding_officer');
+                            $isPersonnel = $currentUser?->hasRole('personnel');
+
+                            $schoolProfileUrl = ($isSchool || $isEO) && !empty($currentUser?->school_id)
+                                ? route('schools.show', $currentUser->school_id)
+                                : '/schools';
+
+                            $personnelUrl = $isPersonnel
+                                ? route('personnel.me')
+                                : '/personnel';
                         @endphp
                         <span class="mb-0 text-sm font-weight-bold" style="display: block; line-height: 1.2; color: #32325d;">
                             {{ Auth::check() ? ($displayName !== '' ? $displayName : Auth::user()->username) : 'Guest' }}
@@ -32,86 +45,130 @@
             </div>
 
             <div class="collapse navbar-collapse" id="sidenav-collapse-main" style="flex-basis: auto; flex-grow: 0;">
-                
                 <ul class="navbar-nav">
+                    @if(!$isPersonnel)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}" href="/dashboard">
                             <i class="ni ni-tv-2 text-primary"></i>
                             <span class="nav-link-text">Dashboard</span>
                         </a>
                     </li>
+                    @endif
+                    @if($isAdmin || $isSchool)
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('personnel*') || request()->is('employees*') ? 'active' : '' }}" href="/personnel">
+                        <a class="nav-link {{ request()->is('personnel*') || request()->is('employees*') || request()->is('my-profile') ? 'active' : '' }}" href="{{ $personnelUrl }}">
                             <i class="ni ni-single-02 text-yellow"></i>
                             <span class="nav-link-text">Personnel</span>
                         </a>
                     </li>
+                    @endif
+                    @if($isPersonnel)
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('schools*') ? 'active' : '' }}" href="/schools">
-                            <i class="ni ni-building text-info"></i>
-                            <span class="nav-link-text">School Profile</span>
+                        <a class="nav-link {{ (request()->is('my-profile') || (request()->is('personnel/*') && Auth::user() && request()->route('personnel') == Auth::user()->personnel_id)) ? 'active' : '' }}" href="{{ $personnelUrl }}">
+                            <i class="ni ni-single-02 text-yellow"></i>
+                            <span class="nav-link-text">Personnel Profile</span>
                         </a>
                     </li>
+                    @endif
+
+                    @if($isAdmin)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('positions*') ? 'active' : '' }}" href="/positions">
                             <i class="ni ni-badge text-default"></i>
                             <span class="nav-link-text">Position</span>
                         </a>
                     </li>
-                </ul>
+                    @endif
 
-                <div id="hidden-menus" style="display: none;">
-                    <ul class="navbar-nav">
+                    @if($isAdmin || $isSchool || $isEO)
+                        @if(!$isPersonnel)
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('monitoring*') ? 'active' : '' }}" href="/monitoring">
-                                <i class="ni ni-sound-wave text-warning"></i>
-                                <span class="nav-link-text">Monitoring</span>
+                            <a class="nav-link {{ request()->is('schools*') ? 'active' : '' }}" href="{{ $schoolProfileUrl }}">
+                                <i class="ni ni-building text-info"></i>
+                                <span class="nav-link-text">School Profile</span>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->is('specialorder*') ? 'active' : '' }}" href="/specialorder">
-                                <i class="ni ni-paper-diploma text-danger"></i>
-                                <span class="nav-link-text">Special Order</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->is('training*') ? 'active' : '' }}" href="/training">
-                                <i class="ni ni-hat-3 text-success"></i>
-                                <span class="nav-link-text">Training</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                        @endif
+                    @endif
 
-                <ul class="navbar-nav">
+                    @if($isAdmin || $isSchool || $isEO)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('monitoring*') ? 'active' : '' }}" href="/monitoring">
+                            <i class="ni ni-sound-wave text-warning"></i>
+                            <span class="nav-link-text">Monitoring</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    @if($isAdmin || $isSchool || $isEO || $isPersonnel)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('specialorder*') ? 'active' : '' }}" href="/specialorder">
+                            <i class="ni ni-paper-diploma text-danger"></i>
+                            <span class="nav-link-text">Special Order</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    @if($isAdmin || $isSchool || $isEO || $isPersonnel)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('training*') ? 'active' : '' }}" href="/training">
+                            <i class="ni ni-hat-3 text-success"></i>
+                            <span class="nav-link-text">Training</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    @if($isAdmin || $isSchool)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('equipment*') ? 'active' : '' }}" href="/equipment">
                             <i class="ni ni-archive-2 text-primary"></i>
                             <span class="nav-link-text">Inventory</span>
                         </a>
                     </li>
+                    @endif
+
+                    @if($isAdmin)
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('isp*') ? 'active' : '' }}" href="#navbar-internet" data-toggle="collapse" role="button" aria-expanded="{{ request()->is('isp*') ? 'true' : 'false' }}">
+                        <a class="nav-link {{ request()->is('internet*') || request()->is('isp*') ? 'active' : '' }}" href="#navbar-internet" data-toggle="collapse" role="button" aria-expanded="{{ request()->is('internet*') || request()->is('isp*') ? 'true' : 'false' }}">
                             <i class="ni ni-world text-info"></i>
                             <span class="nav-link-text">Internet Connectivity</span>
                         </a>
-                        <div class="collapse {{ request()->is('isp*') ? 'show' : '' }}" id="navbar-internet">
+                        <div class="collapse {{ request()->is('internet*') || request()->is('isp*') ? 'show' : '' }}" id="navbar-internet">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="/internet" class="nav-link {{ request()->is('isp/profiles') ? 'active text-primary font-weight-bold' : '' }}">
+                                    <a href="/internet" class="nav-link {{ request()->is('internet*') ? 'active text-primary font-weight-bold' : '' }}">
                                         <span class="sidenav-normal"> Internet Profile </span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/isp" class="nav-link {{ request()->is('isp/accounts') ? 'active text-primary font-weight-bold' : '' }}">
-                                        <span class="sidenav-normal"> ISP Account </span>
+                                    <a href="/isp" class="nav-link {{ request()->is('isp*') ? 'active text-primary font-weight-bold' : '' }}">
+                                        <span class="sidenav-normal"> ISP Inventory </span>
                                     </a>
                                 </li>
                             </ul>
                         </div>
                     </li>
+                    @endif
 
-                    @if(Auth::check() && Auth::user()->hasRole('admin'))
+                    @if($isAdmin || $isSchool)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('reports*') ? 'active' : '' }}" href="/reports">
+                            <i class="ni ni-chart-pie-35 text-orange"></i>
+                            <span class="nav-link-text">Reports</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    @if($isAdmin || $isSchool)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('logs*') ? 'active' : '' }}" href="/logs">
+                            <i class="ni ni-bullet-list-67 text-default"></i>
+                            <span class="nav-link-text">Audit Trail</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    @if($isAdmin || $isSchool)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('users*') ? 'active' : '' }}" href="/users">
                             <i class="ni ni-settings-gear-65 text-dark"></i>
@@ -119,19 +176,6 @@
                         </a>
                     </li>
                     @endif
-
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('reports*') ? 'active' : '' }}" href="/reports">
-                            <i class="ni ni-chart-pie-35 text-orange"></i>
-                            <span class="nav-link-text">Report</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('logs*') ? 'active' : '' }}" href="/logs">
-                            <i class="ni ni-bullet-list-67 text-default"></i>
-                            <span class="nav-link-text">Audit Trail</span>
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <form method="POST" action="/logout" style="display:inline;">
                             @csrf
@@ -142,47 +186,7 @@
                         </form>
                     </li>
                 </ul>
-                
-                <div class="mt-3 text-center">
-                    <button id="toggle-menu-btn" class="btn btn-sm btn-outline-primary rounded-circle" type="button" title="Show/Hide Extra Menu">
-                        <i class="ni ni-bold-down" id="toggle-icon"></i>
-                    </button>
-                </div>
             </div>
         </div>
     </div>
 </nav>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    var hiddenMenus = document.getElementById("hidden-menus");
-    var toggleBtn = document.getElementById("toggle-menu-btn");
-    var toggleIcon = document.getElementById("toggle-icon");
-    
-    var isVisible = localStorage.getItem("sidebar_extra_visible") === "true";
-    
-    if (isVisible) {
-        hiddenMenus.style.display = "block";
-        toggleIcon.classList.replace("ni-bold-down", "ni-bold-up");
-    }
-    
-    toggleBtn.addEventListener("click", function() {
-        if (hiddenMenus.style.display === "none" || hiddenMenus.style.display === "") {
-            hiddenMenus.style.display = "block";
-            localStorage.setItem("sidebar_extra_visible", "true");
-            toggleIcon.classList.replace("ni-bold-down", "ni-bold-up");
-        } else {
-            hiddenMenus.style.display = "none";
-            localStorage.setItem("sidebar_extra_visible", "false");
-            toggleIcon.classList.replace("ni-bold-up", "ni-bold-down");
-        }
-    });
-
-    var activeHiddenLink = hiddenMenus.querySelector(".nav-link.active");
-    if(activeHiddenLink) {
-         hiddenMenus.style.display = "block";
-         localStorage.setItem("sidebar_extra_visible", "true"); 
-         toggleIcon.classList.replace("ni-bold-down", "ni-bold-up");
-    }
-});
-</script>

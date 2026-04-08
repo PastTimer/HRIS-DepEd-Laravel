@@ -24,7 +24,10 @@ class AuthController extends Controller
         // Attempt to log in
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            
+            $user = Auth::user();
+            if ($user && $user->hasRole('personnel') && $user->personnel_id) {
+                return redirect()->route('personnel.show', $user->personnel_id);
+            }
             // Redirect to dashboard on success!
             return redirect()->intended('dashboard');
         }

@@ -20,7 +20,7 @@ class SpecialOrderController extends Controller
         $query = SpecialOrder::with(['employees.school']);
 
         // 2. Security: School-level users see only orders containing their personnel
-        if ($user && $user->hasRole('school') && $user->school_id) {
+        if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer')) && $user->school_id) {
             $query->whereHas('employees', function($q) use ($user) {
                 $q->where('assigned_school_id', $user->school_id);
             });
