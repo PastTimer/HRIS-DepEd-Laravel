@@ -8,6 +8,8 @@
     $firstName = $pds->first_name ?? '';
     $gender = $pds?->birth_sex ? ucfirst(strtolower($pds->birth_sex)) : 'N/A';
     $civilStatus = $pds?->civil_status ? ucfirst(strtolower($pds->civil_status)) : null;
+    $canManageServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school']);
+    $canExportServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school', 'encoding_officer', 'personnel']);
 @endphp
 <div class="container-fluid mt-4">
     <div class="row">
@@ -65,6 +67,11 @@
                         <li class="nav-item">
                             <a class="nav-link py-3" data-toggle="tab" href="#inventory">
                                 <i class="ni ni-archive-2 mr-2"></i> Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-3" data-toggle="tab" href="#service-records">
+                                <i class="ni ni-badge mr-2"></i> Service Records
                             </a>
                         </li>
                         <li class="nav-item">
@@ -181,6 +188,227 @@
                             </div>
                         </div>
 
+                        <div class="tab-pane fade" id="service-records">
+                            @if(session('success'))
+                                <div class="alert alert-success">{{ session('success') }}</div>
+                            @endif
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="mb-0">Service Records</h4>
+                                <div>
+                                    @if($canManageServiceRecords)
+                                        <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#addServiceRecordModal">
+                                            <i class="fas fa-plus"></i> Add Record
+                                        </button>
+                                    @endif
+                                    @if($canExportServiceRecords)
+                                        <button class="btn btn-outline-secondary" disabled>
+                                            <i class="fas fa-file-export"></i> Export
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Add Service Record Modal -->
+                            @if($canManageServiceRecords)
+                            <div class="modal fade" id="addServiceRecordModal" tabindex="-1" role="dialog" aria-labelledby="addServiceRecordModalLabel" aria-hidden="true">
+                              <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                  <div class="modal-header">
+                                    <h5 class="modal-title" id="addServiceRecordModalLabel">Add Service Record</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                      <span aria-hidden="true">&times;</span>
+                                    </button>
+                                  </div>
+                                  <form action="{{ route('service-records.store', $personnel->id) }}" method="POST">
+                                    @csrf
+                                    <div class="modal-body">
+                                      <div class="row">
+                                        <div class="col-md-3 form-group">
+                                            <label>Date From <span class="text-danger">*</span></label>
+                                            <input type="date" name="date_from" class="form-control" value="{{ old('date_from', now()->toDateString()) }}" required>
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Date To</label>
+                                            <input type="date" name="date_to" class="form-control" value="{{ old('date_to') }}">
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Designation <span class="text-danger">*</span></label>
+                                            <select name="position_id" class="form-control" required>
+                                                <option value="" disabled {{ old('position_id') ? '' : 'selected' }}>Select Position</option>
+                                                @foreach($positions as $position)
+                                                    <option value="{{ $position->id }}" {{ (string) old('position_id', $personnel->position_id) === (string) $position->id ? 'selected' : '' }}>{{ $position->title }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Status <span class="text-danger">*</span></label>
+                                            <select name="status" class="form-control" required>
+                                                @foreach($employeeTypes as $type)
+                                                    <option value="{{ $type }}" {{ old('status', $personnel->employee_type) === $type ? 'selected' : '' }}>{{ $type }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                      </div>
+                                      <div class="row">
+                                        <div class="col-md-4 form-group">
+                                            <label>Station <span class="text-danger">*</span></label>
+                                            <select name="school_id" class="form-control" required>
+                                                <option value="" disabled {{ old('school_id') ? '' : 'selected' }}>Select School</option>
+                                                @foreach($schools as $school)
+                                                    <option value="{{ $school->id }}" {{ (string) old('school_id', $personnel->deployed_school_id ?? $personnel->assigned_school_id) === (string) $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Salary</label>
+                                            <input type="number" step="0.01" name="salary" class="form-control" value="{{ old('salary', $personnel->salary_actual) }}">
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Branch</label>
+                                            <input type="text" name="branch" class="form-control" value="{{ old('branch', $personnel->branch) }}">
+                                        </div>
+                                        <div class="col-md-2 form-group">
+                                            <label>LV/Abs WO Pay</label>
+                                            <input type="text" name="lv_abs_wo_pay" class="form-control" value="{{ old('lv_abs_wo_pay') }}">
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                      <button type="submit" class="btn btn-primary">Add Record</button>
+                                    </div>
+                                  </form>
+                                </div>
+                              </div>
+                            </div>
+                            @endif
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped align-items-center">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Date From</th>
+                                            <th>Date To</th>
+                                            <th>Designation</th>
+                                            <th>Status</th>
+                                            <th>Station</th>
+                                            <th>Salary</th>
+                                            <th>Branch</th>
+                                            <th>LV/Abs WO Pay</th>
+                                            @if($canManageServiceRecords)
+                                                <th style="width: 180px;">Actions</th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($personnel->serviceRecords->sortByDesc('date_from') as $record)
+                                            <tr>
+                                                <td>{{ $record->date_from }}</td>
+                                                <td>{{ $record->date_to ?? '---' }}</td>
+                                                <td>{{ $record->position->title ?? 'N/A' }}</td>
+                                                <td>{{ $record->status }}</td>
+                                                <td>{{ $record->school->name ?? 'N/A' }}</td>
+                                                <td>{{ $record->salary }}</td>
+                                                <td>{{ $record->branch ?? '---' }}</td>
+                                                <td>{{ $record->lv_abs_wo_pay ?? '---' }}</td>
+                                                @if($canManageServiceRecords)
+                                                <td>
+                                                    <button class="btn btn-sm btn-warning" type="button" data-toggle="modal" data-target="#editServiceRecordModal-{{ $record->id }}">
+                                                        Edit
+                                                    </button>
+                                                    <form action="{{ route('service-records.destroy', [$personnel->id, $record->id]) }}" method="POST" class="d-inline-block">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this service record?')">Delete</button>
+                                                    </form>
+                                                </td>
+                                                @endif
+                                            </tr>
+
+                                            <!-- Edit Service Record Modal -->
+                                            @if($canManageServiceRecords)
+                                            <div class="modal fade" id="editServiceRecordModal-{{ $record->id }}" tabindex="-1" role="dialog" aria-labelledby="editServiceRecordModalLabel-{{ $record->id }}" aria-hidden="true">
+                                              <div class="modal-dialog modal-lg" role="document">
+                                                <div class="modal-content">
+                                                  <div class="modal-header">
+                                                    <h5 class="modal-title" id="editServiceRecordModalLabel-{{ $record->id }}">Edit Service Record</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                      <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                  </div>
+                                                  <form action="{{ route('service-records.update', [$personnel->id, $record->id]) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="modal-body">
+                                                      <div class="row">
+                                                        <div class="col-md-3 form-group">
+                                                            <label>Date From <span class="text-danger">*</span></label>
+                                                            <input type="date" name="date_from" class="form-control" value="{{ $record->date_from }}" required>
+                                                        </div>
+                                                        <div class="col-md-3 form-group">
+                                                            <label>Date To</label>
+                                                            <input type="date" name="date_to" class="form-control" value="{{ $record->date_to }}">
+                                                        </div>
+                                                        <div class="col-md-3 form-group">
+                                                            <label>Designation <span class="text-danger">*</span></label>
+                                                            <select name="position_id" class="form-control" required>
+                                                                @foreach($positions as $position)
+                                                                    <option value="{{ $position->id }}" {{ (string) $record->position_id === (string) $position->id ? 'selected' : '' }}>{{ $position->title }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-3 form-group">
+                                                            <label>Status <span class="text-danger">*</span></label>
+                                                            <select name="status" class="form-control" required>
+                                                                @foreach($employeeTypes as $type)
+                                                                    <option value="{{ $type }}" {{ $record->status === $type ? 'selected' : '' }}>{{ $type }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                      </div>
+                                                      <div class="row">
+                                                        <div class="col-md-4 form-group">
+                                                            <label>Station <span class="text-danger">*</span></label>
+                                                            <select name="school_id" class="form-control" required>
+                                                                @foreach($schools as $school)
+                                                                    <option value="{{ $school->id }}" {{ (string) $record->school_id === (string) $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-3 form-group">
+                                                            <label>Salary</label>
+                                                            <input type="number" step="0.01" name="salary" class="form-control" value="{{ $record->salary }}">
+                                                        </div>
+                                                        <div class="col-md-3 form-group">
+                                                            <label>Branch</label>
+                                                            <input type="text" name="branch" class="form-control" value="{{ $record->branch }}">
+                                                        </div>
+                                                        <div class="col-md-2 form-group">
+                                                            <label>LV/Abs WO Pay</label>
+                                                            <input type="text" name="lv_abs_wo_pay" class="form-control" value="{{ $record->lv_abs_wo_pay }}">
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                      <button type="submit" class="btn btn-success">Save Changes</button>
+                                                    </div>
+                                                  </form>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            @endif
+                                        @empty
+                                            <tr>
+                                                <td colspan="9" class="text-center text-muted py-4">No service records yet.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <div class="tab-pane fade" id="history">
                             <div class="row">
                                 <div class="col-lg-6">
@@ -228,4 +456,15 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        if (window.location.hash) {
+            var trigger = document.querySelector('a.nav-link[href="' + window.location.hash + '"]');
+            if (trigger && window.jQuery) {
+                window.jQuery(trigger).tab('show');
+            }
+        }
+    })();
+</script>
 @endsection

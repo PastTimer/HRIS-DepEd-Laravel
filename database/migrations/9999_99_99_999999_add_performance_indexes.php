@@ -54,6 +54,22 @@ return new class extends Migration
             }
         }
 
+        // Service Records
+        $serviceRecordIndexes = [
+            'service_records_personnel_id_index' => 'personnel_id',
+            'service_records_position_id_index' => 'position_id',
+            'service_records_school_id_index' => 'school_id',
+            'service_records_date_from_index' => 'date_from',
+            'service_records_date_to_index' => 'date_to',
+        ];
+        foreach ($serviceRecordIndexes as $idxName => $col) {
+            if (!collect(\Illuminate\Support\Facades\DB::select("PRAGMA index_list('service_records')"))->pluck('name')->contains($idxName)) {
+                Schema::table('service_records', function (Blueprint $table) use ($col, $idxName) {
+                    $table->index($col, $idxName);
+                });
+            }
+        }
+
         // Equipment
         $equipmentIndexes = [
             'equipment_school_id_index' => 'school_id',
@@ -128,6 +144,13 @@ return new class extends Migration
     public function down(): void
     {
         // Drop indexes
+        Schema::table('service_records', function (Blueprint $table) {
+            $table->dropIndex('service_records_personnel_id_index');
+            $table->dropIndex('service_records_position_id_index');
+            $table->dropIndex('service_records_school_id_index');
+            $table->dropIndex('service_records_date_from_index');
+            $table->dropIndex('service_records_date_to_index');
+        });
         Schema::table('activity_logs', function (Blueprint $table) {
             $table->dropIndex('activity_logs_user_id_index');
             $table->dropIndex('activity_logs_created_at_index');

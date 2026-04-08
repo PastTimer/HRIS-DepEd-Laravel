@@ -162,6 +162,24 @@
                                         @error('employee_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 form-group mb-3">
+                                        <label class="form-control-label">Salary (Actual)</label>
+                                        <input type="number" step="0.01" name="salary_actual" class="form-control @error('salary_actual') is-invalid @enderror" value="{{ old('salary_actual', $personnel->salary_actual) }}">
+                                        @error('salary_actual') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-4 form-group mb-3">
+                                        <label class="form-control-label">Branch</label>
+                                        <input type="text" name="branch" class="form-control @error('branch') is-invalid @enderror" value="{{ old('branch', $personnel->branch) }}">
+                                        @error('branch') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-4 form-group mb-3">
+                                        <label class="form-control-label">Service Effective Date</label>
+                                        <input type="date" name="service_effective_date" class="form-control @error('service_effective_date') is-invalid @enderror" value="{{ old('service_effective_date', now()->toDateString()) }}">
+                                        @error('service_effective_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

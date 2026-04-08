@@ -27,6 +27,9 @@ return new class extends Migration
             $table->string('salary_grade')->nullable();
             $table->string('employee_type'); // Regular, Contractual, Substitute
 
+            $table->decimal('salary_actual', 15, 2)->nullable();
+            $table->string('branch')->nullable();
+
             $table->timestamps();
         });
     }

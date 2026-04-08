@@ -62,8 +62,43 @@ class PersonnelController extends Controller
             'current_step' => $validatedData['step'],
             'last_step_increment_date' => $validatedData['last_step'],
             'salary_grade' => $validatedData['sg'] ?? null,
+            'salary_actual' => $validatedData['salary_actual'] ?? null,
+            'branch' => $validatedData['branch'] ?? null,
             'employee_type' => $validatedData['employee_type'],
         ];
+    }
+
+    private function serviceRecordPayloadFromPersonnel(Personnel $personnel, string $dateFrom): array
+    {
+        return [
+            'position_id' => $personnel->position_id,
+            'school_id' => $personnel->deployed_school_id ?? $personnel->assigned_school_id,
+            'date_from' => $dateFrom,
+            'status' => $personnel->employee_type,
+            'salary' => $personnel->salary_actual,
+            'branch' => $personnel->branch,
+        ];
+    }
+
+    private function createServiceRecordFromPersonnel(Personnel $personnel, ?string $dateFrom = null): void
+    {
+        $dateValue = $dateFrom ?: now()->toDateString();
+
+        // Find the latest service record with a blank end date and set its date_to
+        $openRecord = $personnel->serviceRecords()
+            ->whereNull('date_to')
+            ->orderByDesc('date_from')
+            ->first();
+        if ($openRecord) {
+            // Set date_to to the day before the new record's date_from
+            $prevEnd = date('Y-m-d', strtotime($dateValue . ' -1 day'));
+            $openRecord->date_to = $prevEnd;
+            $openRecord->save();
+        }
+
+        $personnel->serviceRecords()->create(
+            $this->serviceRecordPayloadFromPersonnel($personnel, $dateValue)
+        );
     }
 
     private function pdsMainPayload(array $validatedData): array
@@ -169,9 +204,12 @@ class PersonnelController extends Controller
             'step' => 'required|integer|min:1',
             'last_step' => 'required|date',
             'sg' => 'nullable|string|max:50',
+            'salary_actual' => 'nullable|numeric|min:0',
+            'branch' => 'nullable|string|max:255',
             'employee_type' => 'required|string|max:100',
             'assigned_school_id' => 'required|exists:schools,id',
             'deployed_school_id' => 'nullable|exists:schools,id',
+            'service_start_date' => 'nullable|date',
 
             // IDs (PDS)
             'gsis_no' => 'nullable|string|max:100',
@@ -207,6 +245,11 @@ class PersonnelController extends Controller
             PdsMain::updateOrCreate(
                 ['personnel_id' => $personnel->id],
                 $this->pdsMainPayload($validatedData)
+            );
+
+            $this->createServiceRecordFromPersonnel(
+                $personnel,
+                $validatedData['service_start_date'] ?? ($validatedData['last_step'] ?? now()->toDateString())
             );
         });
 
@@ -261,9 +304,12 @@ class PersonnelController extends Controller
             'step' => 'required|integer|min:1',
             'last_step' => 'required|date',
             'sg' => 'nullable|string|max:50',
+            'salary_actual' => 'nullable|numeric|min:0',
+            'branch' => 'nullable|string|max:255',
             'employee_type' => 'required|string|max:100',
             'assigned_school_id' => 'required|exists:schools,id',
             'deployed_school_id' => 'nullable|exists:schools,id',
+            'service_effective_date' => 'nullable|date',
 
             // IDs (PDS)
             'gsis_no' => 'nullable|string|max:100',
@@ -306,6 +352,13 @@ class PersonnelController extends Controller
                 ['personnel_id' => $personnel->id],
                 $this->pdsMainPayload($validatedData)
             );
+
+            if ($personnel->wasChanged(['position_id', 'employee_type', 'assigned_school_id', 'deployed_school_id', 'salary_actual', 'branch'])) {
+                $this->createServiceRecordFromPersonnel(
+                    $personnel,
+                    $validatedData['service_effective_date'] ?? now()->toDateString()
+                );
+            }
         });
 
         $changes = [];
@@ -359,10 +412,16 @@ class PersonnelController extends Controller
             'equipment',
             'trainings',
             'specialOrders',
+            'serviceRecords.position',
+            'serviceRecords.school',
         ])->findOrFail($id);
 
         $this->assertPersonnelRecordAccess($personnel);
 
-        return view('personnel.show', compact('personnel'));
+        $positions = Position::orderBy('title')->get();
+        $schools = School::where('is_active', true)->orderBy('name')->get();
+        $employeeTypes = ['Regular', 'Contractual', 'Substitute'];
+
+        return view('personnel.show', compact('personnel', 'positions', 'schools', 'employeeTypes'));
     }
 }

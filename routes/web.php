@@ -60,6 +60,13 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('role:admin|school|encoding_officer')->group(function () {
         Route::get('/personnel', [PersonnelController::class, 'index'])->name('personnel.index');
+   
+        // Service Records CRUD (nested under personnel)
+           Route::prefix('personnel/{personnel}/service-records')->name('service-records.')->group(function () {
+               Route::post('/', [\App\Http\Controllers\ServiceRecordController::class, 'store'])->name('store');
+               Route::put('{service_record}', [\App\Http\Controllers\ServiceRecordController::class, 'update'])->name('update');
+               Route::delete('{service_record}', [\App\Http\Controllers\ServiceRecordController::class, 'destroy'])->name('destroy');
+           });
     });
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/personnel/{personnel}', [PersonnelController::class, 'show'])->name('personnel.show');

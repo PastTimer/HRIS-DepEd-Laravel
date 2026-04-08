@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             InternetAndIspSeeder::class,
             EquipmentSeeder::class,
+            ServiceRecordSeeder::class,
         ]);
     }
 }

@@ -18,6 +18,8 @@ class Personnel extends Model
         'current_step',
         'last_step_increment_date',
         'salary_grade',
+        'salary_actual',
+        'branch',
         'employee_type',
     ];
 
@@ -33,6 +35,10 @@ class Personnel extends Model
     public function pdsTraining() { return $this->hasMany(PdsTraining::class, 'personnel_id'); }
     public function pdsReferences() { return $this->hasMany(PdsReference::class, 'personnel_id'); }
     public function equipment() {return $this->hasMany(Equipment::class, 'accountable_officer_id');}
+    public function serviceRecords()
+    {
+        return $this->hasMany(\App\Models\ServiceRecord::class, 'personnel_id');
+    }
     public function trainings() {
         return $this->belongsToMany(Training::class, 'personnel_training', 'personnel_id', 'training_id');
     }
