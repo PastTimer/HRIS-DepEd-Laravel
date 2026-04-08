@@ -19,4 +19,24 @@ class PdsMain extends Model
 	{
 		return $this->belongsTo(PdsSubmission::class, 'submission_id');
 	}
+
+	public function voluntary_works()
+	{
+		return $this->hasMany(PdsVoluntaryWork::class, 'personnel_id', 'personnel_id');
+	}
+
+	public function skills()
+	{
+		return $this->hasMany(PdsSkill::class, 'personnel_id', 'personnel_id');
+	}
+
+	public function distinctions()
+	{
+		return $this->hasMany(PdsDistinction::class, 'personnel_id', 'personnel_id');
+	}
+
+	public function memberships()
+	{
+		return $this->hasMany(PdsMembership::class, 'personnel_id', 'personnel_id');
+	}
 }

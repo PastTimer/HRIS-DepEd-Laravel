@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    {
+{
         Schema::create('pds_submissions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
             $table->foreignId('submission_id')->nullable()->constrained('pds_submissions')->onDelete('cascade');
 
-            // Personal information
+            // C1 - 1 to 9 [Personal Information]
             $table->string('last_name')->nullable();
             $table->string('first_name')->nullable();
             $table->string('middle_name')->nullable();
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->decimal('weight', 5, 2)->nullable();
             $table->string('blood_type', 5)->nullable();
 
-            // Government numbers
+            // C1 - 10 to 15 [Government Numbers]
             $table->string('umid_id_number')->nullable();
             $table->string('pagibig_number')->nullable();
             $table->string('philhealth_number')->nullable();
@@ -51,13 +51,13 @@ return new class extends Migration
             $table->string('tin_number')->nullable()->unique();
             $table->string('agency_employee_number')->nullable()->unique();
 
-            // Citizenship
+            // C1 - 16 [Citizenship]
             $table->string('citizenship_type', 20)->default('FILIPINO');
             $table->string('citizenship_mode', 20)->nullable();
             $table->string('dual_citizenship_country')->nullable();
             $table->text('dual_citizenship_details')->nullable();
 
-            // Residence split fields
+            // C1 - 17 [Residential Address]
             $table->string('res_house_lot')->nullable();
             $table->string('res_street')->nullable();
             $table->string('res_subdivision')->nullable();
@@ -66,6 +66,7 @@ return new class extends Migration
             $table->string('res_province')->nullable();
             $table->string('res_zipcode', 10)->nullable();
 
+            // C1 - 18 [Permanent Address]
             $table->string('perm_house_lot')->nullable();
             $table->string('perm_street')->nullable();
             $table->string('perm_subdivision')->nullable();
@@ -74,15 +75,15 @@ return new class extends Migration
             $table->string('perm_province')->nullable();
             $table->string('perm_zipcode', 10)->nullable();
 
-            // Practical single-field address for initial personnel flow
+            // Practical Single-Field Address for Initial Personnel Flow
             $table->text('residential_address')->nullable();
 
-            // Contact
+            // C1 - 19 to 21 [Contact]
             $table->string('telephone')->nullable();
             $table->string('mobile')->nullable();
             $table->string('email_address')->nullable();
 
-            // Family
+            // C1 - 22 to 25 [Family]
             $table->string('spouse_last_name')->nullable();
             $table->string('spouse_first_name')->nullable();
             $table->string('spouse_middle_name')->nullable();
@@ -101,7 +102,7 @@ return new class extends Migration
             $table->string('mother_first_name')->nullable();
             $table->string('mother_middle_name')->nullable();
 
-            // Questions
+            // C4 - 34 to 40 [Questions]
             $table->boolean('related_third_degree')->nullable();
             $table->boolean('related_fourth_degree')->nullable();
             $table->text('related_fourth_degree_details')->nullable();
@@ -109,7 +110,8 @@ return new class extends Migration
             $table->boolean('admin_offense')->nullable();
             $table->text('admin_offense_details')->nullable();
             $table->boolean('criminal_case')->nullable();
-            $table->text('criminal_case_details')->nullable();
+            $table->date('criminal_case_date')->nullable();
+            $table->text('criminal_case_status')->nullable();
 
             $table->boolean('convicted')->nullable();
             $table->text('convicted_details')->nullable();
@@ -144,6 +146,7 @@ return new class extends Migration
             $table->index('submission_id');
         });
 
+        // C1 - II [Family - Children]
         Schema::create('pds_children', function (Blueprint $table) {
             $table->id();
             $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
@@ -153,6 +156,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // C1 - III [Educational Background]
         Schema::create('pds_education', function (Blueprint $table) {
             $table->id();
             $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
@@ -162,10 +166,13 @@ return new class extends Migration
             $table->string('degree')->nullable();
             $table->unsignedInteger('from_year')->nullable();
             $table->unsignedInteger('to_year')->nullable();
+            $table->string('highest_level_units')->nullable();
+            $table->unsignedInteger('year_graduated')->nullable();
             $table->string('honors')->nullable();
             $table->timestamps();
         });
 
+        // C2 - IV [Eligibility]
         Schema::create('pds_eligibility', function (Blueprint $table) {
             $table->id();
             $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
@@ -179,6 +186,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // C2 - V [Work Experience]
         Schema::create('pds_work_experience', function (Blueprint $table) {
             $table->id();
             $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
@@ -188,9 +196,25 @@ return new class extends Migration
             $table->string('position')->nullable();
             $table->string('company')->nullable();
             $table->string('appointment_status')->nullable();
+            $table->boolean('is_government')->nullable();
             $table->timestamps();
         });
 
+        // C3 - VI [Voluntary Work]
+        Schema::create('pds_voluntary_work', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
+            $table->foreignId('submission_id')->nullable()->constrained('pds_submissions')->onDelete('cascade');
+            $table->string('organization_name');
+            $table->string('organization_address')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('to_date')->nullable();
+            $table->unsignedInteger('number_of_hours')->nullable();
+            $table->string('position')->nullable();
+            $table->timestamps();
+        });
+
+        // C3 - VII [Training]
         Schema::create('pds_training', function (Blueprint $table) {
             $table->id();
             $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
@@ -204,6 +228,34 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // C3 - VIII [Other Information - Skills]
+        Schema::create('pds_skills', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
+            $table->foreignId('submission_id')->nullable()->constrained('pds_submissions')->onDelete('cascade');
+            $table->string('skill')->nullable();
+            $table->timestamps();
+        });
+
+        // C3 - VIII [Other Information - Distinctions]
+        Schema::create('pds_distinctions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
+            $table->foreignId('submission_id')->nullable()->constrained('pds_submissions')->onDelete('cascade');
+            $table->string('distinction')->nullable();
+            $table->timestamps();
+        });
+
+        // C3 - VIII [Other Information - Memberships]
+        Schema::create('pds_memberships', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
+            $table->foreignId('submission_id')->nullable()->constrained('pds_submissions')->onDelete('cascade');
+            $table->string('membership')->nullable();
+            $table->timestamps();
+        });
+
+        // C4 - 41 [References]
         Schema::create('pds_references', function (Blueprint $table) {
             $table->id();
             $table->foreignId('personnel_id')->constrained('personnel')->onDelete('cascade');
@@ -217,9 +269,13 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists('pds_memberships');
+        Schema::dropIfExists('pds_distinctions');
+        Schema::dropIfExists('pds_skills');
         Schema::dropIfExists('pds_references');
         Schema::dropIfExists('pds_training');
         Schema::dropIfExists('pds_work_experience');
+        Schema::dropIfExists('pds_voluntary_work');
         Schema::dropIfExists('pds_eligibility');
         Schema::dropIfExists('pds_education');
         Schema::dropIfExists('pds_children');

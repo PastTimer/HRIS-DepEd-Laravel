@@ -17,7 +17,7 @@ use App\Models\PdsReference;
 use App\Models\District; 
 use Faker\Factory as Faker;
 
-class EmployeeSeeder extends Seeder
+class PersonnelSeeder extends Seeder
 {
     public function run(): void
     {
@@ -133,40 +133,16 @@ class EmployeeSeeder extends Seeder
             ]);
         }
 
-        // 4. Generate 50 Fake Personnel + linked PDS records
+        // 4. Generate 50 Fake Personnel
         for ($i = 0; $i < 50; $i++) {
             $employeeId = $faker->unique()->numerify('######');
-            $firstName = $faker->firstName();
-            $lastName = $faker->lastName();
-            $middleName = $faker->optional(0.7)->firstName();
-            $nameExt = $faker->randomElement([null, 'Jr.', 'III']);
-            $gender = $faker->randomElement(['Male', 'Female']);
-            $birthDate = $faker->dateTimeBetween('-50 years', '-20 years')->format('Y-m-d');
-            $placeOfBirth = $faker->city();
-            $civilStatus = $faker->randomElement(['Single', 'Married', 'Divorced', 'Widowed']);
-            $bloodType = $faker->randomElement(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
-
             $assignedSchoolId = $schools[array_rand($schools)]->id;
             $deployedSchoolId = $faker->boolean(25) ? $schools[array_rand($schools)]->id : $assignedSchoolId;
-
             $step = $faker->numberBetween(1, 8);
             $lastStep = $faker->dateTimeBetween('-5 years', 'now')->format('Y-m-d');
             $employeeType = $faker->randomElement(['Regular', 'Contractual', 'Substitute']);
-
-            $gsisNo = $faker->numerify('##########');
-            $pagibigNo = $faker->numerify('############');
-            $philhealthNo = $faker->numerify('############');
-            $sssNo = $faker->numerify('##-#######-#');
-            $tinNo = $faker->unique()->numerify('###-###-###-###');
-
-            $contactNo = $faker->numerify('09#########');
-            $emailAddress = $faker->unique()->safeEmail();
-            $residentialAddress = $faker->address();
-
-            // Guarantee unique item_number for all personnel
             $itemNumber = $faker->unique()->bothify('ITEM-####');
-
-            $personnel = Personnel::create([
+            Personnel::create([
                 'emp_id' => $employeeId,
                 'assigned_school_id' => $assignedSchoolId,
                 'deployed_school_id' => $deployedSchoolId,
@@ -178,111 +154,6 @@ class EmployeeSeeder extends Seeder
                 'profile_photo' => null,
                 'is_active' => $faker->boolean(90),
             ]);
-
-            $submission = PdsSubmission::create([
-                'personnel_id' => $personnel->id,
-                'version_number' => 1,
-                'submitted_at' => now(),
-                'status' => 'SUBMITTED',
-            ]);
-
-            PdsMain::create([
-                'personnel_id' => $personnel->id,
-                'submission_id' => $submission->id,
-                'last_name' => $lastName,
-                'first_name' => $firstName,
-                'middle_name' => $middleName,
-                'extension_name' => $nameExt,
-                'birth_date' => $birthDate,
-                'birth_place' => $placeOfBirth,
-                'birth_sex' => strtoupper($gender),
-                'civil_status' => strtoupper($civilStatus),
-                'blood_type' => $bloodType,
-                'umid_id_number' => $gsisNo,
-                'pagibig_number' => $pagibigNo,
-                'philhealth_number' => $philhealthNo,
-                'sss_number' => $sssNo,
-                'tin_number' => $tinNo,
-                'agency_employee_number' => $employeeId,
-                'mobile' => $contactNo,
-                'email_address' => $emailAddress,
-                'residential_address' => $residentialAddress,
-            ]);
-
-            $childrenCount = $faker->numberBetween(0, 3);
-            for ($c = 0; $c < $childrenCount; $c++) {
-                PdsChild::create([
-                    'personnel_id' => $personnel->id,
-                    'submission_id' => $submission->id,
-                    'child_name' => $faker->name(),
-                    'birth_date' => $faker->dateTimeBetween('-18 years', '-1 year')->format('Y-m-d'),
-                ]);
-            }
-
-            $educationLevels = ['ELEMENTARY', 'SECONDARY', 'COLLEGE'];
-            foreach ($educationLevels as $level) {
-                PdsEducation::create([
-                    'personnel_id' => $personnel->id,
-                    'submission_id' => $submission->id,
-                    'level' => $level,
-                    'school_name' => $faker->company() . ' School',
-                    'degree' => $level === 'COLLEGE' ? $faker->randomElement(['BSEd', 'BSIT', 'BSA']) : null,
-                    'from_year' => $faker->numberBetween(1990, 2010),
-                    'to_year' => $faker->numberBetween(2011, 2024),
-                    'honors' => $faker->optional(0.2)->randomElement(['With Honors', 'Cum Laude']),
-                ]);
-            }
-
-            if ($faker->boolean(70)) {
-                PdsEligibility::create([
-                    'personnel_id' => $personnel->id,
-                    'submission_id' => $submission->id,
-                    'eligibility' => $faker->randomElement(['LET', 'Civil Service Professional', 'N/A']),
-                    'rating' => (string) $faker->numberBetween(75, 95),
-                    'exam_date' => $faker->dateTimeBetween('-20 years', '-1 year')->format('Y-m-d'),
-                    'exam_place' => $faker->city(),
-                    'license_number' => $faker->numerify('LIC-######'),
-                    'license_valid_until' => $faker->dateTimeBetween('now', '+5 years')->format('Y-m-d H:i:s'),
-                ]);
-            }
-
-            $workCount = $faker->numberBetween(1, 3);
-            for ($w = 0; $w < $workCount; $w++) {
-                PdsWorkExperience::create([
-                    'personnel_id' => $personnel->id,
-                    'submission_id' => $submission->id,
-                    'start_date' => $faker->dateTimeBetween('-20 years', '-5 years')->format('Y-m-d'),
-                    'end_date' => $faker->dateTimeBetween('-4 years', 'now')->format('Y-m-d'),
-                    'position' => $faker->jobTitle(),
-                    'company' => $faker->company(),
-                    'appointment_status' => $faker->randomElement(['Permanent', 'Contractual', 'Temporary']),
-                ]);
-            }
-
-            $pdsTrainingCount = $faker->numberBetween(1, 3);
-            for ($t = 0; $t < $pdsTrainingCount; $t++) {
-                PdsTraining::create([
-                    'personnel_id' => $personnel->id,
-                    'submission_id' => $submission->id,
-                    'title' => $faker->catchPhrase(),
-                    'start_date' => $faker->dateTimeBetween('-5 years', '-1 year')->format('Y-m-d'),
-                    'end_date' => $faker->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
-                    'hours' => $faker->numberBetween(4, 40),
-                    'type' => $faker->randomElement(['MANAGERIAL', 'SUPERVISORY', 'TECHNICAL']),
-                    'sponsor' => $faker->company(),
-                ]);
-            }
-
-            $referenceCount = $faker->numberBetween(1, 3);
-            for ($r = 0; $r < $referenceCount; $r++) {
-                PdsReference::create([
-                    'personnel_id' => $personnel->id,
-                    'submission_id' => $submission->id,
-                    'name' => $faker->name(),
-                    'address' => $faker->address(),
-                    'contact' => $faker->phoneNumber(),
-                ]);
-            }
         }
     }
 }

@@ -434,7 +434,7 @@
                     <td class="value-cell">{!! $show($education?->degree) !!}</td>
                     <td class="value-cell center">{!! $showYear($education?->from_year) !!}</td>
                     <td class="value-cell center">{!! $showYear($education?->to_year) !!}</td>
-                    <td class="value-cell">&nbsp;</td>
+                    <td class="value-cell">{!! $show($education?->highest_level) !!}</td>
                     <td class="value-cell center">{!! $showYear($education?->to_year) !!}</td>
                     <td class="value-cell">{!! $show($education?->honors) !!}</td>
                 </tr>
@@ -543,7 +543,7 @@
                     <td class="value-cell">{!! $show($experience->position) !!}</td>
                     <td class="value-cell">{!! $show($experience->company) !!}</td>
                     <td class="value-cell">{!! $show($experience->appointment_status) !!}</td>
-                    <td class="value-cell center">{!! $yn($experience->gov_service ?? $experience->government_service ?? null) !!}</td>
+                    <td class="value-cell center">{!! $yn($experience->is_government ?? null) !!}</td>
                 </tr>
             @endforeach
             @for ($index = $experienceRows->take($workExperienceDisplayRows)->count(); $index < $workExperienceDisplayRows; $index++)
@@ -596,11 +596,18 @@
             </tr>
             @foreach($voluntaryRows as $rowNumber)
                 <tr>
-                    <td class="value-cell">&nbsp;</td>
-                    <td class="value-cell">&nbsp;</td>
-                    <td class="value-cell">&nbsp;</td>
-                    <td class="value-cell">&nbsp;</td>
-                    <td class="value-cell">&nbsp;</td>
+                    <td class="value-cell">
+                        @php
+                            $vw = $pds->voluntary_works->get($rowNumber - 1);
+                            $org = $vw->organization_name ?? $vw->organization ?? null;
+                            $addr = $vw->organization_address ?? null;
+                        @endphp
+                        {!! $show(trim(($org ? $org : '') . ($org && $addr ? ', ' : '') . ($addr ? $addr : ''))) !!}
+                    </td>
+                    <td class="value-cell">{!! $showDate($vw->from_date ?? null) !!}</td>
+                    <td class="value-cell">{!! $showDate($vw->to_date ?? null) !!}</td>
+                    <td class="value-cell">{!! $show($vw->number_of_hours ?? null) !!}</td>
+                    <td class="value-cell">{!! $show($vw->position ?? null) !!}</td>
                 </tr>
             @endforeach
             <tr>
@@ -669,9 +676,9 @@
             </tr>
             @foreach($otherRows as $rowNumber)
                 <tr>
-                    <td class="value-cell">&nbsp;</td>
-                    <td class="value-cell">&nbsp;</td>
-                    <td class="value-cell">&nbsp;</td>
+                    <td class="value-cell">{!! $show($pds->skills->get($rowNumber - 1)->skill ?? null) !!}</td>
+                    <td class="value-cell">{!! $show($pds->distinctions->get($rowNumber - 1)->distinction ?? null) !!}</td>
+                    <td class="value-cell">{!! $show($pds->memberships->get($rowNumber - 1)->membership ?? null) !!}</td>
                 </tr>
             @endforeach
             <tr>
@@ -702,6 +709,12 @@
                 <col style="width: 30%;">
             </colgroup>
 
+            @php
+                $cb = fn($checked) => $checked === null ? '☐' : ($checked ? '☑' : '☐');
+                $cbNo = fn($checked) => $checked === null ? '☐' : ($checked ? '☐' : '☑');
+            @endphp
+
+            <!-- 34 -->
             <tr style="height: 72px;">
                 <td class="question-cell">
                     <b>34.</b> Are you related by consanguinity or affinity to the appointing or recommending authority, or to the chief of bureau or office or to the person who has immediate supervision over you in the Office, Bureau or Department where you will be appointed,
@@ -709,90 +722,107 @@
                     <br><span class="small">b.</span> within the fourth degree (for Local Government Unit - Career Employees)?
                 </td>
                 <td class="value-cell" style="vertical-align: top;">
-                    <div class="details-label">IF YES, give details:</div>
-                    <span class="fill-line"></span>
-                    <span class="fill-line"></span>
-                    <span class="fill-line"></span>
+                    <span style="margin-left:8px;">{!! $cb($pds?->related_third_degree) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->related_third_degree) !!} NO</span>
+                    <span style="margin-left:8px;">{!! $cb($pds?->related_fourth_degree) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->related_fourth_degree) !!} NO</span>
+                    <div class="details-label">If YES, give details:</div>
+                    {!! $show($pds?->related_fourth_degree_details) !!}
                 </td>
             </tr>
 
+            <!-- 35 -->
             <tr style="height: 48px;">
                 <td class="question-cell">
                     <b>35.a</b> Have you ever been found guilty of any administrative offense?
                 </td>
                 <td class="value-cell" style="vertical-align: top;">
+                    <span style="margin-left:8px;">{!! $cb($pds?->admin_offense) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->admin_offense) !!} NO</span>
                     <div class="details-label">If YES, give details:</div>
-                    <span class="fill-line"></span>
-                    <span class="fill-line"></span>
+                    {!! $show($pds?->admin_offense_details) !!}
                 </td>
             </tr>
-
             <tr style="height: 62px;">
                 <td class="question-cell">
                     <b>35.b</b> Have you been criminally charged before any court?
                 </td>
                 <td class="value-cell" style="vertical-align: top;">
+                    <span style="margin-left:8px;">{!! $cb($pds?->criminal_case) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->criminal_case) !!} NO</span>
                     <div class="details-label">If YES, give details:</div>
-                    <span class="fill-line tight"></span>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 2px;">
-                        <tr>
-                            <td style="border: 0; padding: 0; width: 42%; font-size: 7px;">Date Filed:</td>
-                            <td style="border: 0; padding: 0;"><span class="fill-line tight"></span></td>
-                        </tr>
-                        <tr>
-                            <td style="border: 0; padding: 0; font-size: 7px;">Status of Case/s:</td>
-                            <td style="border: 0; padding: 0;"><span class="fill-line tight"></span></td>
-                        </tr>
-                    </table>
+                    {!! $show($pds?->criminal_case_details) !!}
+                    <div class="details-label">Date Filed:</div>
+                    {!! $show($pds?->criminal_case_date_filed) !!}
+                    <div class="details-label">Status of Case/s:</div>
+                    {!! $show($pds?->criminal_case_status) !!}
                 </td>
             </tr>
 
+            <!-- 36 -->
             <tr style="height: 48px;">
                 <td class="question-cell">
                     <b>36.</b> Have you ever been convicted of any crime or violation of any law, decree, ordinance or regulation by any court or tribunal?
                 </td>
                 <td class="value-cell" style="vertical-align: top;">
+                    <span style="margin-left:8px;">{!! $cb($pds?->convicted) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->convicted) !!} NO</span>
                     <div class="details-label">If YES, give details:</div>
-                    <span class="fill-line"></span>
-                    <span class="fill-line"></span>
+                    {!! $show($pds?->convicted_details) !!}
                 </td>
             </tr>
 
+            <!-- 37 -->
             <tr style="height: 58px;">
                 <td class="question-cell">
                     <b>37.</b> Have you ever been separated from the service in any of the following modes: resignation, retirement, dropped from the rolls, dismissal, termination, end of term, finished contract or phased out (abolition) in the public or private sector?
                 </td>
                 <td class="value-cell" style="vertical-align: top;">
+                    <span style="margin-left:8px;">{!! $cb($pds?->separated_service) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->separated_service) !!} NO</span>
                     <div class="details-label">If YES, give details:</div>
-                    <span class="fill-line"></span>
-                    <span class="fill-line"></span>
+                    {!! $show($pds?->separated_service_details) !!}
                 </td>
             </tr>
 
+            <!-- 38 -->
             <tr style="height: 62px;">
                 <td class="question-cell">
                     <b>38.a</b> Have you ever been a candidate in a national or local election held within the last year (except Barangay election)?
-                    <br><b>38.b</b> Have you resigned from the government service during the three (3)-month period before the last election to promote/actively campaign for a national or local candidate?
                 </td>
                 <td class="value-cell" style="vertical-align: top;">
+                    <span style="margin-left:8px;">{!! $cb($pds?->election_candidate) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->election_candidate) !!} NO</span>
                     <div class="details-label">If YES, give details:</div>
-                    <span class="fill-line"></span>
-                    <div class="details-label" style="margin-top: 4px;">If YES, give details:</div>
-                    <span class="fill-line"></span>
+                    {!! $show($pds?->election_candidate_details) !!}
+                </td>
+            </tr>
+            <tr style="height: 62px;">
+                <td class="question-cell">
+                    <b>38.b</b> Have you resigned from the government service during the three (3)-month period before the last election to promote/actively campaign for a national or local candidate?
+                </td>
+                <td class="value-cell" style="vertical-align: top;">
+                    <span style="margin-left:8px;">{!! $cb($pds?->election_resigned) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->election_resigned) !!} NO</span>
+                    <div class="details-label">If YES, give details:</div>
+                    {!! $show($pds?->election_resigned_details) !!}
                 </td>
             </tr>
 
+            <!-- 39 -->
             <tr style="height: 48px;">
                 <td class="question-cell">
                     <b>39.</b> Have you acquired the status of an immigrant or permanent resident of another country?
                 </td>
                 <td class="value-cell" style="vertical-align: top;">
+                    <span style="margin-left:8px;">{!! $cb($pds?->immigrant) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->immigrant) !!} NO</span>
                     <div class="details-label">If YES, give details (country):</div>
-                    <span class="fill-line"></span>
-                    <span class="fill-line"></span>
+                    {!! $show($pds?->immigrant_details) !!}
                 </td>
             </tr>
 
+            <!-- 40 -->
             <tr style="height: 78px;">
                 <td class="question-cell">
                     <b>40.</b> Pursuant to: (a) Indigenous People's Act (RA 8371); (b) Magna Carta for Disabled Persons (RA 7277, as amended); and (c) Expanded Solo Parents Welfare Act (RA 11861), please answer the following items:
@@ -801,26 +831,20 @@
                     <br><span class="small">c.</span> Are you a solo parent?
                 </td>
                 <td class="value-cell" style="vertical-align: top;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="border: 0; padding: 0; font-size: 7px;">If YES, please specify:</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 0; padding: 0;"><span class="fill-line tight"></span></td>
-                        </tr>
-                        <tr>
-                            <td style="border: 0; padding: 0; font-size: 7px; padding-top: 2px;">If YES, please specify ID No.:</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 0; padding: 0;"><span class="fill-line tight"></span></td>
-                        </tr>
-                        <tr>
-                            <td style="border: 0; padding: 0; font-size: 7px; padding-top: 2px;">If YES, please specify:</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 0; padding: 0;"><span class="fill-line tight"></span></td>
-                        </tr>
-                    </table>
+                    <span style="margin-left:8px;">{!! $cb($pds?->indigenous) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->indigenous) !!} NO</span>
+                    <div class="details-label">If YES, please specify:</div>
+                    {!! $show($pds?->indigenous_details) !!}
+
+                    <span style="margin-left:8px;">{!! $cb($pds?->pwd) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->pwd) !!} NO</span>
+                    <div class="details-label">If YES, please specify ID No:</div>
+                    {!! $show($pds?->pwd_details) !!}
+
+                    <span style="margin-left:8px;">{!! $cb($pds?->solo_parent) !!} YES</span>
+                    <span style="margin-left:8px;">{!! $cbNo($pds?->solo_parent) !!} NO</span>
+                    <div class="details-label">If YES, please specify ID No:</div>
+                    {!! $show($pds?->solo_parent_details) !!}
                 </td>
             </tr>
         </table>
@@ -898,13 +922,19 @@
                     </table>
                     <table style="width:100%; border-collapse: collapse; table-layout: fixed;">
                         <tr>
-                            <td style="border-top:1px solid #000; border-left:0; border-right:0; border-bottom:0; padding: 2px 6px; font-size: 7px;">Government Issued ID:</td>
+                            <td style="border-top:1px solid #000; border-left:0; border-right:0; border-bottom:0; padding: 2px 6px; font-size: 7px;">
+                                Government Issued ID: {!! $show($pds?->issued_id) !!}
+                            </td>
                         </tr>
                         <tr>
-                            <td style="border-top:1px solid #000; border-left:0; border-right:0; border-bottom:0; padding: 2px 6px; font-size: 7px;">ID/License/Passport No.:</td>
+                            <td style="border-top:1px solid #000; border-left:0; border-right:0; border-bottom:0; padding: 2px 6px; font-size: 7px;">
+                                ID/License/Passport No.: {!! $show($pds?->id_number) !!}
+                            </td>
                         </tr>
                         <tr>
-                            <td style="border-top:1px solid #000; border-left:0; border-right:0; border-bottom:0; padding: 2px 6px; font-size: 7px;">Date/Place of Issuance:</td>
+                            <td style="border-top:1px solid #000; border-left:0; border-right:0; border-bottom:0; padding: 2px 6px; font-size: 7px;">
+                                Date/Place of Issuance: {!! $showDate($pds?->issue_date) !!} {!! $show($pds?->issue_place) !!}
+                            </td>
                         </tr>
                     </table>
                 </td>
