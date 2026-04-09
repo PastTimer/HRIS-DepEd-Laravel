@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
                Route::put('{service_record}', [\App\Http\Controllers\ServiceRecordController::class, 'update'])->name('update');
                Route::delete('{service_record}', [\App\Http\Controllers\ServiceRecordController::class, 'destroy'])->name('destroy');
            });
+        Route::get('/personnel/{personnel}/service-records/export/xlsx-format', [\App\Http\Controllers\ServiceRecordController::class, 'exportXlsxFormat'])->name('service-records.export.xlsx-format');
     });
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/personnel/{personnel}', [PersonnelController::class, 'show'])->name('personnel.show');

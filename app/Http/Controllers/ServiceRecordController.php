@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Personnel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Exports\ServiceRecordFormatExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ServiceRecordController extends Controller
 {
@@ -137,5 +139,13 @@ class ServiceRecordController extends Controller
         $this->syncPersonnelFromLatestServiceRecord($personnel);
 
         return $this->redirectToPersonnelServiceTab($personnelId, 'Service record deleted.');
+    }
+
+    public function exportXlsxFormat($personnelId)
+    {
+        $personnel = Personnel::findOrFail($personnelId);
+        $export = new ServiceRecordFormatExport($personnel);
+        $filename = 'Service_Record_' . $personnel->pdsMain->last_name . '_' . $personnel->pdsMain->first_name . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
     }
 }

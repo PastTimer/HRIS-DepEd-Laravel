@@ -203,9 +203,9 @@
                                         </button>
                                     @endif
                                     @if($canExportServiceRecords)
-                                        <button class="btn btn-outline-secondary" disabled>
-                                            <i class="fas fa-file-export"></i> Export
-                                        </button>
+                                        <a href="{{ route('service-records.export.xlsx-format', $personnel->id) }}" class="btn btn-outline-success">
+                                            <i class="fas fa-file-excel"></i> Export
+                                        </a>
                                     @endif
                                 </div>
                             </div>
@@ -309,8 +309,8 @@
                                                 <td>{{ $record->date_to ?? '---' }}</td>
                                                 <td>{{ $record->position->title ?? 'N/A' }}</td>
                                                 <td>{{ $record->status }}</td>
-                                                <td>{{ $record->school->name ?? 'N/A' }}</td>
                                                 <td>{{ $record->salary }}</td>
+                                                <td>{{ $record->school->name ?? 'N/A' }}</td>
                                                 <td>{{ $record->branch ?? '---' }}</td>
                                                 <td>{{ $record->lv_abs_wo_pay ?? '---' }}</td>
                                                 @if($canManageServiceRecords)
