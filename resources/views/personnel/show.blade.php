@@ -415,11 +415,11 @@
                                 <div class="col-lg-6">
                                     <h4 class="mb-3 text-primary"><i class="ni ni-books mr-2"></i> Seminar History</h4>
                                     <div class="timeline timeline-one-side">
-                                        @forelse($personnel->trainings as $tr)
+                                        @forelse($personnel->pdsTraining as $tr)
                                         <div class="timeline-block mb-3">
                                             <span class="timeline-step badge-success"><i class="ni ni-check-bold"></i></span>
                                             <div class="timeline-content">
-                                                <small class="text-muted font-weight-bold">{{ $tr->date_from }}</small>
+                                                <small class="text-muted font-weight-bold">{{ $tr->start_date }}</small>
                                                 <h5 class="mt-1 mb-0">{{ $tr->title }}</h5>
                                                 <p class="text-sm mt-1 mb-0 text-muted">{{ $tr->hours }} Hours</p>
                                             </div>
@@ -432,15 +432,18 @@
                                 <div class="col-lg-6">
                                     <h4 class="mb-3 text-danger"><i class="ni ni-paper-diploma mr-2"></i> Special Orders</h4>
                                     <div class="list-group list-group-flush">
-                                        @forelse($personnel->specialOrders as $so)
+                                        @php
+                                            $approvedSOs = $personnel->specialOrders->where('status', 'Approved');
+                                        @endphp
+                                        @forelse($approvedSOs as $so)
                                         <div class="list-group-item px-0">
                                             <div class="row align-items-center">
                                                 <div class="col">
-                                                    <h5 class="mb-0">SO #{{ $so->so_no }}-{{ $so->series_year }}</h5>
+                                                    <h5 class="mb-0">SO #{{ $so->so_number ?? $so->so_no }}-{{ $so->series_year }}</h5>
                                                     <small class="text-muted">{{ Str::limit($so->title, 40) }}</small>
                                                 </div>
                                                 <div class="col-auto">
-                                                    <span class="badge badge-pill badge-secondary">{{ $so->type }}</span>
+                                                    <span class="badge badge-pill badge-primary">{{ $so->type->name ?? ($so->type ?? 'N/A') }}</span>
                                                 </div>
                                             </div>
                                         </div>

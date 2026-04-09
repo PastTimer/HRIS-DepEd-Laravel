@@ -6,7 +6,7 @@
 </style>
 
 <div class="container-fluid mt-4">
-    <form method="POST" action="/specialorder" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('specialorder.store') }}">
         @csrf
         <div class="row">
             
@@ -18,52 +18,80 @@
                     <div class="card-body bg-secondary">
                         
                         <div class="form-group mb-3">
-                            <label class="form-control-label">Title / Description <span class="text-danger">*</span></label>
-                            <textarea rows="3" class="form-control @error('title') is-invalid @enderror" name="title" required>{{ old('title') }}</textarea>
+                            <label class="form-control-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @error('title') is-invalid @enderror" name="title" value="{{ old('title') }}" required>
                             @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-control-label">Description</label>
+                            <textarea rows="3" class="form-control @error('description') is-invalid @enderror" name="description">{{ old('description') }}</textarea>
+                            @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 form-group mb-3">
                                 <label class="form-control-label">SO Number <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('so_no') is-invalid @enderror" name="so_no" value="{{ old('so_no') }}" placeholder="e.g. 123" required>
-                                @error('so_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <input type="text" class="form-control @error('so_number') is-invalid @enderror" name="so_number" value="{{ old('so_number') }}" placeholder="e.g. 123" required>
+                                @error('so_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6 form-group mb-3">
                                 <label class="form-control-label">Series Year <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="series_year" value="{{ old('series_year', date('Y')) }}" required>
+                                <input type="text" class="form-control @error('series_year') is-invalid @enderror" name="series_year" value="{{ old('series_year', date('Y')) }}" required>
+                                @error('series_year') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label class="form-control-label">SO Type <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <select name="type" id="sotype" class="form-control @error('type') is-invalid @enderror" onchange="handleTypeChange(this)" required>
-                                    <option value="" disabled {{ old('type') === null ? 'selected' : '' }}>--- Select Type ---</option>
-                                    <option value="VL" {{ old('type') == 'VL' ? 'selected' : '' }}>VL (Vacation Leave)</option>
-                                    <option value="SL" {{ old('type') == 'SL' ? 'selected' : '' }}>SL (Sick Leave)</option>
-                                    <option value="custom" {{ old('type') == 'custom' ? 'selected' : '' }}>Other / Custom</option>
+
+                        <div class="row">
+                            <div class="col-md-12 form-group mb-3">
+                                <label class="form-control-label">SO Type <span class="text-danger">*</span></label>
+                                <select name="type_id" id="type_id" class="form-control @error('type_id') is-invalid @enderror" required>
+                                    <option value="" disabled {{ old('type_id') ? '' : 'selected' }}>--- Select Type ---</option>
+                                    @foreach($types as $type)
+                                        <option value="{{ $type->id }}" data-default-value="{{ $type->value }}" {{ (string) old('type_id') === (string) $type->id ? 'selected' : '' }}>
+                                            {{ $type->name }}
+                                        </option>
+                                    @endforeach
                                 </select>
-                                <input type="text" name="custom_type" id="custom_type" class="form-control" placeholder="Enter custom SO type..." value="{{ old('custom_type') }}" style="{{ old('type') == 'custom' ? 'display: block;' : 'display: none;' }}">
+                                @error('type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
 
+
                         <div class="form-group mb-3">
-                            <label class="form-control-label">Selected Personnel <span class="text-danger">*</span></label>
-                            <textarea rows="6" id="empn_display" class="form-control bg-white" readonly placeholder="Select personnel from the list on the right..."></textarea>
+                            <label class="form-control-label">Selected Personnel & Units <span class="text-danger">*</span></label>
+                            <div id="selected-personnel-list">
+                                <p class="text-muted">Select personnel from the list on the right. You can set custom units for each below.</p>
+                                <table class="table table-bordered table-sm" style="background:#fff;">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th style="width:120px;">Units</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="selected-personnel-table-body">
+                                        <!-- JS will populate rows here -->
+                                    </tbody>
+                                </table>
+                            </div>
                             @error('employee_ids') <small class="text-danger font-weight-bold mt-2 d-block">Please select at least one personnel entry from the list.</small> @enderror
                         </div>
 
-                        <div class="form-group mb-4">
-                            <label class="form-control-label">Attachment (PDF/Image)</label>
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="customFile" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                <label class="custom-file-label" for="customFile">Choose file</label>
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="set_units_for_all" name="set_units_for_all" checked>
+                                <label class="form-check-label" for="set_units_for_all">
+                                    Set units for all selected personnel
+                                </label>
                             </div>
+                            <label class="form-control-label mt-2">Units</label>
+                            <input type="number" step="0.01" id="units" name="units" class="form-control @error('units') is-invalid @enderror" value="{{ old('units') }}" placeholder="Defaults to selected type value">
+                            @error('units') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="text-right">
-                            <a href="/specialorder" class="btn btn-secondary px-4">Cancel</a>
+                            <a href="{{ route('specialorder.index') }}" class="btn btn-secondary px-4">Cancel</a>
                             <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save mr-2"></i> Save Special Order</button>
                         </div>
                     </div>
@@ -91,12 +119,13 @@
                                 <tr>
                                     <td class="text-center">
                                         <div class="custom-control custom-checkbox">
-                                            <input type="checkbox" name="employee_ids[]" value="{{ $personnel->id }}" 
-                                                   class="custom-control-input personnel-checkbox" 
-                                                   id="check_{{ $personnel->id }}" 
-                                                   data-name="{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}"
-                                                   {{ (is_array(old('employee_ids')) && in_array($personnel->id, old('employee_ids'))) ? 'checked' : '' }}>
-                                            <label class="custom-control-label" for="check_{{ $personnel->id }}"></label>
+                                              <input type="checkbox" name="employee_ids[]" value="{{ $personnel->id }}" 
+                                                  class="custom-control-input personnel-checkbox" 
+                                                  id="check_{{ $personnel->id }}" 
+                                                  data-name="{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}"
+                                                  data-personnel-id="{{ $personnel->id }}"
+                                                  {{ (is_array(old('employee_ids')) && in_array($personnel->id, old('employee_ids'))) ? 'checked' : '' }}>
+                                              <label class="custom-control-label" for="check_{{ $personnel->id }}"></label>
                                         </div>
                                     </td>
                                     <td class="name-cell font-weight-bold">
@@ -112,6 +141,57 @@
 
         </div>
     </form>
+
+
+    <script>
+    // Collect personnel data for JS
+    const allPersonnel = [
+        @foreach($employees as $personnel)
+        {
+            id: {{ $personnel->id }},
+            name: @json(($personnel->pdsMain->last_name ?? 'N/A') . ', ' . ($personnel->pdsMain->first_name ?? '')),
+            defaultUnits: {{ (float) ($personnel->default_units ?? old('units', 1)) }}
+        },
+        @endforeach
+    ];
+
+    function getDefaultUnits() {
+        let sel = document.getElementById('type_id');
+        let opt = sel.options[sel.selectedIndex];
+        return parseFloat(opt.getAttribute('data-default-value')) || 1;
+    }
+
+    function updateSelectedPersonnelTable() {
+        const checked = document.querySelectorAll('.personnel-checkbox:checked');
+        const tbody = document.getElementById('selected-personnel-table-body');
+        tbody.innerHTML = '';
+        let defaultUnits = getDefaultUnits();
+        let setForAll = document.getElementById('set_units_for_all').checked;
+        let unitsVal = document.getElementById('units').value || defaultUnits;
+        let oldVal = @json(old('units_per_personnel', []));
+        checked.forEach(cb => {
+            let pid = cb.value;
+            let person = allPersonnel.find(p => p.id == pid);
+            let name = person ? person.name : 'Unknown';
+            let val = setForAll ? unitsVal : (oldVal && oldVal[pid] ? oldVal[pid] : defaultUnits);
+            tbody.innerHTML += `<tr><td>${name}<input type="hidden" name="employee_ids[]" value="${pid}"></td><td><input type="number" step="0.01" min="0" class="form-control form-control-sm units-input" name="units_per_personnel[${pid}]" value="${val}" ${setForAll ? 'readonly' : ''}></td></tr>`;
+        });
+    }
+
+    document.querySelectorAll('.personnel-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelectedPersonnelTable);
+    });
+    document.getElementById('type_id').addEventListener('change', updateSelectedPersonnelTable);
+    document.getElementById('units').addEventListener('input', updateSelectedPersonnelTable);
+    document.getElementById('set_units_for_all').addEventListener('change', function() {
+        updateSelectedPersonnelTable();
+        document.getElementById('units').disabled = !this.checked;
+    });
+    window.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('units').disabled = !document.getElementById('set_units_for_all').checked;
+        updateSelectedPersonnelTable();
+    });
+    </script>
 </div>
 
 <script>
@@ -129,23 +209,25 @@
         }
     }
 
-    // 2. Toggle custom SO type input
-    function handleTypeChange(select) {
-        let customInput = document.getElementById('custom_type');
-        if (select.value === 'custom') {
-            customInput.style.display = 'block';
-            customInput.required = true;
-            customInput.focus();
-        } else {
-            customInput.style.display = 'none';
-            customInput.required = false;
-        }
-    }
-
-    // 3. Update Textarea visual feedback
+    // 2. Keep selected personnel preview and units default behavior.
     document.addEventListener('DOMContentLoaded', function() {
         const checkboxes = document.querySelectorAll('.personnel-checkbox');
         const displayArea = document.getElementById('empn_display');
+        const typeSelect = document.getElementById('type_id');
+        const unitsInput = document.getElementById('units');
+        let unitsTouched = unitsInput.value !== '';
+
+        function applyDefaultUnitsFromType() {
+            const selected = typeSelect.options[typeSelect.selectedIndex];
+            if (!selected) {
+                return;
+            }
+
+            const defaultValue = selected.getAttribute('data-default-value');
+            if (!unitsTouched || unitsInput.value === '') {
+                unitsInput.value = defaultValue ?? '';
+            }
+        }
 
         function updateDisplay() {
             let selectedNames = [];
@@ -161,16 +243,18 @@
 
         // Run on load to handle validation redirects properly
         updateDisplay(); 
+        applyDefaultUnitsFromType();
 
         checkboxes.forEach(cb => {
             cb.addEventListener('change', updateDisplay);
         });
 
-        // Update file input label dynamically
-        document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-            let fileName = e.target.files[0].name;
-            let nextSibling = e.target.nextElementSibling;
-            nextSibling.innerText = fileName;
+        unitsInput.addEventListener('input', function () {
+            unitsTouched = true;
+        });
+
+        typeSelect.addEventListener('change', function () {
+            applyDefaultUnitsFromType();
         });
     });
 </script>

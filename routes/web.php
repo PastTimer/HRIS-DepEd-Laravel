@@ -108,16 +108,26 @@ Route::middleware('auth')->group(function () {
         Route::resource('equipment', EquipmentController::class);
     });
 
-    // Special Order (Admin full; School/EO/Personnel read-only for now)
+    // Special Order
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/specialorder', [SpecialOrderController::class, 'index'])->name('specialorder.index');
-    });
-    Route::middleware('role:admin')->group(function () {
+        Route::get('/specialorder/submissions', [SpecialOrderController::class, 'submissions'])->name('specialorder.submissions');
+
         Route::get('/specialorder/create', [SpecialOrderController::class, 'create'])->name('specialorder.create');
         Route::post('/specialorder', [SpecialOrderController::class, 'store'])->name('specialorder.store');
+
+        Route::get('/specialorder/types', [SpecialOrderController::class, 'typeIndex'])->name('specialorder.types.index');
+        Route::get('/specialorder/types/create', [SpecialOrderController::class, 'typeCreate'])->name('specialorder.types.create');
+        Route::post('/specialorder/types', [SpecialOrderController::class, 'typeStore'])->name('specialorder.types.store');
+        Route::get('/specialorder/types/{soType}/edit', [SpecialOrderController::class, 'typeEdit'])->name('specialorder.types.edit');
+        Route::put('/specialorder/types/{soType}', [SpecialOrderController::class, 'typeUpdate'])->name('specialorder.types.update');
+        Route::delete('/specialorder/types/{soType}', [SpecialOrderController::class, 'typeDestroy'])->name('specialorder.types.destroy');
+
+        Route::get('/specialorder/{specialorder}', [SpecialOrderController::class, 'show'])->name('specialorder.show');
         Route::get('/specialorder/{specialorder}/edit', [SpecialOrderController::class, 'edit'])->name('specialorder.edit');
         Route::put('/specialorder/{specialorder}', [SpecialOrderController::class, 'update'])->name('specialorder.update');
         Route::patch('/specialorder/{specialorder}', [SpecialOrderController::class, 'update']);
+        Route::patch('/specialorder/{specialorder}/status', [SpecialOrderController::class, 'updateStatus'])->name('specialorder.status.update');
         Route::delete('/specialorder/{specialorder}', [SpecialOrderController::class, 'destroy'])->name('specialorder.destroy');
     });
 

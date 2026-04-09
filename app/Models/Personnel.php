@@ -39,11 +39,11 @@ class Personnel extends Model
     {
         return $this->hasMany(\App\Models\ServiceRecord::class, 'personnel_id');
     }
-    public function trainings() {
-        return $this->belongsToMany(Training::class, 'personnel_training', 'personnel_id', 'training_id');
-    }
+
     public function specialOrders() {
-        return $this->belongsToMany(SpecialOrder::class, 'personnel_specialorder', 'personnel_id', 'specialorder_id');
+        return $this->belongsToMany(SpecialOrder::class, 'so_personnel', 'personnel_id', 'special_order_id')
+            ->withPivot('units')
+            ->withTimestamps();
     }
 
     public function users() {

@@ -2,22 +2,54 @@
 
 namespace App\Models;
 
+use App\Models\SoType;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class SpecialOrder extends Model
 {
-    protected $table = 'specialorder';
+    protected $table = 'special_orders';
 
-    protected $fillable = ['title', 'so_no', 'series_year', 'type', 'file_path', 'created_by'];
+    protected $fillable = [
+        'so_number',
+        'series_year',
+        'title',
+        'description',
+        'type_id',
+        'status',
+        'approved_by',
+        'approved_at',
+        'created_by',
+    ];
 
-    public function personnel()
+    protected $casts = [
+        'approved_at' => 'datetime',
+    ];
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(SoType::class, 'type_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function personnel(): BelongsToMany
     {
         return $this->belongsToMany(
             Personnel::class,
-            'personnel_specialorder',
-            'specialorder_id',
+            'so_personnel',
+            'special_order_id',
             'personnel_id'
-        );
+        )->withPivot('units')->withTimestamps();
     }
 
     public function employees()

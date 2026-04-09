@@ -439,7 +439,6 @@ class PersonnelController extends Controller
             'position',
             'school',
             'equipment',
-            'trainings',
             'specialOrders',
             'serviceRecords.position',
             'serviceRecords.school',

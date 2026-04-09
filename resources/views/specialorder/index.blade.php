@@ -32,7 +32,7 @@
                         <form action="{{ route('specialorder.index') }}" method="GET" class="mr-3 mb-0" data-ajax-search-form>
                             <div class="input-group input-group-sm">
                                 <input type="text" name="search" class="form-control" style="min-width: 280px;" 
-                                    placeholder="Search title, SO #, or personnel..." value="{{ request('search') }}">
+                                    placeholder="Search title, SO #, year, or type..." value="{{ request('search') }}">
                                 <div class="input-group-append">
                                     <button class="btn btn-primary" type="submit">
                                         <i class="fas fa-search"></i>
@@ -45,6 +45,14 @@
                                 </div>
                             </div>
                         </form>
+
+                        <a href="{{ route('specialorder.submissions') }}" class="btn btn-sm btn-outline-info mr-2">
+                            <i class="fas fa-inbox mr-1"></i> Submissions
+                        </a>
+
+                        <a href="{{ route('specialorder.types.index') }}" class="btn btn-sm btn-outline-secondary mr-2">
+                            <i class="fas fa-tags mr-1"></i> Order Types
+                        </a>
 
                         <a href="{{ route('specialorder.create') }}" class="btn btn-sm btn-success">
                             <i class="fas fa-plus mr-1"></i> New Order
@@ -61,31 +69,37 @@
                         </button>
                     </div>
                 @endif
+                @if(session('error'))
+                    <div class="alert alert-danger m-3 alert-dismissible fade show" role="alert">
+                        <span class="alert-icon"><i class="ni ni-fat-remove"></i></span>
+                        <span class="alert-text"><strong>Error:</strong> {{ session('error') }}</span>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
 
                 <div class="table-responsive">
                     <table class="table align-items-center table-flush table-hover">
                         <thead class="thead-light">
                             <tr class="text-uppercase">
-                                <th style="min-width: 300px;">Title / Description</th>
+                                <th style="min-width: 280px;">Title</th>
                                 <th class="text-center">SO Number</th>
-                                <th class="text-center">Date (Series)</th>
-                                <th class="text-center">Personnel Included</th>
+                                <th class="text-center">Series Year</th>
                                 <th class="text-center">Type</th>
-                                <th class="text-center">Attachment</th>
-                                @if(Auth::user()->hasRole('admin'))
-                                    <th class="text-center">Action</th>
-                                @endif
+                                <th class="text-center">Personnel Included (Number)</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($specialorder as $so)
+                            @forelse($orders as $so)
                             <tr>
                                 <td class="font-weight-bold text-dark" style="white-space: normal;">
                                     {{ $so->title }}
                                 </td>
                                 
                                 <td class="text-center">
-                                    {{ $so->so_no }}
+                                    {{ $so->so_number }}
                                 </td>
                                 
                                 <td class="text-center">
@@ -93,50 +107,38 @@
                                 </td>
 
                                 <td class="text-center">
+                                    <span class="badge badge-pill badge-primary">{{ $so->type->name ?? 'N/A' }}</span>
+                                </td>
+
+                                <td class="text-center">
                                     <span class="badge badge-secondary badge-pill">
-                                        <i class="fas fa-users mr-1"></i> {{ $so->employees->count() }}
+                                        <i class="fas fa-users mr-1"></i> {{ $so->personnel_count }}
                                     </span>
                                 </td>
                                 
                                 <td class="text-center">
-                                    @if($so->type === 'VL')
-                                        <span class="badge badge-pill badge-success">VL</span>
-                                    @elseif($so->type === 'SL')
-                                        <span class="badge badge-pill badge-warning">SL</span>
-                                    @else
-                                        <span class="badge badge-pill badge-primary">{{ $so->type }}</span>
-                                    @endif
-                                </td>
-                                
-                                <td class="text-center">
-                                    @if($so->file_path)
-                                        <a href="{{ asset('storage/' . $so->file_path) }}" target="_blank" class="btn btn-icon-only text-danger btn-sm" title="View Attachment">
-                                            <i class="fas fa-file-pdf fa-lg"></i>
-                                        </a>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                                
-                                @if(Auth::user()->hasRole('admin'))
-                                <td class="text-center">
-                                    <a href="/specialorder/{{ $so->id }}/edit" class="btn btn-sm btn-info" title="Edit">
+                                    <a href="{{ route('specialorder.show', $so) }}" class="btn btn-sm btn-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    <a href="{{ route('specialorder.edit', $so) }}" class="btn btn-sm btn-info" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     
-                                    <form method="POST" action="/specialorder/{{ $so->id }}" style="display:inline;">
+                                    @if(in_array($so->id, $deletableOrderIds ?? [], true))
+                                    <form method="POST" action="{{ route('specialorder.destroy', $so) }}" style="display:inline;">
                                         @csrf 
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to permanently DELETE this record?')" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endif
                                 </td>
-                                @endif
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="{{ Auth::user()->hasRole('admin') ? '7' : '6' }}" class="text-center py-5">
+                                <td colspan="6" class="text-center py-5">
                                     <i class="ni ni-paper-diploma fa-3x text-muted mb-3 d-block"></i>
                                     <h4 class="text-muted mb-0">No Special Orders found.</h4>
                                 </td>
@@ -147,7 +149,7 @@
                 </div>
                 
                 <div class="card-footer py-4">
-                    {{ $specialorder->links('pagination::bootstrap-4') }}
+                    {{ $orders->links('pagination::bootstrap-4') }}
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Internet Connectivity Dashboard')
+@section('title', 'Internet Connectivity Profiles')
 
 @section('content')
 <style>

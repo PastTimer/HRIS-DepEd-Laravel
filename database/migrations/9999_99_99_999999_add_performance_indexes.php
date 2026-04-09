@@ -123,6 +123,7 @@ return new class extends Migration
         $pivotTables = [
             'personnel_training' => ['personnel_id', 'training_id'],
             'personnel_specialorder' => ['personnel_id', 'specialorder_id'],
+            'so_personnel' => ['personnel_id', 'special_order_id'],
         ];
         foreach ($pivotTables as $tableName => $columns) {
             if (Schema::hasTable($tableName)) {
@@ -187,6 +188,7 @@ return new class extends Migration
         $pivotTables = [
             'personnel_training' => ['personnel_id', 'training_id'],
             'personnel_specialorder' => ['personnel_id', 'specialorder_id'],
+            'so_personnel' => ['personnel_id', 'special_order_id'],
         ];
         foreach ($pivotTables as $tableName => $columns) {
             if (Schema::hasTable($tableName)) {
