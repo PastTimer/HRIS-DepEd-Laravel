@@ -46,11 +46,7 @@
                                 <input type="text" class="form-control" name="sponsor" value="{{ old('sponsor', $training->sponsor) }}" required>
                             </div>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="form-control-label">Currently Included Personnel</label>
-                            <textarea id="selected_names" class="form-control bg-white" rows="6" readonly>{{ $training->personnel && $training->personnel->pdsMain ? ($training->personnel->pdsMain->last_name . ', ' . $training->personnel->pdsMain->first_name) : '' }}</textarea>
-                            <small class="text-muted">To change personnel, create a new record for each person.</small>
-                        </div>
+                        
 
                         <div class="text-right">
                             <a href="/training" class="btn btn-secondary px-4">Cancel</a>

@@ -14,8 +14,8 @@ class TrainingController extends Controller
     {
         $user = Auth::user();
 
+        return $user->school_id ? (int) $user->school_id : null;
         if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer'))) {
-            return $user->school_id ? (int) $user->school_id : null;
         }
 
         return null;
@@ -35,30 +35,36 @@ class TrainingController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $user = Auth::user();
+        $isPersonnel = $user && $user->hasRole('personnel');
         $schoolId = $this->schoolScopeId();
-        
+
         $query = PdsTraining::with(['personnel.pdsMain']);
 
-        if ($schoolId) {
+        if ($isPersonnel) {
+            $query->where('personnel_id', $user->personnel_id);
+        } elseif ($schoolId) {
             $query->whereHas('personnel', function ($q) use ($schoolId) {
                 $q->where('assigned_school_id', $schoolId);
             });
         }
 
-        $query->when($search, function ($q) use ($search) {
-            $q->where(function($subQuery) use ($search) {
+        $query->when($search, function ($q) use ($search, $isPersonnel) {
+            $q->where(function($subQuery) use ($search, $isPersonnel) {
                 $subQuery->where('title', 'like', "%{$search}%")
                         ->orWhere('type', 'like', "%{$search}%")
-                        ->orWhere('sponsor', 'like', "%{$search}%")
-                        ->orWhereHas('personnel.pdsMain', function ($pdsQ) use ($search) {
-                            $pdsQ->where('first_name', 'like', "%{$search}%")
-                                 ->orWhere('last_name', 'like', "%{$search}%");
-                        });
+                        ->orWhere('sponsor', 'like', "%{$search}%");
+                if (!$isPersonnel) {
+                    $subQuery->orWhereHas('personnel.pdsMain', function ($pdsQ) use ($search) {
+                        $pdsQ->where('first_name', 'like', "%{$search}%")
+                             ->orWhere('last_name', 'like', "%{$search}%");
+                    });
+                }
             });
         });
 
         $stats = [
-            'total' => (clone $query)->count(),
+            'total' => $isPersonnel ? null : (clone $query)->count(),
         ];
 
         $trainings = $query->orderBy('start_date', 'desc')

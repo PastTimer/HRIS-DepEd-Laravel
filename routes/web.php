@@ -135,7 +135,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/training', [TrainingController::class, 'index'])->name('training.index');
     });
-    Route::middleware('role:admin|school')->group(function () {
+    Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/training/create', [TrainingController::class, 'create'])->name('training.create');
         Route::post('/training', [TrainingController::class, 'store'])->name('training.store');
         Route::get('/training/{training}/edit', [TrainingController::class, 'edit'])->name('training.edit');

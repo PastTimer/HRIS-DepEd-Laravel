@@ -109,6 +109,7 @@
                     </li>
                     @endif
 
+
                     @if($isAdmin || $isSchool || $isEO || $isPersonnel)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('training*') ? 'active' : '' }}" href="/training">
@@ -118,6 +119,29 @@
                     </li>
                     @endif
 
+                    <!-- Requests Menu -->
+                     @if($isAdmin || $isSchool)
+                    <li class="nav-item">
+                        <a class="nav-link" href="#navbar-requests" data-toggle="collapse" role="button" aria-expanded="false">
+                            <i class="ni ni-archive-2 text-warning"></i>
+                            <span class="nav-link-text">Requests</span>
+                        </a>
+                        <div class="collapse" id="navbar-requests">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">
+                                        <span class="sidenav-normal"> Special Order Requests </span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">
+                                        <span class="sidenav-normal"> Training Request </span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    @endif
                     @if($isAdmin || $isSchool)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('equipment*') ? 'active' : '' }}" href="/equipment">
