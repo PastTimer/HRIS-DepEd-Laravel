@@ -136,6 +136,13 @@
                                                     <i class="fas fa-user-check"></i>
                                                 </button>
                                             </form>
+                                        @elseif($user->status === 'active')
+                                            <form method="POST" action="{{ route('users.deactivate', $user->id) }}" style="display:inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Deactivate this account?')" title="Deactivate User">
+                                                    <i class="fas fa-user-slash"></i>
+                                                </button>
+                                            </form>
                                         @endif
                                         <form method="POST" action="/users/{{ $user->id }}" style="display:inline;">
                                             @csrf 
