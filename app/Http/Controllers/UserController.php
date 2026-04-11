@@ -13,6 +13,44 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    public function activate(User $user)
+    {
+        // Only admin can activate/deactivate accounts
+        if (!Auth::user()->hasRole('admin')) {
+            abort(403, 'Unauthorized');
+        }
+        $user->status = 'active';
+        $user->save();
+        // If user is linked to personnel, also activate personnel
+        if ($user->personnel_id) {
+            $personnel = \App\Models\Personnel::find($user->personnel_id);
+            if ($personnel) {
+                $personnel->is_active = 1;
+                $personnel->save();
+            }
+        }
+        ActivityLog::log('UPDATE', 'User Management', "Activated user account: {$user->username}");
+        return back()->with('success', 'User account activated.');
+    }
+
+    public function deactivate(User $user)
+    {
+        if (!Auth::user()->hasRole('admin')) {
+            abort(403, 'Unauthorized');
+        }
+        $user->status = 'inactive';
+        $user->save();
+        // If user is linked to personnel, also deactivate personnel
+        if ($user->personnel_id) {
+            $personnel = \App\Models\Personnel::find($user->personnel_id);
+            if ($personnel) {
+                $personnel->is_active = 0;
+                $personnel->save();
+            }
+        }
+        ActivityLog::log('UPDATE', 'User Management', "Deactivated user account: {$user->username}");
+        return back()->with('success', 'User account deactivated.');
+    }
     private const SUPPORTED_ROLES = ['admin', 'school', 'encoding_officer', 'personnel'];
 
     private function isSchoolUser(): bool

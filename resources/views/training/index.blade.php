@@ -92,6 +92,7 @@
                     <th class="text-center">Total Hours</th>
                     <th class="text-center">Start Date</th>
                     <th class="text-center">End Date</th>
+                    <th class="text-center">Status</th>
                     <th class="text-right">Action</th>
                 </tr>
             </thead>
@@ -128,6 +129,15 @@
 
                             <td class="text-center">
                                 {{ $tr->end_date ? \Carbon\Carbon::parse($tr->end_date)->format('M d, Y') : '' }}
+                            </td>
+                            <td class="text-center">
+                                @if($tr->verification_status === 'pending')
+                                    <span class="badge badge-warning">Pending</span>
+                                @elseif($tr->verification_status === 'verified')
+                                    <span class="badge badge-success">Verified</span>
+                                @elseif($tr->verification_status === 'rejected')
+                                    <span class="badge badge-danger">Rejected</span>
+                                @endif
                             </td>
 
                             <td class="text-right">

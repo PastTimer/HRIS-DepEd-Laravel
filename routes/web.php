@@ -101,6 +101,8 @@ Route::middleware('auth')->group(function () {
     // User Management (Admin + School)
     Route::middleware('role:admin|school')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
+        Route::post('/users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
+        Route::post('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('users.deactivate');
     });
 
     // Equipment (Admin + School)
@@ -134,14 +136,19 @@ Route::middleware('auth')->group(function () {
     // Training (Admin/School CRUD; EO/Personnel read-only)
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/training', [TrainingController::class, 'index'])->name('training.index');
-    });
-    Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/training/create', [TrainingController::class, 'create'])->name('training.create');
         Route::post('/training', [TrainingController::class, 'store'])->name('training.store');
         Route::get('/training/{training}/edit', [TrainingController::class, 'edit'])->name('training.edit');
         Route::put('/training/{training}', [TrainingController::class, 'update'])->name('training.update');
         Route::patch('/training/{training}', [TrainingController::class, 'update']);
         Route::delete('/training/{training}', [TrainingController::class, 'destroy'])->name('training.destroy');
+    });
+
+    // Admin-only: Training Requests Approval
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/training/requests', [TrainingController::class, 'requests'])->name('training.requests');
+        Route::post('/training/requests/{training}/approve', [TrainingController::class, 'approveRequest'])->name('training.requests.approve');
+        Route::post('/training/requests/{training}/reject', [TrainingController::class, 'rejectRequest'])->name('training.requests.reject');
     });
 
     // Internet Connectivity (Admin only)

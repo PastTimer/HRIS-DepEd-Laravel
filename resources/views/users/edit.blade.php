@@ -10,6 +10,7 @@
                 </div>
                 
                 <div class="card-body bg-secondary">
+                    {{-- Activate/Deactivate buttons moved to user list --}}
                     @php($selectedRole = old('role', $currentRole))
                     <form method="POST" action="{{ route('users.update', $user->id) }}">
                         @csrf

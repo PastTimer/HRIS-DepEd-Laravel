@@ -217,6 +217,7 @@ class PdsSeeder extends Seeder
                     'hours' => $faker->numberBetween(4, 80),
                     'type' => $faker->randomElement(['MANAGERIAL', 'SUPERVISORY', 'TECHNICAL']),
                     'sponsor' => $faker->company(),
+                    'verification_status' => 'verified',
                 ]);
             }
 

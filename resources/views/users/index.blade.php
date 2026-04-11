@@ -128,8 +128,15 @@
                                     <a href="/users/{{ $user->id }}/edit" class="btn btn-sm btn-primary" title="Edit User">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    
                                     @if(Auth::id() !== $user->id)
+                                        @if($user->status === 'inactive')
+                                            <form method="POST" action="{{ route('users.activate', $user->id) }}" style="display:inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Activate this account?')" title="Activate User">
+                                                    <i class="fas fa-user-check"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                         <form method="POST" action="/users/{{ $user->id }}" style="display:inline;">
                                             @csrf 
                                             @method('DELETE')
