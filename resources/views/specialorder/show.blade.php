@@ -8,9 +8,15 @@
                 <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
                     <h3 class="mb-0 text-primary"><i class="fas fa-file-alt mr-2"></i> Special Order Details</h3>
                     <div>
+                        @php
+                            $isPersonnel = Auth::user() && Auth::user()->hasRole('personnel');
+                            $isPending = $specialorder->status === 'Pending';
+                        @endphp
+                        @if(!$isPersonnel || ($isPersonnel && $isPending))
                         <a href="{{ route('specialorder.edit', $specialorder) }}" class="btn btn-sm btn-info">
                             <i class="fas fa-edit mr-1"></i> Edit
                         </a>
+                        @endif
                         <a href="{{ route('specialorder.index') }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left mr-1"></i> Back
                         </a>

@@ -29,6 +29,10 @@
                             $personnelUrl = $isPersonnel
                                 ? route('personnel.me')
                                 : '/personnel';
+
+                            $isRequestsOpen = request()->routeIs('specialorder.requests')
+                                || request()->routeIs('training.requests')
+                                || request()->routeIs('training.requests.*');
                         @endphp
                         <span class="mb-0 text-sm font-weight-bold" style="display: block; line-height: 1.2; color: #32325d;">
                             {{ Auth::check() ? ($displayName !== '' ? $displayName : Auth::user()->username) : 'Guest' }}
@@ -100,19 +104,24 @@
                     </li>
                     @endif
 
+
                     @if($isAdmin || $isSchool || $isEO || $isPersonnel)
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('specialorder*') ? 'active' : '' }}" href="/specialorder">
+                        @php
+                            // Highlight SO tab for Personnel if on SO requests
+                            $isSOActive = request()->is('specialorder*') && (!request()->routeIs('specialorder.requests') || ($isPersonnel && request()->routeIs('specialorder.requests')));
+                            $isTrainingActive = request()->is('training*') && !request()->routeIs('training.requests') && !request()->routeIs('training.requests.*');
+                        @endphp
+                        <a class="nav-link {{ $isSOActive ? 'active' : '' }}" href="/specialorder">
                             <i class="ni ni-paper-diploma text-danger"></i>
                             <span class="nav-link-text">Special Order</span>
                         </a>
                     </li>
                     @endif
 
-
-                    @if($isAdmin || $isSchool || $isEO || $isPersonnel)
+                    @if($isAdmin || $isSchool || $isPersonnel)
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('training*') ? 'active' : '' }}" href="/training">
+                        <a class="nav-link {{ $isTrainingActive ? 'active' : '' }}" href="/training">
                             <i class="ni ni-hat-3 text-success"></i>
                             <span class="nav-link-text">Training</span>
                         </a>
@@ -122,20 +131,20 @@
                     <!-- Requests Menu -->
                      @if($isAdmin || $isSchool)
                     <li class="nav-item">
-                        <a class="nav-link" href="#navbar-requests" data-toggle="collapse" role="button" aria-expanded="false">
+                        <a class="nav-link {{ $isRequestsOpen ? 'active' : '' }}" href="#navbar-requests" data-toggle="collapse" role="button" aria-expanded="{{ $isRequestsOpen ? 'true' : 'false' }}">
                             <i class="ni ni-archive-2 text-warning"></i>
                             <span class="nav-link-text">Requests</span>
                         </a>
-                        <div class="collapse" id="navbar-requests">
+                        <div class="collapse {{ $isRequestsOpen ? 'show' : '' }}" id="navbar-requests">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('specialorder.submissions') }}">
+                                    <a class="nav-link {{ request()->routeIs('specialorder.requests') ? 'active text-primary font-weight-bold' : '' }}" href="{{ route('specialorder.requests') }}">
                                         <span class="sidenav-normal"> Special Order Requests </span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('training.requests') }}">
-                                        <span class="sidenav-normal"> Training Request </span>
+                                    <a class="nav-link {{ request()->routeIs('training.requests') || request()->routeIs('training.requests.*') ? 'active text-primary font-weight-bold' : '' }}" href="{{ route('training.requests') }}">
+                                        <span class="sidenav-normal"> Training Requests </span>
                                     </a>
                                 </li>
                             </ul>

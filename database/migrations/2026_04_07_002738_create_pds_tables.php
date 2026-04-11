@@ -225,6 +225,11 @@ return new class extends Migration
             $table->unsignedInteger('hours')->nullable();
             $table->string('type', 30)->nullable();
             $table->string('sponsor')->nullable();
+
+            $table->enum('verification_status', ['pending', 'verified', 'rejected'])->default('pending')->after('sponsor');
+            $table->unsignedBigInteger('verified_by')->nullable()->after('verification_status');
+            $table->timestamp('verified_at')->nullable()->after('verified_by');
+            $table->text('rejection_reason')->nullable()->after('verified_at');
             $table->timestamps();
         });
 

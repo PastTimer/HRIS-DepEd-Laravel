@@ -45,7 +45,6 @@
         </h3>
 
         <div class="d-flex align-items-center">
-
             {{-- SEARCH (ALL USERS) --}}
             <form action="{{ route('training.index') }}" method="GET" class="mr-3 mb-0">
                 <div class="input-group input-group-sm">
@@ -69,11 +68,18 @@
                 </div>
             </form>
 
+
+            {{-- REQUESTS BUTTON: Show only for Admin/School --}}
+            @if(!$isPersonnel && (Auth::user()?->hasRole('admin') || Auth::user()?->hasRole('school')))
+            <a href="{{ route('training.requests') }}" class="btn btn-sm btn-outline-info mr-2">
+                <i class="fas fa-inbox mr-1"></i> Requests
+            </a>
+            @endif
+
             {{-- ADD BUTTON (ALL USERS) --}}
             <a href="{{ route('training.create') }}" class="btn btn-sm btn-success">
                 <i class="fas fa-plus mr-1"></i> Add Training
             </a>
-
         </div>
     </div>
 
@@ -143,23 +149,25 @@
                             <td class="text-right">
                                 <div class="d-flex justify-content-end align-items-center">
 
-                                    <a href="{{ route('training.edit', $tr->id) }}"
-                                       class="btn btn-sm btn-info mr-2">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
 
-                                    <form action="{{ route('training.destroy', $tr->id) }}"
-                                          method="POST"
-                                          class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button type="submit"
-                                                class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Are you sure you want to delete this training record?')">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </form>
+                                    @php $canEdit = !$isPersonnel || ($isPersonnel && $tr->verification_status === 'pending'); @endphp
+                                    @if($canEdit)
+                                        <a href="{{ route('training.edit', $tr->id) }}"
+                                           class="btn btn-sm btn-info mr-2">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <form action="{{ route('training.destroy', $tr->id) }}"
+                                              method="POST"
+                                              class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this training record?')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    @endif
 
                                 </div>
                             </td>

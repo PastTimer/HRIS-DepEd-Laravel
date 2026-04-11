@@ -293,8 +293,8 @@
                                             <th>Date To</th>
                                             <th>Designation</th>
                                             <th>Status</th>
-                                            <th>Station</th>
                                             <th>Salary</th>
+                                            <th>Station</th>
                                             <th>Branch</th>
                                             <th>LV/Abs WO Pay</th>
                                             @if($canManageServiceRecords)

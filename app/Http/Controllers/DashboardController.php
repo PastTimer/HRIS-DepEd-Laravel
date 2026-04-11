@@ -119,14 +119,14 @@ class DashboardController extends Controller
         if ($isAdmin || $user?->hasRole('school')) {
             $quickLinks[] = ['label' => 'Personnel', 'route' => 'personnel.index', 'icon' => 'ni ni-single-02'];
             $quickLinks[] = ['label' => 'Equipment', 'route' => 'equipment.index', 'icon' => 'ni ni-archive-2'];
-            $quickLinks[] = ['label' => 'SO Submissions', 'route' => 'specialorder.submissions', 'icon' => 'ni ni-folder-17'];
+            $quickLinks[] = ['label' => 'SO Requests', 'route' => 'specialorder.requests', 'icon' => 'ni ni-folder-17'];
             $quickLinks[] = ['label' => 'Reports', 'route' => 'report.index', 'icon' => 'ni ni-chart-bar-32'];
         }
 
         if ($user?->hasRole('encoding_officer')) {
             $quickLinks[] = ['label' => 'Personnel', 'route' => 'personnel.index', 'icon' => 'ni ni-single-02'];
             $quickLinks[] = ['label' => 'Special Orders', 'route' => 'specialorder.index', 'icon' => 'ni ni-paper-diploma'];
-            $quickLinks[] = ['label' => 'SO Submissions', 'route' => 'specialorder.submissions', 'icon' => 'ni ni-folder-17'];
+            $quickLinks[] = ['label' => 'SO Requests', 'route' => 'specialorder.requests', 'icon' => 'ni ni-folder-17'];
         }
 
         if ($isPersonnel) {

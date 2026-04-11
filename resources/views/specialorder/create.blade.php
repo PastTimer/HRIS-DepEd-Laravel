@@ -10,25 +10,23 @@
         @csrf
         <div class="row">
             
+            @php $isPersonnel = Auth::user() && Auth::user()->hasRole('personnel'); @endphp
             <div class="col-xl-8">
                 <div class="card shadow mb-4">
                     <div class="card-header border-0 bg-white">
                         <h3 class="mb-0 text-primary"><i class="ni ni-paper-diploma mr-2"></i> Add Special Order</h3>
                     </div>
                     <div class="card-body bg-secondary">
-                        
                         <div class="form-group mb-3">
                             <label class="form-control-label">Title <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('title') is-invalid @enderror" name="title" value="{{ old('title') }}" required>
                             @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-
                         <div class="form-group mb-3">
                             <label class="form-control-label">Description</label>
                             <textarea rows="3" class="form-control @error('description') is-invalid @enderror" name="description">{{ old('description') }}</textarea>
                             @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        
                         <div class="row">
                             <div class="col-md-6 form-group mb-3">
                                 <label class="form-control-label">SO Number <span class="text-danger">*</span></label>
@@ -41,8 +39,6 @@
                                 @error('series_year') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
-
-
                         <div class="row">
                             <div class="col-md-12 form-group mb-3">
                                 <label class="form-control-label">SO Type <span class="text-danger">*</span></label>
@@ -57,39 +53,44 @@
                                 @error('type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
-
-
-                        <div class="form-group mb-3">
-                            <label class="form-control-label">Selected Personnel & Units <span class="text-danger">*</span></label>
-                            <div id="selected-personnel-list">
-                                <p class="text-muted">Select personnel from the list on the right. You can set custom units for each below.</p>
-                                <table class="table table-bordered table-sm" style="background:#fff;">
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th style="width:120px;">Units</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="selected-personnel-table-body">
-                                        <!-- JS will populate rows here -->
-                                    </tbody>
-                                </table>
+                        @if($isPersonnel)
+                            <input type="hidden" name="employee_ids[]" value="{{ Auth::user()->personnel_id }}">
+                            <div class="form-group mb-3">
+                                <label class="form-control-label">Units <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" id="units" name="units" class="form-control @error('units') is-invalid @enderror" value="{{ old('units') }}" placeholder="Defaults to selected type value">
+                                @error('units') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            @error('employee_ids') <small class="text-danger font-weight-bold mt-2 d-block">Please select at least one personnel entry from the list.</small> @enderror
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="set_units_for_all" name="set_units_for_all" checked>
-                                <label class="form-check-label" for="set_units_for_all">
-                                    Set units for all selected personnel
-                                </label>
+                        @else
+                            <div class="form-group mb-3">
+                                <label class="form-control-label">Selected Personnel & Units <span class="text-danger">*</span></label>
+                                <div id="selected-personnel-list">
+                                    <p class="text-muted">Select personnel from the list on the right. You can set custom units for each below.</p>
+                                    <table class="table table-bordered table-sm" style="background:#fff;">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th style="width:120px;">Units</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="selected-personnel-table-body">
+                                            <!-- JS will populate rows here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @error('employee_ids') <small class="text-danger font-weight-bold mt-2 d-block">Please select at least one personnel entry from the list.</small> @enderror
                             </div>
-                            <label class="form-control-label mt-2">Units</label>
-                            <input type="number" step="0.01" id="units" name="units" class="form-control @error('units') is-invalid @enderror" value="{{ old('units') }}" placeholder="Defaults to selected type value">
-                            @error('units') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
+                            <div class="form-group mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="set_units_for_all" name="set_units_for_all" checked>
+                                    <label class="form-check-label" for="set_units_for_all">
+                                        Set units for all selected personnel
+                                    </label>
+                                </div>
+                                <label class="form-control-label mt-2">Units</label>
+                                <input type="number" step="0.01" id="units" name="units" class="form-control @error('units') is-invalid @enderror" value="{{ old('units') }}" placeholder="Defaults to selected type value">
+                                @error('units') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        @endif
                         <div class="text-right">
                             <a href="{{ route('specialorder.index') }}" class="btn btn-secondary px-4">Cancel</a>
                             <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save mr-2"></i> Save Special Order</button>
@@ -97,14 +98,13 @@
                     </div>
                 </div>
             </div>
-
+            @if(!$isPersonnel)
             <div class="col-xl-4">
                 <div class="card shadow">
                     <div class="card-header border-0 pb-2">
                         <h3 class="mb-2">Select Personnel</h3>
                         <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search name..." onkeyup="filterNames()">
                     </div>
-                    
                     <div class="table-responsive scrollable-card">
                         <table class="table align-items-center table-flush table-hover" id="nameTable">
                             <thead class="thead-light">
@@ -138,6 +138,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
         </div>
     </form>

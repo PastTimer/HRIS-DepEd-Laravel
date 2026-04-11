@@ -163,13 +163,19 @@ class SpecialOrderController extends Controller
         return view('specialorder.index', compact('orders', 'totalSo', 'deletableOrderIds'));
     }
 
-    public function submissions(Request $request)
+    public function requests(Request $request)
     {
         $search = trim((string) $request->input('search'));
+        $user = Auth::user();
 
         $query = $this->scopedOrdersQuery()
             ->with(['type', 'creator'])
             ->withCount('personnel');
+
+        // For personnel, only show SOs they created
+        if ($user && $user->hasRole('personnel')) {
+            $query->where('created_by', $user->id);
+        }
 
         $query->when($search !== '', function (Builder $q) use ($search) {
             $q->where(function (Builder $subQuery) use ($search) {
@@ -184,13 +190,13 @@ class SpecialOrderController extends Controller
             });
         });
 
-        $submissions = $query->latest()->paginate(15)->appends(['search' => $search]);
-        $deletableOrderIds = $submissions->getCollection()
+        $requests = $query->latest()->paginate(15)->appends(['search' => $search]);
+        $deletableOrderIds = $requests->getCollection()
             ->filter(fn (SpecialOrder $so) => $this->canDelete($so))
             ->pluck('id')
             ->all();
 
-        return view('specialorder.submissions', compact('submissions', 'deletableOrderIds'));
+        return view('specialorder.submissions', compact('requests', 'deletableOrderIds'));
     }
 
     public function create()
@@ -340,7 +346,7 @@ class SpecialOrderController extends Controller
 
         ActivityLog::log('UPDATE', 'Special Order', "Updated status of SO {$specialorder->so_number} to {$specialorder->status}");
 
-        return redirect()->route('specialorder.submissions')->with('success', 'Special Order status updated.');
+        return redirect()->route('specialorder.requests')->with('success', 'Special Order status updated.');
     }
 
     public function destroy(SpecialOrder $specialorder)

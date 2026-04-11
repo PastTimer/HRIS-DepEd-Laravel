@@ -46,13 +46,15 @@
                             </div>
                         </form>
 
-                        <a href="{{ route('specialorder.submissions') }}" class="btn btn-sm btn-outline-info mr-2">
-                            <i class="fas fa-inbox mr-1"></i> Submissions
+                        <a href="{{ route('specialorder.requests') }}" class="btn btn-sm btn-outline-info mr-2">
+                            <i class="fas fa-inbox mr-1"></i> Requests
                         </a>
 
+                        @if(Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('school')))
                         <a href="{{ route('specialorder.types.index') }}" class="btn btn-sm btn-outline-secondary mr-2">
                             <i class="fas fa-tags mr-1"></i> Order Types
                         </a>
+                        @endif
 
                         <a href="{{ route('specialorder.create') }}" class="btn btn-sm btn-success">
                             <i class="fas fa-plus mr-1"></i> New Order
@@ -120,19 +122,23 @@
                                     <a href="{{ route('specialorder.show', $so) }}" class="btn btn-sm btn-primary" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
-
-                                    <a href="{{ route('specialorder.edit', $so) }}" class="btn btn-sm btn-info" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    
-                                    @if(in_array($so->id, $deletableOrderIds ?? [], true))
-                                    <form method="POST" action="{{ route('specialorder.destroy', $so) }}" style="display:inline;">
-                                        @csrf 
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to permanently DELETE this record?')" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    @php
+                                        $isPersonnel = Auth::user() && Auth::user()->hasRole('personnel');
+                                        $isPending = $so->status === 'Pending';
+                                    @endphp
+                                    @if(!$isPersonnel || ($isPersonnel && $isPending))
+                                        <a href="{{ route('specialorder.edit', $so) }}" class="btn btn-sm btn-info" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endif
+                                    @if((!$isPersonnel && in_array($so->id, $deletableOrderIds ?? [], true)) || ($isPersonnel && $isPending && in_array($so->id, $deletableOrderIds ?? [], true)))
+                                        <form method="POST" action="{{ route('specialorder.destroy', $so) }}" style="display:inline;">
+                                            @csrf 
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to permanently DELETE this record?')" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     @endif
                                 </td>
                             </tr>

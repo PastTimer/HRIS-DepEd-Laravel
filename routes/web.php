@@ -113,17 +113,10 @@ Route::middleware('auth')->group(function () {
     // Special Order
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/specialorder', [SpecialOrderController::class, 'index'])->name('specialorder.index');
-        Route::get('/specialorder/submissions', [SpecialOrderController::class, 'submissions'])->name('specialorder.submissions');
+        Route::get('/specialorder/requests', [SpecialOrderController::class, 'requests'])->name('specialorder.requests');
 
         Route::get('/specialorder/create', [SpecialOrderController::class, 'create'])->name('specialorder.create');
         Route::post('/specialorder', [SpecialOrderController::class, 'store'])->name('specialorder.store');
-
-        Route::get('/specialorder/types', [SpecialOrderController::class, 'typeIndex'])->name('specialorder.types.index');
-        Route::get('/specialorder/types/create', [SpecialOrderController::class, 'typeCreate'])->name('specialorder.types.create');
-        Route::post('/specialorder/types', [SpecialOrderController::class, 'typeStore'])->name('specialorder.types.store');
-        Route::get('/specialorder/types/{soType}/edit', [SpecialOrderController::class, 'typeEdit'])->name('specialorder.types.edit');
-        Route::put('/specialorder/types/{soType}', [SpecialOrderController::class, 'typeUpdate'])->name('specialorder.types.update');
-        Route::delete('/specialorder/types/{soType}', [SpecialOrderController::class, 'typeDestroy'])->name('specialorder.types.destroy');
 
         Route::get('/specialorder/{specialorder}', [SpecialOrderController::class, 'show'])->name('specialorder.show');
         Route::get('/specialorder/{specialorder}/edit', [SpecialOrderController::class, 'edit'])->name('specialorder.edit');
@@ -133,8 +126,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('/specialorder/{specialorder}', [SpecialOrderController::class, 'destroy'])->name('specialorder.destroy');
     });
 
-    // Training (Admin/School CRUD; EO/Personnel read-only)
-    Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
+    // Special Order Types (Admin/School only)
+    Route::middleware('role:admin|school')->group(function () {
+        Route::get('/specialorder/types', [SpecialOrderController::class, 'typeIndex'])->name('specialorder.types.index');
+        Route::get('/specialorder/types/create', [SpecialOrderController::class, 'typeCreate'])->name('specialorder.types.create');
+        Route::post('/specialorder/types', [SpecialOrderController::class, 'typeStore'])->name('specialorder.types.store');
+        Route::get('/specialorder/types/{soType}/edit', [SpecialOrderController::class, 'typeEdit'])->name('specialorder.types.edit');
+        Route::put('/specialorder/types/{soType}', [SpecialOrderController::class, 'typeUpdate'])->name('specialorder.types.update');
+        Route::delete('/specialorder/types/{soType}', [SpecialOrderController::class, 'typeDestroy'])->name('specialorder.types.destroy');
+    });
+
+    // Training (Admin/School/Personnel CRUD; EO read-only)
+    Route::middleware('role:admin|school|personnel')->group(function () {
         Route::get('/training', [TrainingController::class, 'index'])->name('training.index');
         Route::get('/training/create', [TrainingController::class, 'create'])->name('training.create');
         Route::post('/training', [TrainingController::class, 'store'])->name('training.store');
@@ -143,9 +146,8 @@ Route::middleware('auth')->group(function () {
         Route::patch('/training/{training}', [TrainingController::class, 'update']);
         Route::delete('/training/{training}', [TrainingController::class, 'destroy'])->name('training.destroy');
     });
-
-    // Admin-only: Training Requests Approval
-    Route::middleware('role:admin')->group(function () {
+    // Training Requests (Admin/School only)
+    Route::middleware('role:admin|school')->group(function () {
         Route::get('/training/requests', [TrainingController::class, 'requests'])->name('training.requests');
         Route::post('/training/requests/{training}/approve', [TrainingController::class, 'approveRequest'])->name('training.requests.approve');
         Route::post('/training/requests/{training}/reject', [TrainingController::class, 'rejectRequest'])->name('training.requests.reject');
