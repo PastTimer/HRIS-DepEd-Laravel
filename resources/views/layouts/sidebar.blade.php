@@ -129,12 +129,12 @@
                         <div class="collapse" id="navbar-requests">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#">
+                                    <a class="nav-link" href="{{ route('specialorder.submissions') }}">
                                         <span class="sidenav-normal"> Special Order Requests </span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#">
+                                    <a class="nav-link" href="{{ route('training.requests') }}">
                                         <span class="sidenav-normal"> Training Request </span>
                                     </a>
                                 </li>
