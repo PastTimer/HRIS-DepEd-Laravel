@@ -4,7 +4,7 @@
     <div class="card-header bg-transparent">
         <div class="row">
             <div class="col-md-6">
-                <h2><img src="{{ asset('assets/img/brand/stepinc.png') }}" width="50" height="50"> STEP MONITORING</h2>
+                    <!-- Title moved to navbar -->
             </div>
         </div>
     </div>
@@ -48,36 +48,41 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table id="nameTable" class="table align-items-center table-flush table-hover">
-                <thead class="thead-light">
-                    <tr>
-                        <th>ID No.</th>
-                        <th>Name</th>
-                        <th class="text-center">Position</th>
-                        <th class="text-center">Last Step</th>
-                        @for ($month = 1; $month <= 12; $month++)
-                            @php
-                                $monthName = \Carbon\Carbon::create()->month($month)->format('M');
-                            @endphp
-                            <th class="text-center {{ now()->month === $month ? 'bg-current-month' : '' }}">{{ $monthName }}</th>
-                        @endfor
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($tableData as $row)
-                        <tr>
-                            <td>{{ $row['emp_id'] }}</td>
-                            <td>{{ $row['name'] }}</td>
-                            <td class="text-center">{{ $row['position'] }}</td>
-                            <td class="text-center">{{ $row['last_step'] }}</td>
-                            @for ($month = 1; $month <= 12; $month++)
-                                <td class="text-center">{{ $row['months'][$month] }}</td>
-                            @endfor
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="card ppc-card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="nameTable" class="table align-items-center table-flush table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID No.</th>
+                                <th>Name</th>
+                                <th class="text-center">Position</th>
+                                <th class="text-center">Last Step</th>
+                                @for ($month = 1; $month <= 12; $month++)
+                                    @php
+                                        $monthName = \Carbon\Carbon::create()->month($month)->format('M');
+                                    @endphp
+                                    <th class="text-center {{ now()->month === $month ? 'bg-current-month' : '' }}">{{ $monthName }}</th>
+                                @endfor
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($tableData as $row)
+                                <tr>
+                                    <td>{{ $row['emp_id'] }}</td>
+                                    <td>{{ $row['name'] }}</td>
+                                    <td class="text-center">{{ $row['position'] }}</td>
+                                    <td class="text-center">{{ $row['last_step'] }}</td>
+                                    @for ($month = 1; $month <= 12; $month++)
+                                        <td class="text-center">{{ $row['months'][$month] }}</td>
+                                    @endfor
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
             @if(isset($personnel) && $personnel->lastPage() > 1)
             <div class="d-flex justify-content-center mt-3">
                 <nav>

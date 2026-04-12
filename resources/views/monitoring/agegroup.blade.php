@@ -4,7 +4,7 @@
     <div class="card-header bg-transparent">
         <div class="row">
             <div class="col-md-6">
-                <h2><img src="{{ asset('assets/img/brand/id.png') }}" width="50" height="50"> PERSONNEL'S AGE</h2>
+                <h2>PERSONNEL'S AGE</h2>
             </div>
         </div>
     </div>
@@ -57,24 +57,26 @@
             </a>
         </div>
 
-        <div class="table-responsive mt-4">
-            <table class="table align-items-center table-flush" id="nameTable">
-                <thead class="thead-light">
-                    <tr>
-                        <th>ID No.</th>
-                        <th>Name</th>
-                        <th>Birthdate</th>
-                        <th>Gender</th>
-                        <th>Position</th>
-                        <th>Employment Type</th>
-                        <th>Station</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($rows as $row)
-                        <tr>
-                            <td>{{ $row['emp_id'] }}</td>
-                            <td>{{ $row['name'] }}</td>
+        <div class="card ppc-card shadow-sm mb-4 mt-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-items-center table-flush" id="nameTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID No.</th>
+                                <th>Name</th>
+                                <th>Birthdate</th>
+                                <th>Gender</th>
+                                <th>Position</th>
+                                <th>Employment Type</th>
+                                <th>Station</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($rows as $row)
+                                <tr>
+                                    <td>{{ $row['emp_id'] }}</td>
+                                    <td>{{ $row['name'] }}</td>
                             <td>{{ $row['birth_date'] }}</td>
                             <td>{{ $row['gender'] }}</td>
                             <td>{{ $row['position'] }}</td>

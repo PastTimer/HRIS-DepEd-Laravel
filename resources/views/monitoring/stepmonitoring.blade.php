@@ -4,7 +4,7 @@
     <div class="card-header bg-transparent">
         <div class="row">
             <div class="col-md-6">
-                <h2><img src="{{ asset('assets/img/brand/stepinc.png') }}" width="50" height="50"> STEP MONITORING</h2>
+                    <!-- Title moved to navbar -->
             </div>
         </div>
     </div>
@@ -45,46 +45,50 @@
                 </div>
             </div>
         </div>
-        <div class="table-responsive">
-            <table id="nameTable" class="table align-items-center table-flush table-hover">
-                <thead class="thead-light">
-                    <tr>
-                        <th>ID No.</th>
-                        <th>Name</th>
-                        <th class="text-center">Position</th>
-                        <th class="text-center">Last Step</th>
-                        @foreach($years as $year)
-                            <th class="text-center {{ $year == $currentYear ? 'bg-current-year' : '' }}">{{ $year }}</th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($tableData as $row)
-                        <tr>
-                            <td>{{ $row['emp_id'] }}</td>
-                            <td>{{ $row['name'] }}</td>
-                            <td class="text-center">{{ $row['position'] }}</td>
-                            <td class="text-center">{{ $row['last_step'] }}</td>
-                            @foreach($years as $year)
-                                <td class="text-center">{{ $row['years'][$year] }}</td>
+        <div class="card ppc-card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="nameTable" class="table align-items-center table-flush table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID No.</th>
+                                <th>Name</th>
+                                <th class="text-center">Position</th>
+                                <th class="text-center">Last Step</th>
+                                @foreach($years as $year)
+                                    <th class="text-center {{ $year == $currentYear ? 'bg-current-year' : '' }}">{{ $year }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($tableData as $row)
+                                <tr>
+                                    <td>{{ $row['emp_id'] }}</td>
+                                    <td>{{ $row['name'] }}</td>
+                                    <td class="text-center">{{ $row['position'] }}</td>
+                                    <td class="text-center">{{ $row['last_step'] }}</td>
+                                    @foreach($years as $year)
+                                        <td class="text-center">{{ $row['years'][$year] }}</td>
+                                    @endforeach
+                                </tr>
                             @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            @if(isset($personnel) && $personnel->lastPage() > 1)
-            <div class="d-flex justify-content-center mt-3">
-                <nav>
-                    <ul class="pagination">
-                        @for ($i = 1; $i <= $personnel->lastPage(); $i++)
-                            <li class="page-item {{ $i == $personnel->currentPage() ? 'active' : '' }}">
-                                <a class="page-link" href="?page={{ $i }}">{{ $i }}</a>
-                            </li>
-                        @endfor
-                    </ul>
-                </nav>
+                        </tbody>
+                    </table>
+                    @if(isset($personnel) && $personnel->lastPage() > 1)
+                    <div class="d-flex justify-content-center mt-3">
+                        <nav>
+                            <ul class="pagination">
+                                @for ($i = 1; $i <= $personnel->lastPage(); $i++)
+                                    <li class="page-item {{ $i == $personnel->currentPage() ? 'active' : '' }}">
+                                        <a class="page-link" href="?page={{ $i }}">{{ $i }}</a>
+                                    </li>
+                                @endfor
+                            </ul>
+                        </nav>
+                    </div>
+                    @endif
+                </div>
             </div>
-            @endif
         </div>
     </div>
 </div>

@@ -1,4 +1,4 @@
-<nav class="sidenav navbar navbar-vertical fixed-left navbar-expand-xs navbar-light bg-white" id="sidenav-main">
+<nav class="sidenav navbar navbar-vertical fixed-left navbar-expand-xs navbar-light bg-white" id="sidenav-main" style="box-shadow: 4px 0 24px 0 rgba(11,60,93,0.08); border-right: 1.5px solid #e3e6ed;">
     <div class="scrollbar-inner">
         <div class="sidenav-header align-items-center" style="height: auto; padding: 1.5rem 1.5rem 0.5rem;">
             <img src="{{ asset('assets/img/brand/blue.png') }}" style="width: 100%; max-width: 210px; display: block; margin: 0 auto;" alt="Logo">

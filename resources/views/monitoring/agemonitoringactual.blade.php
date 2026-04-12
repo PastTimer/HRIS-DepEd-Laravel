@@ -4,7 +4,7 @@
     <div class="card-header bg-transparent">
         <div class="row">
             <div class="col-md-6">
-                <h2><img src="{{ asset('assets/img/brand/stepinc.png') }}" width="50" height="50"> AGE MONITORING</h2>
+                    <!-- Title moved to navbar -->
             </div>
         </div>
     </div>
@@ -61,23 +61,25 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table id="nameTable" class="table align-items-center table-flush table-hover">
-                <thead class="thead-light">
-                    <tr>
-                        <th>ID No.</th>
-                        <th>Name</th>
-                        <th class="text-center">Birthdate</th>
-                        <th class="text-center">Age</th>
-                        <th class="text-center">Position</th>
-                        <th>Station</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($rows as $row)
-                        <tr>
-                            <td>{{ $row['emp_id'] }}</td>
-                            <td>{{ $row['name'] }}</td>
+        <div class="card ppc-card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="nameTable" class="table align-items-center table-flush table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID No.</th>
+                                <th>Name</th>
+                                <th class="text-center">Birthdate</th>
+                                <th class="text-center">Age</th>
+                                <th class="text-center">Position</th>
+                                <th>Station</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($rows as $row)
+                                <tr>
+                                    <td>{{ $row['emp_id'] }}</td>
+                                    <td>{{ $row['name'] }}</td>
                             <td class="text-center">{{ $row['birth_date'] }}</td>
                             <td class="text-center {{ $row['age'] >= 55 ? 'bg-retirement-age' : '' }}">{{ $row['age'] }}</td>
                             <td class="text-center">{{ $row['position'] }}</td>

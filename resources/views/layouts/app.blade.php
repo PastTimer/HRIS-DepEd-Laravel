@@ -79,10 +79,25 @@
     
     <div class="main-content" id="panel">
         
-        <nav class="navbar navbar-top navbar-expand navbar-dark bg-primary border-bottom">
+        <nav class="navbar navbar-top navbar-expand navbar-dark border-bottom" style="background: linear-gradient(90deg, #0b3c5d 0%, #328cc1 70%, #d9f1ff 100%); box-shadow: 0 4px 24px 0 rgba(11,60,93,0.18), 0 1.5px 6px rgba(50,140,193,0.10);">
             <div class="container-fluid">
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <h6 class="h2 text-white d-inline-block mb-0">@yield('title')</h6>
+                    @php
+                        $route = request()->route() ? request()->route()->getName() : '';
+                        $navbarTitle = '';
+                        if (in_array($route, ['monitoring.step.year', 'monitoring.step.month'])) {
+                            $navbarTitle = 'STEP MONITORING';
+                        } elseif (in_array($route, ['monitoring.age.year', 'monitoring.age.actual'])) {
+                            $navbarTitle = 'AGE MONITORING';
+                        }
+                    @endphp
+                    <h1 class="navbar-title mb-0" style="font-size: 2rem; font-weight: 700; color: #fff; text-shadow: 0 2px 8px rgba(44,62,80,0.18); letter-spacing: 1px;">
+                        @if($navbarTitle)
+                            {{ $navbarTitle }}
+                        @else
+                            @yield('title', 'HRIS System')
+                        @endif
+                    </h1>
                 </div>
             </div>
         </nav>

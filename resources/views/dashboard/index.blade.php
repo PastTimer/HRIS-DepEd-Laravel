@@ -4,11 +4,7 @@
 
 @section('content')
 <div class="container-fluid px-4 py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-1">Dashboard</h2>
-            <p class="text-muted mb-0">Overview for {{ ucfirst(str_replace('_', ' ', $roleName)) }} access</p>
-        </div>
+    <div class="d-flex justify-content-end align-items-center mb-4">
         <span class="badge badge-pill badge-info px-3 py-2">Role: {{ strtoupper(str_replace('_', ' ', $roleName)) }}</span>
     </div>
 
