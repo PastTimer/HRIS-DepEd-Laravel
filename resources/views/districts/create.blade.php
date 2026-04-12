@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow">
+            <div class="card ppc-card">
                 <div class="card-header bg-white"><h4 class="mb-0">Add New District</h4></div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('districts.store') }}">

@@ -14,7 +14,7 @@
 
     <div class="row">
         <div class="col-md-3">
-            <div class="card card-stats shadow mb-4">
+            <div class="card card-stats ppc-card mb-4">
                 <div class="card-body">
                     <h5 class="card-title text-uppercase text-muted mb-0">Active Personnel</h5>
                     <span class="h2 font-weight-bold mb-0">{{ number_format($activePersonnelCount) }}</span>
@@ -59,7 +59,7 @@
 
     <div class="row">
         <div class="col-lg-4">
-            <div class="card shadow mb-4">
+            <div class="card ppc-card mb-4">
                 <div class="card-header bg-white border-0">
                     <h4 class="mb-0">Personnel Distribution</h4>
                 </div>

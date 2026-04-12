@@ -9,20 +9,71 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/@fortawesome/fontawesome-free/css/all.min.css') }}" type="text/css">
     
     <link rel="stylesheet" href="{{ asset('assets/css/argon.css?v=1.2.0') }}" type="text/css">
-</head>
-<style>
-    @media (min-width: 1200px) {
-        .main-content {
-            margin-left: 250px !important;
+    <style>
+        body {
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            /* PPC Theme Gradient (GLOBAL) */
+            background: linear-gradient(135deg, #0b3c5d, #328cc1, #d9f1ff);
+            position: relative;
+            overflow-x: hidden;
         }
-    }
 
-    [data-ajax-content].is-loading {
-        opacity: 0.65;
-        pointer-events: none;
-        transition: opacity 0.15s ease-in-out;
-    }
-</style>
+        /* GLOBAL WATERMARK */
+        body::before {
+            content: "";
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: url('{{ asset('assets/img/brand/ppc.png') }}') no-repeat center;
+            background-size: contain;
+            opacity: 0.05;
+            top: 70%;
+            left: 80%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
+        /* CONTENT ABOVE BACKGROUND */
+        .main-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* STANDARD CARD STYLE (reuse everywhere) */
+        .ppc-card {
+            border-radius: 14px;
+            /* Enhanced multi-layer shadow for depth */
+            box-shadow:
+                0 2px 8px rgba(44, 62, 80, 0.10),
+                0 8px 30px rgba(0,0,0,0.18),
+                0 1.5px 6px rgba(50,140,193,0.10);
+            border: none;
+            background: #ffffff;
+            transition: box-shadow 0.2s;
+        }
+
+        /* Optional: Add a hover effect for even more depth */
+        .ppc-card:hover {
+            box-shadow:
+                0 6px 24px rgba(44, 62, 80, 0.13),
+                0 16px 48px rgba(0,0,0,0.22),
+                0 3px 12px rgba(50,140,193,0.13);
+        }
+
+        @media (min-width: 1200px) {
+            .main-content {
+                margin-left: 250px !important;
+            }
+        }
+
+        [data-ajax-content].is-loading {
+            opacity: 0.65;
+            pointer-events: none;
+            transition: opacity 0.15s ease-in-out;
+        }
+    </style>
+</head>
 <body>
     @include('layouts.sidebar')
     

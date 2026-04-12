@@ -101,7 +101,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-5 col-md-7">
 
-                <div class="card login-card">
+                <div class="card ppc-card">
                     <div class="card-body px-lg-5 py-lg-5">
 
                         <!-- Header -->
