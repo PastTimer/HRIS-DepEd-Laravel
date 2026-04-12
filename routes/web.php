@@ -8,6 +8,7 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\PdsEditRequestController;
 use App\Http\Controllers\SpecialOrderController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\InternetProfileController;
@@ -72,6 +73,23 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/personnel/{personnel}', [PersonnelController::class, 'show'])->name('personnel.show');
         Route::get('/personnel/{personnel}/pds/export', [PersonnelController::class, 'exportPds'])->name('personnel.pds.export');
+    });
+
+    // PDS edit requests
+    Route::middleware('role:admin|school|personnel')->group(function () {
+        Route::get('/personnel/{personnel}/pds/edit-request', [PdsEditRequestController::class, 'edit'])->name('personnel.pds.edit');
+        Route::post('/personnel/{personnel}/pds/edit-request', [PdsEditRequestController::class, 'store'])->name('personnel.pds.edit.store');
+    });
+    Route::middleware('role:admin|school|personnel')->group(function () {
+        Route::get('/pds/requests', [PdsEditRequestController::class, 'requests'])->name('pds.requests.index');
+        Route::get('/pds/requests/{submission}', [PdsEditRequestController::class, 'showRequest'])->name('pds.requests.show');
+    });
+    Route::middleware('role:personnel')->group(function () {
+        Route::delete('/pds/requests/{submission}', [PdsEditRequestController::class, 'destroy'])->name('pds.requests.destroy');
+    });
+    Route::middleware('role:admin|school')->group(function () {
+        Route::post('/pds/requests/{submission}/approve', [PdsEditRequestController::class, 'approve'])->name('pds.requests.approve');
+        Route::post('/pds/requests/{submission}/reject', [PdsEditRequestController::class, 'reject'])->name('pds.requests.reject');
     });
 
     // Positions (Admin only)

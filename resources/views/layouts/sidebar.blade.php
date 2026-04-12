@@ -32,7 +32,8 @@
 
                             $isRequestsOpen = request()->routeIs('specialorder.requests')
                                 || request()->routeIs('training.requests')
-                                || request()->routeIs('training.requests.*');
+                                || request()->routeIs('training.requests.*')
+                                || request()->routeIs('pds.requests.*');
                         @endphp
                         <span class="mb-0 text-sm font-weight-bold" style="display: block; line-height: 1.2; color: #32325d;">
                             {{ Auth::check() ? ($displayName !== '' ? $displayName : Auth::user()->username) : 'Guest' }}
@@ -68,7 +69,7 @@
                     @endif
                     @if($isPersonnel)
                     <li class="nav-item">
-                        <a class="nav-link {{ (request()->is('my-profile') || (request()->is('personnel/*') && Auth::user() && request()->route('personnel') == Auth::user()->personnel_id)) ? 'active' : '' }}" href="{{ $personnelUrl }}">
+                        <a class="nav-link {{ (request()->is('my-profile') || (request()->is('personnel/*') && Auth::user() && (optional(request()->route('personnel'))->id ?? null) == Auth::user()->personnel_id)) ? 'active' : '' }}" href="{{ $personnelUrl }}">
                             <i class="ni ni-single-02 text-yellow"></i>
                             <span class="nav-link-text">Personnel Profile</span>
                         </a>
@@ -129,7 +130,7 @@
                     @endif
 
                     <!-- Requests Menu -->
-                     @if($isAdmin || $isSchool || $isPersonnel)
+                     @if($isAdmin || $isSchool || $isEO || $isPersonnel)
                     <li class="nav-item">
                         <a class="nav-link {{ $isRequestsOpen ? 'active' : '' }}" href="#navbar-requests" data-toggle="collapse" role="button" aria-expanded="{{ $isRequestsOpen ? 'true' : 'false' }}">
                             <i class="ni ni-archive-2 text-warning"></i>
@@ -142,11 +143,18 @@
                                         <span class="sidenav-normal"> Special Order Requests </span>
                                     </a>
                                 </li>
+                                @if(!$isEO)
                                 <li class="nav-item">
                                     <a class="nav-link {{ request()->routeIs('training.requests') || request()->routeIs('training.requests.*') ? 'active text-primary font-weight-bold' : '' }}" href="{{ route('training.requests') }}">
                                         <span class="sidenav-normal"> Training Requests </span>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('pds.requests.*') ? 'active text-primary font-weight-bold' : '' }}" href="{{ route('pds.requests.index') }}">
+                                        <span class="sidenav-normal"> PDS Edit Requests </span>
+                                    </a>
+                                </li>
+                                @endif
                             </ul>
                         </div>
                     </li>

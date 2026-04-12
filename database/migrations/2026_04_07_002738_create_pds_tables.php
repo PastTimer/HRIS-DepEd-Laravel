@@ -21,6 +21,10 @@ return new class extends Migration
             $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->text('review_remarks')->nullable();
 
+            // Added for changed fields/sections tracking
+            $table->text('changed_main_fields')->nullable()->after('review_remarks');
+            $table->text('changed_sections')->nullable()->after('changed_main_fields');
+
             $table->timestamps();
         });
 

@@ -3,13 +3,19 @@
 
 @section('content')
 @php
+    $user = auth()->user();
     $pds = $personnel->pdsMain;
-    $lastName = $pds->last_name ?? 'N/A';
+    $lastName = $pds->last_name ?? '--';
     $firstName = $pds->first_name ?? '';
-    $gender = $pds?->birth_sex ? ucfirst(strtolower($pds->birth_sex)) : 'N/A';
+    $gender = $pds?->birth_sex ? ucfirst(strtolower($pds->birth_sex)) : '--';
     $civilStatus = $pds?->civil_status ? ucfirst(strtolower($pds->civil_status)) : null;
     $canManageServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school']);
     $canExportServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school', 'encoding_officer', 'personnel']);
+    $showBackToList = !($user && $user->hasRole('personnel'));
+    $canEditPds = $user && (
+        $user->hasAnyRole(['admin', 'school']) ||
+        ($user->hasRole('personnel') && (int) $user->personnel_id === (int) $personnel->id)
+    );
 @endphp
 <div class="container-fluid mt-4">
     <div class="row">
@@ -20,10 +26,10 @@
                         <img src="{{ $personnel->profile_photo ? asset('storage/' . $personnel->profile_photo) : asset('uploads/default/defaultpic.png') }}" class="rounded-circle border shadow-sm" width="140" style="height: 140px; object-fit: cover;">
                     </div>
                     <h2 class="mb-0 text-dark">{{ $lastName }}, {{ $firstName }}</h2>
-                    <p class="text-muted mb-3">{{ $personnel->position->title ?? 'N/A' }}</p>
+                    <p class="text-muted mb-3">{{ $personnel->position->title ?? '--' }}</p>
                     
                     <div class="badge badge-pill badge-primary mb-4 px-4 py-2">
-                        {{ $personnel->employee_type ?? 'N/A' }}
+                        {{ $personnel->employee_type ?? '--' }}
                     </div>
 
                     <div class="row text-left mt-2">
@@ -44,7 +50,9 @@
                     <hr class="my-4">
                     
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('personnel.index') }}" class="btn btn-sm btn-secondary">Back to List</a>
+                        @if($showBackToList)
+                            <a href="{{ route('personnel.index') }}" class="btn btn-sm btn-secondary">Back to List</a>
+                        @endif
                         <a href="{{ route('personnel.pds.export', $personnel->id) }}" class="btn btn-sm btn-primary">Export PDS PDF</a>
                         @if($personnel->is_active)
                             <span class="text-success font-weight-bold"><i class="fas fa-circle mr-1"></i> Active</span>
@@ -86,78 +94,403 @@
                 <div class="card-body" style="min-height: 500px;">
                     <div class="tab-content">
                         <div class="tab-pane fade show active" id="pds">
-                            <h6 class="heading-small text-muted mb-4">Government Identifiers</h6>
-                            <div class="row mb-4">
-                                <div class="col-md-4"><strong>GSIS:</strong><br>{{ $pds->umid_id_number ?? 'N/A' }}</div>
-                                <div class="col-md-4"><strong>SSS:</strong><br>{{ $pds->sss_number ?? 'N/A' }}</div>
-                                <div class="col-md-4"><strong>TIN:</strong><br>{{ $pds->tin_number ?? 'N/A' }}</div>
-                                <div class="col-md-4"><strong>Pag-Ibig:</strong><br>{{ $pds->pagibig_number ?? 'N/A' }}</div>
+                            @php
+                                $sectionMain = [
+                                    'I. Personal Information' => [
+                                        ['name' => 'last_name', 'label' => 'Last Name'],
+                                        ['name' => 'first_name', 'label' => 'First Name'],
+                                        ['name' => 'middle_name', 'label' => 'Middle Name'],
+                                        ['name' => 'extension_name', 'label' => 'Extension Name'],
+                                        ['name' => 'birth_date', 'label' => 'Birth Date'],
+                                        ['name' => 'birth_place', 'label' => 'Birth Place'],
+                                        ['name' => 'birth_sex', 'label' => 'Sex'],
+                                        ['name' => 'civil_status', 'label' => 'Civil Status'],
+                                        ['name' => 'height', 'label' => 'Height'],
+                                        ['name' => 'weight', 'label' => 'Weight'],
+                                        ['name' => 'blood_type', 'label' => 'Blood Type'],
+                                        ['name' => 'umid_id_number', 'label' => 'GSIS/UMID Number'],
+                                        ['name' => 'pagibig_number', 'label' => 'Pag-IBIG Number'],
+                                        ['name' => 'philhealth_number', 'label' => 'PhilHealth Number'],
+                                        ['name' => 'sss_number', 'label' => 'SSS Number'],
+                                        ['name' => 'philsys_number', 'label' => 'PhilSys Number'],
+                                        ['name' => 'tin_number', 'label' => 'TIN Number'],
+                                        ['name' => 'agency_employee_number', 'label' => 'Agency Employee Number'],
+                                        ['name' => 'citizenship_type', 'label' => 'Citizenship Type'],
+                                        ['name' => 'citizenship_mode', 'label' => 'Citizenship Mode'],
+                                        ['name' => 'dual_citizenship_country', 'label' => 'Dual Citizenship Country'],
+                                        ['name' => 'dual_citizenship_details', 'label' => 'Dual Citizenship Details'],
+                                        ['name' => 'res_house_lot', 'label' => 'Residential House/Lot'],
+                                        ['name' => 'res_street', 'label' => 'Residential Street'],
+                                        ['name' => 'res_subdivision', 'label' => 'Residential Subdivision'],
+                                        ['name' => 'res_barangay', 'label' => 'Residential Barangay'],
+                                        ['name' => 'res_city', 'label' => 'Residential City/Municipality'],
+                                        ['name' => 'res_province', 'label' => 'Residential Province'],
+                                        ['name' => 'res_zipcode', 'label' => 'Residential ZIP Code'],
+                                        ['name' => 'perm_house_lot', 'label' => 'Permanent House/Lot'],
+                                        ['name' => 'perm_street', 'label' => 'Permanent Street'],
+                                        ['name' => 'perm_subdivision', 'label' => 'Permanent Subdivision'],
+                                        ['name' => 'perm_barangay', 'label' => 'Permanent Barangay'],
+                                        ['name' => 'perm_city', 'label' => 'Permanent City/Municipality'],
+                                        ['name' => 'perm_province', 'label' => 'Permanent Province'],
+                                        ['name' => 'perm_zipcode', 'label' => 'Permanent ZIP Code'],
+                                        ['name' => 'residential_address', 'label' => 'Current Residential Address'],
+                                        ['name' => 'telephone', 'label' => 'Telephone Number'],
+                                        ['name' => 'mobile', 'label' => 'Mobile Number'],
+                                        ['name' => 'email_address', 'label' => 'Email Address'],
+                                    ],
+                                    'II. Family Background' => [
+                                        ['name' => 'spouse_last_name', 'label' => 'Spouse Last Name'],
+                                        ['name' => 'spouse_first_name', 'label' => 'Spouse First Name'],
+                                        ['name' => 'spouse_middle_name', 'label' => 'Spouse Middle Name'],
+                                        ['name' => 'spouse_extension_name', 'label' => 'Spouse Extension Name'],
+                                        ['name' => 'spouse_occupation', 'label' => 'Spouse Occupation'],
+                                        ['name' => 'spouse_employer', 'label' => 'Spouse Employer/Business Name'],
+                                        ['name' => 'employer_address', 'label' => 'Employer/Business Address'],
+                                        ['name' => 'spouse_telephone', 'label' => 'Spouse Telephone'],
+                                        ['name' => 'father_last_name', 'label' => 'Father Last Name'],
+                                        ['name' => 'father_first_name', 'label' => 'Father First Name'],
+                                        ['name' => 'father_middle_name', 'label' => 'Father Middle Name'],
+                                        ['name' => 'father_extension_name', 'label' => 'Father Extension Name'],
+                                        ['name' => 'mother_last_name', 'label' => 'Mother Last Name'],
+                                        ['name' => 'mother_first_name', 'label' => 'Mother First Name'],
+                                        ['name' => 'mother_middle_name', 'label' => 'Mother Middle Name'],
+                                    ],
+                                ];
+
+                                $questionsGroups = [
+                                    'RELATIONSHIP TO AUTHORITY' => [
+                                        [ 'name' => 'related_third_degree', 'label' => 'Are you related by consanguinity or affinity to the appointing or recommending authority, or to the chief of bureau or office or to the person who has immediate supervision over you in the Office, Bureau or Department where you will be appointed, within the third degree?' ],
+                                        [ 'name' => 'related_fourth_degree', 'label' => 'Are you related by consanguinity or affinity to the appointing or recommending authority, or to the chief of bureau or office or to the person who has immediate supervision over you in the Office, Bureau or Department where you will be appointed, within the fourth degree (for Local Government Unit - Career Employees)?' ],
+                                        [ 'name' => 'related_fourth_degree_details', 'label' => 'Related within Fourth Degree Details (If YES):' ],
+                                    ],
+                                    'ADMINISTRATIVE/CRIMINAL CASES' => [
+                                        [ 'name' => 'admin_offense', 'label' => 'Have you ever been found guilty of any administrative offense?' ],
+                                        [ 'name' => 'admin_offense_details', 'label' => 'Administrative Offense Details (If YES):' ],
+                                        [ 'name' => 'criminal_case', 'label' => 'Have you been criminally charged before any court?' ],
+                                        [ 'name' => 'criminal_case_date', 'label' => 'Date Filed (for criminal case):' ],
+                                        [ 'name' => 'criminal_case_status', 'label' => 'Status of Case/s (for criminal case):' ],
+                                    ],
+                                    'CONVICTION/SEPARATION' => [
+                                        [ 'name' => 'convicted', 'label' => 'Have you ever been convicted of any crime or violation of any law, decree, ordinance or regulation by any court or tribunal?' ],
+                                        [ 'name' => 'convicted_details', 'label' => 'Conviction Details (If YES):' ],
+                                        [ 'name' => 'separated_service', 'label' => 'Have you ever been separated from the service in any of the following modes: resignation, retirement, dropped from the rolls, dismissal, termination, end of term, finished contract or phased out (abolition) in the public or private sector?' ],
+                                        [ 'name' => 'separated_service_details', 'label' => 'Separation from Service Details (If YES):' ],
+                                    ],
+                                    'ELECTION-RELATED' => [
+                                        [ 'name' => 'election_candidate', 'label' => 'Have you ever been a candidate in a national or local election held within the last year (except Barangay election)?' ],
+                                        [ 'name' => 'election_candidate_details', 'label' => 'Election Candidate Details (If YES):' ],
+                                        [ 'name' => 'election_resigned', 'label' => 'Have you resigned from the government service during the three (3)-month period before the last election to promote/actively campaign for a national or local candidate?' ],
+                                        [ 'name' => 'election_resigned_details', 'label' => 'Election Resigned Details (If YES):' ],
+                                    ],
+                                    'RESIDENCY/STATUS' => [
+                                        [ 'name' => 'immigrant', 'label' => 'Have you acquired the status of an immigrant or permanent resident of another country?' ],
+                                        [ 'name' => 'immigrant_details', 'label' => 'Immigrant/Permanent Resident Details (Country) (If YES):' ],
+                                    ],
+                                    'SPECIAL GROUPS' => [
+                                        [ 'name' => 'indigenous', 'label' => 'Are you a member of any indigenous group?' ],
+                                        [ 'name' => 'indigenous_details', 'label' => 'Indigenous Group Details (If YES):' ],
+                                        [ 'name' => 'pwd', 'label' => 'Are you a person with disability?' ],
+                                        [ 'name' => 'pwd_details', 'label' => 'PWD ID Details (If YES):' ],
+                                        [ 'name' => 'solo_parent', 'label' => 'Are you a solo parent?' ],
+                                        [ 'name' => 'solo_parent_details', 'label' => 'Solo Parent ID Details (If YES):' ],
+                                    ],
+                                ];
+
+                                $governmentIdFields = [
+                                    ['name' => 'issued_id', 'label' => 'Government Issued ID'],
+                                    ['name' => 'id_number', 'label' => 'ID Number'],
+                                    ['name' => 'issue_date', 'label' => 'Date of Issuance'],
+                                    ['name' => 'issue_place', 'label' => 'Place of Issuance'],
+                                ];
+                            @endphp
+
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4 class="mb-0">PDS Information</h4>
+                                @if($canEditPds)
+                                    <a href="{{ route('personnel.pds.edit', $personnel) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-edit mr-1"></i> Edit
+                                    </a>
+                                @endif
                             </div>
-                            
-                            <hr class="my-4">
-                            
-                            <h6 class="heading-small text-muted mb-4">Contact & Address</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3"><strong>Email:</strong><br>{{ $pds->email_address ?? 'N/A' }}</div>
-                                <div class="col-md-6 mb-3"><strong>Contact Number:</strong><br>{{ $pds->mobile ?? 'N/A' }}</div>
-                                <div class="col-md-12"><strong>Residential Address:</strong><br>{{ $pds->residential_address ?? 'N/A' }}</div>
-                            </div>
 
-
-
-                            <!-- TESTING: FULL PERSONNEL DATA DUMP -->
-                            <div style="background: #f6f6f6; border: 1px solid #000000; border-radius: 6px; padding: 1.5rem; margin-top: 2rem;">
-                                <h5 class="mb-3">[TEST] PDS Data <br> pds_main = 1:1 to personnel <br> other tables = M:1 to personnel <br> personnel = not covered in pds</h5>
-                                <div class="mb-3">
-                                    <strong>personnel</strong>
-                                    <ul class="mb-2">
-                                        @foreach($personnel->getAttributes() as $key => $val)
-                                            <li><code>{{ $key }}</code>: <span class="text-monospace">{{ is_scalar($val) ? $val : json_encode($val) }}</span></li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                                <div class="mb-3">
-                                    <strong>pds_main</strong>
-                                    <ul class="mb-2">
-                                        @if($pds)
-                                            @foreach($pds->getAttributes() as $key => $val)
-                                                <li><code>{{ $key }}</code>: <span class="text-monospace">{{ is_scalar($val) ? $val : json_encode($val) }}</span></li>
+                            @foreach($sectionMain as $sectionTitle => $fields)
+                                <div class="card shadow-sm mb-4">
+                                    <div class="card-header bg-white"><h5 class="mb-0">{{ $sectionTitle }}</h5></div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            @foreach($fields as $field)
+                                                @php
+                                                    $boolFields = [
+                                                        'related_third_degree', 'related_fourth_degree', 'admin_offense', 'criminal_case', 'convicted',
+                                                        'separated_service', 'election_candidate', 'election_resigned', 'immigrant', 'indigenous', 'pwd', 'solo_parent'
+                                                    ];
+                                                    $value = optional($pds)->{$field['name']} ?? null;
+                                                @endphp
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-control-label text-muted">{{ $field['label'] }}</label>
+                                                    <div class="font-weight-bold">
+                                                        @if(in_array($field['name'], $boolFields, true))
+                                                            @if($value === null || $value === '')
+                                                                --
+                                                            @else
+                                                                {{ (string) $value === '1' ? 'Yes' : 'No' }}
+                                                            @endif
+                                                        @else
+                                                            {{ $value !== null && $value !== '' ? $value : '--' }}
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             @endforeach
-                                        @else
-                                            <li class="text-danger">No pds_main record found.</li>
-                                        @endif
-                                    </ul>
-                                </div>
-                                @foreach([
-                                    'pdsChildren' => 'pds_children',
-                                    'pdsEducation' => 'pds_education',
-                                    'pdsEligibility' => 'pds_eligibility',
-                                    'pdsWorkExperience' => 'pds_work_experience',
-                                    'pdsTraining' => 'pds_training',
-                                    'pdsReferences' => 'pds_references',
-                                    'pdsSubmissions' => 'pds_submissions',
-                                ] as $relation => $label)
-                                    <div class="mb-3">
-                                        <strong>{{ $label }}</strong>
-                                        <ul class="mb-2">
-                                            @forelse($personnel->$relation as $row)
-                                                <li>
-                                                    <ul>
-                                                        @foreach($row->getAttributes() as $key => $val)
-                                                            <li><code>{{ $key }}</code>: <span class="text-monospace">{{ is_scalar($val) ? $val : json_encode($val) }}</span></li>
-                                                        @endforeach
-                                                    </ul>
-                                                </li>
-                                            @empty
-                                                <li class="text-muted">No records.</li>
-                                            @endforelse
-                                        </ul>
+                                        </div>
                                     </div>
-                                @endforeach
+                                </div>
+
+                                @if($sectionTitle === 'II. Family Background')
+                                    @include('personnel.partials.pds_repeater_readonly', [
+                                        'title' => 'Children',
+                                        'fields' => [
+                                            ['name' => 'child_name', 'label' => 'Name', 'type' => 'text'],
+                                            ['name' => 'birth_date', 'label' => 'Birth Date', 'type' => 'date'],
+                                        ],
+                                        'rows' => $personnel->pdsChildren->map(function ($row) {
+                                            return [
+                                                'child_name' => $row->child_name,
+                                                'birth_date' => $row->birth_date,
+                                            ];
+                                        })->values()->all(),
+                                    ])
+                                @endif
+                            @endforeach
+
+                            @include('personnel.partials.pds_repeater_readonly', [
+                                'title' => 'III. Educational Background',
+                                'fields' => [
+                                    ['name' => 'level', 'label' => 'Level', 'type' => 'text'],
+                                    ['name' => 'school_name', 'label' => 'School Name', 'type' => 'text'],
+                                    ['name' => 'degree', 'label' => 'Degree', 'type' => 'text'],
+                                    ['name' => 'from_year', 'label' => 'From Year', 'type' => 'number'],
+                                    ['name' => 'to_year', 'label' => 'To Year', 'type' => 'number'],
+                                    ['name' => 'highest_level_units', 'label' => 'Highest Level / Units', 'type' => 'text'],
+                                    ['name' => 'year_graduated', 'label' => 'Year Graduated', 'type' => 'number'],
+                                    ['name' => 'honors', 'label' => 'Honors', 'type' => 'text'],
+                                ],
+                                'rows' => $personnel->pdsEducation->map(function ($row) {
+                                    return [
+                                        'level' => $row->level,
+                                        'school_name' => $row->school_name,
+                                        'degree' => $row->degree,
+                                        'from_year' => $row->from_year,
+                                        'to_year' => $row->to_year,
+                                        'highest_level_units' => $row->highest_level_units,
+                                        'year_graduated' => $row->year_graduated,
+                                        'honors' => $row->honors,
+                                    ];
+                                })->values()->all(),
+                            ])
+
+                            @include('personnel.partials.pds_repeater_readonly', [
+                                'title' => 'IV. Civil Service Eligibility',
+                                'fields' => [
+                                    ['name' => 'eligibility', 'label' => 'Eligibility', 'type' => 'text'],
+                                    ['name' => 'rating', 'label' => 'Rating', 'type' => 'text'],
+                                    ['name' => 'exam_date', 'label' => 'Exam Date', 'type' => 'date'],
+                                    ['name' => 'exam_place', 'label' => 'Exam Place', 'type' => 'text'],
+                                    ['name' => 'license_number', 'label' => 'License Number', 'type' => 'text'],
+                                    ['name' => 'license_valid_until', 'label' => 'License Valid Until', 'type' => 'date'],
+                                ],
+                                'rows' => $personnel->pdsEligibility->map(function ($row) {
+                                    return [
+                                        'eligibility' => $row->eligibility,
+                                        'rating' => $row->rating,
+                                        'exam_date' => $row->exam_date,
+                                        'exam_place' => $row->exam_place,
+                                        'license_number' => $row->license_number,
+                                        'license_valid_until' => $row->license_valid_until,
+                                    ];
+                                })->values()->all(),
+                            ])
+
+                            @include('personnel.partials.pds_repeater_readonly', [
+                                'title' => 'V. Work Experience',
+                                'fields' => [
+                                    ['name' => 'start_date', 'label' => 'Start Date', 'type' => 'date'],
+                                    ['name' => 'end_date', 'label' => 'End Date', 'type' => 'date'],
+                                    ['name' => 'position', 'label' => 'Position', 'type' => 'text'],
+                                    ['name' => 'company', 'label' => 'Company', 'type' => 'text'],
+                                    ['name' => 'appointment_status', 'label' => 'Appointment Status', 'type' => 'text'],
+                                    ['name' => 'is_government', 'label' => 'Government Service', 'type' => 'boolean'],
+                                ],
+                                'rows' => $personnel->pdsWorkExperience->map(function ($row) {
+                                    return [
+                                        'start_date' => $row->start_date,
+                                        'end_date' => $row->end_date,
+                                        'position' => $row->position,
+                                        'company' => $row->company,
+                                        'appointment_status' => $row->appointment_status,
+                                        'is_government' => $row->is_government,
+                                    ];
+                                })->values()->all(),
+                            ])
+
+                            @include('personnel.partials.pds_repeater_readonly', [
+                                'title' => 'VI. Voluntary Work or Involvement in Civic / Non-Government / People / Voluntary Organization/s',
+                                'fields' => [
+                                    ['name' => 'organization_name', 'label' => 'Organization Name', 'type' => 'text'],
+                                    ['name' => 'organization_address', 'label' => 'Organization Address', 'type' => 'text'],
+                                    ['name' => 'from_date', 'label' => 'From Date', 'type' => 'date'],
+                                    ['name' => 'to_date', 'label' => 'To Date', 'type' => 'date'],
+                                    ['name' => 'number_of_hours', 'label' => 'Number of Hours', 'type' => 'number'],
+                                    ['name' => 'position', 'label' => 'Position / Nature of Work', 'type' => 'text'],
+                                ],
+                                'rows' => $personnel->pdsVoluntaryWork->map(function ($row) {
+                                    return [
+                                        'organization_name' => $row->organization_name,
+                                        'organization_address' => $row->organization_address,
+                                        'from_date' => $row->from_date,
+                                        'to_date' => $row->to_date,
+                                        'number_of_hours' => $row->number_of_hours,
+                                        'position' => $row->position,
+                                    ];
+                                })->values()->all(),
+                            ])
+
+                            @include('personnel.partials.pds_repeater_readonly', [
+                                'title' => 'VII. Learning and Development (L & D) Interventions/Training Program Attended',
+                                'fields' => [
+                                    ['name' => 'title', 'label' => 'Title', 'type' => 'text'],
+                                    ['name' => 'start_date', 'label' => 'Start Date', 'type' => 'date'],
+                                    ['name' => 'end_date', 'label' => 'End Date', 'type' => 'date'],
+                                    ['name' => 'hours', 'label' => 'Hours', 'type' => 'number'],
+                                    ['name' => 'type', 'label' => 'Type', 'type' => 'text'],
+                                    ['name' => 'sponsor', 'label' => 'Sponsor', 'type' => 'text'],
+                                ],
+                                'rows' => $personnel->pdsTraining->map(function ($row) {
+                                    return [
+                                        'title' => $row->title,
+                                        'start_date' => $row->start_date,
+                                        'end_date' => $row->end_date,
+                                        'hours' => $row->hours,
+                                        'type' => $row->type,
+                                        'sponsor' => $row->sponsor,
+                                    ];
+                                })->values()->all(),
+                            ])
+
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-white"><h5 class="mb-0">VIII. Other Information (Skills, Distinctions, Memberships)</h5></div>
+                                <div class="card-body">
+                                    @include('personnel.partials.pds_repeater_readonly', [
+                                        'title' => 'Skills',
+                                        'fields' => [
+                                            ['name' => 'skill', 'label' => 'Skill', 'type' => 'text'],
+                                        ],
+                                        'rows' => $personnel->pdsSkills->map(function ($row) {
+                                            return [
+                                                'skill' => $row->skill,
+                                            ];
+                                        })->values()->all(),
+                                    ])
+
+                                    @include('personnel.partials.pds_repeater_readonly', [
+                                        'title' => 'Distinctions',
+                                        'fields' => [
+                                            ['name' => 'distinction', 'label' => 'Distinction', 'type' => 'text'],
+                                        ],
+                                        'rows' => $personnel->pdsDistinctions->map(function ($row) {
+                                            return [
+                                                'distinction' => $row->distinction,
+                                            ];
+                                        })->values()->all(),
+                                    ])
+
+                                    @include('personnel.partials.pds_repeater_readonly', [
+                                        'title' => 'Memberships',
+                                        'fields' => [
+                                            ['name' => 'membership', 'label' => 'Membership', 'type' => 'text'],
+                                        ],
+                                        'rows' => $personnel->pdsMemberships->map(function ($row) {
+                                            return [
+                                                'membership' => $row->membership,
+                                            ];
+                                        })->values()->all(),
+                                    ])
+                                </div>
                             </div>
 
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-white"><h5 class="mb-0">Questions</h5></div>
+                                <div class="card-body">
+                                    @foreach($questionsGroups as $groupTitle => $fields)
+                                        <div class="mb-2 mt-3"><strong>{{ $groupTitle }}</strong></div>
+                                        <div class="row">
+                                            @foreach($fields as $field)
+                                                @php
+                                                    $type = 'text';
+                                                    if(Str::endsWith($field['name'], '_details')) {
+                                                        $type = 'textarea';
+                                                    } elseif(in_array($field['name'], [
+                                                        'related_third_degree', 'related_fourth_degree', 'admin_offense', 'criminal_case', 'convicted',
+                                                        'separated_service', 'election_candidate', 'election_resigned', 'immigrant', 'indigenous', 'pwd', 'solo_parent'
+                                                    ])) {
+                                                        $type = 'boolean';
+                                                    }
+                                                    $name = $field['name'];
+                                                    $value = optional($pds)->{$name} ?? null;
+                                                @endphp
+                                                <div class="{{ $type === 'textarea' ? 'col-md-12' : 'col-md-4' }} mb-3">
+                                                    <label class="form-control-label text-muted">{{ $field['label'] }}</label>
+                                                    <div class="font-weight-bold">
+                                                        @if($type === 'boolean')
+                                                            @if($value === null || $value === '')
+                                                                --
+                                                            @else
+                                                                {{ (string) $value === '1' ? 'Yes' : 'No' }}
+                                                            @endif
+                                                        @elseif($type === 'textarea')
+                                                            {{ $value !== null && $value !== '' ? $value : '--' }}
+                                                        @else
+                                                            {{ $value !== null && $value !== '' ? $value : '--' }}
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
 
-                            
+                            @include('personnel.partials.pds_repeater_readonly', [
+                                'title' => 'References',
+                                'fields' => [
+                                    ['name' => 'name', 'label' => 'Name', 'type' => 'text'],
+                                    ['name' => 'address', 'label' => 'Address', 'type' => 'textarea'],
+                                    ['name' => 'contact', 'label' => 'Contact', 'type' => 'text'],
+                                ],
+                                'rows' => $personnel->pdsReferences->map(function ($row) {
+                                    return [
+                                        'name' => $row->name,
+                                        'address' => $row->address,
+                                        'contact' => $row->contact,
+                                    ];
+                                })->values()->all(),
+                            ])
+
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-white"><h5 class="mb-0">Government ID Issuance</h5></div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        @foreach($governmentIdFields as $field)
+                                            @php
+                                                $value = optional($pds)->{$field['name']} ?? null;
+                                            @endphp
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-control-label text-muted">{{ $field['label'] }}</label>
+                                                <div class="font-weight-bold">{{ $value !== null && $value !== '' ? $value : '--' }}</div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="tab-pane fade" id="inventory">
@@ -307,10 +640,10 @@
                                             <tr>
                                                 <td>{{ $record->date_from }}</td>
                                                 <td>{{ $record->date_to ?? '---' }}</td>
-                                                <td>{{ $record->position->title ?? 'N/A' }}</td>
+                                                <td>{{ $record->position->title ?? '--' }}</td>
                                                 <td>{{ $record->status }}</td>
                                                 <td>{{ $record->salary }}</td>
-                                                <td>{{ $record->school->name ?? 'N/A' }}</td>
+                                                <td>{{ $record->school->name ?? '--' }}</td>
                                                 <td>{{ $record->branch ?? '---' }}</td>
                                                 <td>{{ $record->lv_abs_wo_pay ?? '---' }}</td>
                                                 @if($canManageServiceRecords)
@@ -443,7 +776,7 @@
                                                     <small class="text-muted">{{ Str::limit($so->title, 40) }}</small>
                                                 </div>
                                                 <div class="col-auto">
-                                                    <span class="badge badge-pill badge-primary">{{ $so->type->name ?? ($so->type ?? 'N/A') }}</span>
+                                                    <span class="badge badge-pill badge-primary">{{ $so->type->name ?? ($so->type ?? '--') }}</span>
                                                 </div>
                                             </div>
                                         </div>

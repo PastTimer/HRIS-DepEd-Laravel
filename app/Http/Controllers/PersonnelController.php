@@ -435,7 +435,39 @@ class PersonnelController extends Controller
     public function show($id)
     {
         $personnel = Personnel::with([
-            'pdsMain',
+            'pdsMain' => function ($q) {
+                $q->whereNull('submission_id');
+            },
+            'pdsChildren' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsEducation' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsEligibility' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsWorkExperience' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsVoluntaryWork' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsTraining' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsSkills' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsDistinctions' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsMemberships' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
+            'pdsReferences' => function ($q) {
+                $q->whereNull('submission_id')->orderBy('id');
+            },
             'position',
             'school',
             'equipment',

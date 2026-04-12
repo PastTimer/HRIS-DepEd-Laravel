@@ -33,6 +33,10 @@ class Personnel extends Model
     public function pdsEligibility() { return $this->hasMany(PdsEligibility::class, 'personnel_id'); }
     public function pdsWorkExperience() { return $this->hasMany(PdsWorkExperience::class, 'personnel_id'); }
     public function pdsTraining() { return $this->hasMany(PdsTraining::class, 'personnel_id'); }
+    public function pdsVoluntaryWork() { return $this->hasMany(PdsVoluntaryWork::class, 'personnel_id'); }
+    public function pdsSkills() { return $this->hasMany(PdsSkill::class, 'personnel_id'); }
+    public function pdsDistinctions() { return $this->hasMany(PdsDistinction::class, 'personnel_id'); }
+    public function pdsMemberships() { return $this->hasMany(PdsMembership::class, 'personnel_id'); }
     public function pdsReferences() { return $this->hasMany(PdsReference::class, 'personnel_id'); }
     public function equipment() {return $this->hasMany(Equipment::class, 'accountable_officer_id');}
     public function serviceRecords()
