@@ -23,7 +23,7 @@
             <div class="card card-profile shadow mb-4">
                 <div class="card-body pt-5 text-center">
                     <div class="mb-4">
-                        <img src="{{ $personnel->profile_photo ? asset('storage/' . $personnel->profile_photo) : asset('uploads/default/defaultpic.png') }}" class="rounded-circle border shadow-sm" width="140" style="height: 140px; object-fit: cover;">
+                        <img src="{{ $personnel->profile_photo ? asset('storage/' . $personnel->profile_photo) : asset('assets/img/brand/boss.jpg') }}" class="rounded-circle border shadow-sm" width="140" style="height: 140px; object-fit: cover;">
                     </div>
                     <h2 class="mb-0 text-dark">{{ $lastName }}, {{ $firstName }}</h2>
                     <p class="text-muted mb-3">{{ $personnel->position->title ?? '--' }}</p>

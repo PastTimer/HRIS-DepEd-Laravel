@@ -77,7 +77,7 @@
                                     @if($personnel->profile_photo)
                                         <img src="{{ asset('storage/' . $personnel->profile_photo) }}" alt="avatar" class="rounded-circle img-thumbnail" style="width: 45px; height: 45px; object-fit: cover;">
                                     @else
-                                        <img src="{{ asset('uploads/default/defaultpic.png') }}" alt="avatar" class="rounded-circle img-thumbnail" style="width: 45px; height: 45px; object-fit: cover;">
+                                        <img src="{{ asset('assets/img/brand/boss.jpg') }}" alt="avatar" class="rounded-circle img-thumbnail" style="width: 45px; height: 45px; object-fit: cover;">
                                     @endif
                                 </td>
                                 
