@@ -545,7 +545,7 @@
 
                             <!-- Add Service Record Modal -->
                             @if($canManageServiceRecords)
-                            <div class="modal fade" id="addServiceRecordModal" tabindex="-1" role="dialog" aria-labelledby="addServiceRecordModalLabel" aria-hidden="true">
+                            <div class="modal fade" id="addServiceRecordModal" tabindex="-1" role="dialog" aria-labelledby="addServiceRecordModalLabel" aria-hidden="true" data-backdrop="false">
                               <div class="modal-dialog modal-lg" role="document">
                                 <div class="modal-content">
                                   <div class="modal-header">
@@ -662,7 +662,7 @@
 
                                             <!-- Edit Service Record Modal -->
                                             @if($canManageServiceRecords)
-                                            <div class="modal fade" id="editServiceRecordModal-{{ $record->id }}" tabindex="-1" role="dialog" aria-labelledby="editServiceRecordModalLabel-{{ $record->id }}" aria-hidden="true">
+                                            <div class="modal fade" id="editServiceRecordModal-{{ $record->id }}" tabindex="-1" role="dialog" aria-labelledby="editServiceRecordModalLabel-{{ $record->id }}" aria-hidden="true" data-backdrop="false">
                                               <div class="modal-dialog modal-lg" role="document">
                                                 <div class="modal-content">
                                                   <div class="modal-header">

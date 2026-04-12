@@ -95,10 +95,12 @@
                 </div>
                 <div class="list-group list-group-flush">
                     @forelse($quickLinks as $link)
-                        <a href="{{ route($link['route']) }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                            <i class="{{ $link['icon'] }} mr-2"></i>
-                            <span>{{ $link['label'] }}</span>
-                        </a>
+                        @if(!(strtolower($roleName) === 'encoding_officer' && ($link['route'] === 'personnel.index' || Str::contains(Str::lower($link['label']), 'personnel'))))
+                            <a href="{{ route($link['route']) }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="{{ $link['icon'] }} mr-2"></i>
+                                <span>{{ $link['label'] }}</span>
+                            </a>
+                        @endif
                     @empty
                         <div class="list-group-item text-muted">No quick links available for your role.</div>
                     @endforelse

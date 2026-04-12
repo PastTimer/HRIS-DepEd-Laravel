@@ -15,9 +15,9 @@ class UserController extends Controller
 {
     public function activate(User $user)
     {
-        // Only admin can activate/deactivate accounts
+        // Admin can activate anyone; school can activate users under their school
         if (!Auth::user()->hasRole('admin')) {
-            abort(403, 'Unauthorized');
+            $this->assertSchoolUserCanManageTarget($user);
         }
         $user->status = 'active';
         $user->save();
@@ -36,7 +36,7 @@ class UserController extends Controller
     public function deactivate(User $user)
     {
         if (!Auth::user()->hasRole('admin')) {
-            abort(403, 'Unauthorized');
+            $this->assertSchoolUserCanManageTarget($user);
         }
         $user->status = 'inactive';
         $user->save();

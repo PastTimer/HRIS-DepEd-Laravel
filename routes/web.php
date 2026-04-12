@@ -98,15 +98,15 @@ Route::middleware('auth')->group(function () {
     });
 
     // School Profile
-    Route::middleware('role:admin|school|encoding_officer')->group(function () {
-        Route::get('/schools', [SchoolController::class, 'index'])->name('schools.index');
-        Route::get('/schools/{school}', [SchoolController::class, 'show'])->name('schools.show');
-    });
     Route::middleware('role:admin')->group(function () {
         Route::get('/schools/create', [SchoolController::class, 'create'])->name('schools.create');
         Route::post('/schools', [SchoolController::class, 'store'])->name('schools.store');
         Route::delete('/schools/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
         Route::resource('districts', App\Http\Controllers\DistrictController::class);
+    });
+    Route::middleware('role:admin|school|encoding_officer')->group(function () {
+        Route::get('/schools', [SchoolController::class, 'index'])->name('schools.index');
+        Route::get('/schools/{school}', [SchoolController::class, 'show'])->name('schools.show');
     });
     Route::middleware('role:admin|school')->group(function () {
         Route::get('/schools/{school}/edit', [SchoolController::class, 'edit'])->name('schools.edit');

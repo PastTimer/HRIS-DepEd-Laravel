@@ -250,7 +250,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="speedTestModal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="speedTestModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
