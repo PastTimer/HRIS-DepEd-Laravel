@@ -11,8 +11,10 @@
                         @php
                             $isPersonnel = Auth::user() && Auth::user()->hasRole('personnel');
                             $isPending = $specialorder->status === 'Pending';
+                            $isApproved = $specialorder->status === 'Approved';
+                            $canEdit = ($isPersonnel && $isPending) || (!$isPersonnel && $isApproved);
                         @endphp
-                        @if(!$isPersonnel || ($isPersonnel && $isPending))
+                        @if($canEdit)
                         <a href="{{ route('specialorder.edit', $specialorder) }}" class="btn btn-sm btn-info">
                             <i class="fas fa-edit mr-1"></i> Edit
                         </a>
@@ -60,6 +62,12 @@
                                     <span class="badge badge-warning">Pending</span>
                                 @endif
                             </div>
+                            @if($specialorder->status === 'Rejected' && $specialorder->rejection_reason)
+                                <div class="mt-2">
+                                    <label class="form-control-label text-danger">Reason for Rejection:</label>
+                                    <div class="text-danger">{{ $specialorder->rejection_reason }}</div>
+                                </div>
+                            @endif
                         </div>
                     </div>
 

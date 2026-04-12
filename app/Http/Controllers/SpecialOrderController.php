@@ -106,11 +106,29 @@ class SpecialOrderController extends Controller
             return false;
         }
 
-        if ($user->hasRole('personnel') && $specialorder->status === 'Approved') {
-            return false;
+        if ($user->hasRole('personnel')) {
+            return $specialorder->status === 'Pending'
+                && $this->scopedOrdersQuery()->whereKey($specialorder->id)->exists();
         }
 
-        return $this->scopedOrdersQuery()->whereKey($specialorder->id)->exists();
+        return $specialorder->status === 'Approved'
+            && $this->scopedOrdersQuery()->whereKey($specialorder->id)->exists();
+    }
+
+    private function assertPersonnelCanModifyPending(SpecialOrder $specialorder): void
+    {
+        $user = Auth::user();
+        if ($user && $user->hasRole('personnel')) {
+            abort_if($specialorder->status !== 'Pending', 403);
+        }
+    }
+
+    private function assertNonPersonnelCanModifyApproved(SpecialOrder $specialorder): void
+    {
+        $user = Auth::user();
+        if ($user && !$user->hasRole('personnel')) {
+            abort_if($specialorder->status !== 'Approved', 403);
+        }
     }
 
     private function resolveUnits(Request $request, SoType $type): float
@@ -175,6 +193,11 @@ class SpecialOrderController extends Controller
         // For personnel, only show SOs they created
         if ($user && $user->hasRole('personnel')) {
             $query->where('created_by', $user->id);
+        } else {
+            // Non-personnel requests view should only include SOs created by personnel users.
+            $query->whereHas('creator.roles', function (Builder $q) {
+                $q->where('name', 'personnel');
+            });
         }
 
         $query->when($search !== '', function (Builder $q) use ($search) {
@@ -190,7 +213,11 @@ class SpecialOrderController extends Controller
             });
         });
 
-        $requests = $query->latest()->paginate(15)->appends(['search' => $search]);
+        $requests = $query
+            ->orderByRaw("CASE WHEN status = 'Pending' THEN 0 ELSE 1 END")
+            ->orderByDesc('created_at')
+            ->paginate(15)
+            ->appends(['search' => $search]);
         $deletableOrderIds = $requests->getCollection()
             ->filter(fn (SpecialOrder $so) => $this->canDelete($so))
             ->pluck('id')
@@ -227,14 +254,23 @@ class SpecialOrderController extends Controller
         $type = SoType::findOrFail((int) $validated['type_id']);
         $unitsPerPersonnel = $request->input('units_per_personnel', []);
 
+        // Auto-approve if creator is Admin, School, or EO
+        $user = Auth::user();
+        $autoApproveRoles = ['admin', 'school', 'encoding_officer'];
+        $status = ($user && $user->hasAnyRole($autoApproveRoles)) ? 'Approved' : 'Pending';
+        $approvedBy = ($status === 'Approved') ? $user->id : null;
+        $approvedAt = ($status === 'Approved') ? now() : null;
+
         $specialorder = SpecialOrder::create([
             'title'       => $validated['title'],
             'description' => $validated['description'] ?? null,
             'so_number'   => $validated['so_number'],
             'series_year' => $validated['series_year'],
             'type_id'     => (int) $validated['type_id'],
-            'status'      => 'Pending',
-            'created_by'  => Auth::id(),
+            'status'      => $status,
+            'created_by'  => $user ? $user->id : null,
+            'approved_by' => $approvedBy,
+            'approved_at' => $approvedAt,
         ]);
 
         $pivotData = [];
@@ -253,6 +289,8 @@ class SpecialOrderController extends Controller
     public function edit(SpecialOrder $specialorder)
     {
         $this->ensureOrderAccessible($specialorder);
+        $this->assertPersonnelCanModifyPending($specialorder);
+        $this->assertNonPersonnelCanModifyApproved($specialorder);
 
         $specialorder->load(['personnel', 'type']);
         $employees = $this->scopedPersonnelQuery()->get();
@@ -273,6 +311,8 @@ class SpecialOrderController extends Controller
     public function update(Request $request, SpecialOrder $specialorder)
     {
         $this->ensureOrderAccessible($specialorder);
+        $this->assertPersonnelCanModifyPending($specialorder);
+        $this->assertNonPersonnelCanModifyApproved($specialorder);
 
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
@@ -331,15 +371,22 @@ class SpecialOrderController extends Controller
 
         $validated = $request->validate([
             'status' => ['required', Rule::in(['Approved', 'Rejected', 'Pending'])],
+            'rejection_reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $specialorder->status = $validated['status'];
         if ($validated['status'] === 'Pending') {
             $specialorder->approved_by = null;
             $specialorder->approved_at = null;
+            $specialorder->rejection_reason = null;
+        } elseif ($validated['status'] === 'Rejected') {
+            $specialorder->approved_by = $user->id;
+            $specialorder->approved_at = now();
+            $specialorder->rejection_reason = $validated['rejection_reason'] ?? null;
         } else {
             $specialorder->approved_by = $user->id;
             $specialorder->approved_at = now();
+            $specialorder->rejection_reason = null;
         }
 
         $specialorder->save();
@@ -352,6 +399,8 @@ class SpecialOrderController extends Controller
     public function destroy(SpecialOrder $specialorder)
     {
         $this->ensureOrderAccessible($specialorder);
+        $this->assertPersonnelCanModifyPending($specialorder);
+        $this->assertNonPersonnelCanModifyApproved($specialorder);
         abort_unless($this->canDelete($specialorder), 403);
 
         ActivityLog::log('DELETE', 'Special Order', "Deleted SO: {$specialorder->title}");

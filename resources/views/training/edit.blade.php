@@ -61,45 +61,7 @@
                     </div>
                 </div>
             </div>
-            @unless($isPersonnel)
-            <div class="col-xl-4">
-                <div class="card shadow">
-                    <div class="card-header border-0">
-                        <input type="text" id="empSearch" class="form-control" placeholder="Search..." onkeyup="filterTable()">
-                    </div>
-                    <div style="max-height: 600px; overflow-y: auto;">
-                        <table class="table" id="empTable">
-                            @foreach($employees as $personnel)
-                                @php($pds = $personnel->pdsMain)
-                                <tr>
-                                    <td width="40">
-                                        <input type="checkbox" name="employee_ids[]" value="{{ $personnel->id }}" class="emp-check" data-name="{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}">
-                                    </td>
-                                    <td class="font-weight-bold">
-                                        {{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </table>
-                    </div>
-                </div>
-            </div>
-            @endunless
         </div>
     </form>
 </div>
-
-<script>
-    // Search filter for the personnel table
-    function filterTable() {
-        let val = document.getElementById('empSearch').value.toUpperCase();
-        let rows = document.getElementById('empTable').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            let td = rows[i].getElementsByClassName("name-cell")[0];
-            if (td) {
-                rows[i].style.display = td.textContent.toUpperCase().includes(val) ? "" : "none";
-            }
-        }
-    }
-</script>
 @endsection

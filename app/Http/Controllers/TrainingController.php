@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PdsTraining;
 use App\Models\Personnel;
 use App\Models\ActivityLog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,8 +15,8 @@ class TrainingController extends Controller
     {
         $user = Auth::user();
 
-        return $user->school_id ? (int) $user->school_id : null;
-        if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer'))) {
+        if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer')) && $user->school_id) {
+            return (int) $user->school_id;
         }
 
         return null;
@@ -23,6 +24,14 @@ class TrainingController extends Controller
 
     private function assertTrainingAccess(PdsTraining $training): void
     {
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        if ($user->hasRole('personnel')) {
+            abort_if((int) $training->personnel_id !== (int) $user->personnel_id, 403);
+            return;
+        }
+
         $schoolId = $this->schoolScopeId();
         if (!$schoolId) {
             return;
@@ -32,6 +41,22 @@ class TrainingController extends Controller
         abort_if($recordSchoolId !== $schoolId, 403);
     }
 
+    private function assertPersonnelCanModifyPending(PdsTraining $training): void
+    {
+        $user = Auth::user();
+        if ($user && $user->hasRole('personnel')) {
+            abort_if($training->verification_status !== 'pending', 403);
+        }
+    }
+
+    private function assertNonPersonnelCanModifyVerified(PdsTraining $training): void
+    {
+        $user = Auth::user();
+        if ($user && !$user->hasRole('personnel')) {
+            abort_if($training->verification_status !== 'verified', 403);
+        }
+    }
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -39,15 +64,11 @@ class TrainingController extends Controller
         $isPersonnel = $user && $user->hasRole('personnel');
         $schoolId = $this->schoolScopeId();
 
-
         $query = PdsTraining::with(['personnel.pdsMain']);
 
         if ($isPersonnel) {
             $query->where('personnel_id', $user->personnel_id)
-                  ->where(function($q) {
-                      $q->where('verification_status', 'verified')
-                        ->orWhere('verification_status', 'pending');
-                  });
+                ->where('verification_status', 'verified');
         } elseif ($schoolId) {
             $query->whereHas('personnel', function ($q) use ($schoolId) {
                 $q->where('assigned_school_id', $schoolId);
@@ -58,14 +79,15 @@ class TrainingController extends Controller
         }
 
         $query->when($search, function ($q) use ($search, $isPersonnel) {
-            $q->where(function($subQuery) use ($search, $isPersonnel) {
+            $q->where(function ($subQuery) use ($search, $isPersonnel) {
                 $subQuery->where('title', 'like', "%{$search}%")
-                        ->orWhere('type', 'like', "%{$search}%")
-                        ->orWhere('sponsor', 'like', "%{$search}%");
+                    ->orWhere('type', 'like', "%{$search}%")
+                    ->orWhere('sponsor', 'like', "%{$search}%");
+
                 if (!$isPersonnel) {
                     $subQuery->orWhereHas('personnel.pdsMain', function ($pdsQ) use ($search) {
                         $pdsQ->where('first_name', 'like', "%{$search}%")
-                             ->orWhere('last_name', 'like', "%{$search}%");
+                            ->orWhere('last_name', 'like', "%{$search}%");
                     });
                 }
             });
@@ -76,8 +98,8 @@ class TrainingController extends Controller
         ];
 
         $trainings = $query->orderBy('start_date', 'desc')
-                ->paginate(15)
-                ->appends(['search' => $search]);
+            ->paginate(15)
+            ->appends(['search' => $search]);
 
         return view('training.index', compact('trainings', 'stats'));
     }
@@ -114,8 +136,10 @@ class TrainingController extends Controller
                 'type' => 'required|string',
                 'sponsor' => 'required|string',
             ]);
+
             $training = PdsTraining::create([
                 'personnel_id' => $user->personnel_id,
+                'created_by' => $user->id,
                 'title' => $validated['title'],
                 'hours' => $validated['hours'],
                 'start_date' => $validated['start_date'],
@@ -127,7 +151,8 @@ class TrainingController extends Controller
                 'verified_at' => null,
                 'rejection_reason' => null,
             ]);
-            ActivityLog::log('CREATE', 'Training', "Created Training: {$training->title} for Personnel ID: {$user->personnel_id}");
+
+            ActivityLog::log('CREATE', 'Training', "Created Training request: {$training->title} for Personnel ID: {$user->personnel_id}");
         } else {
             $validated = $request->validate([
                 'title' => 'required|string',
@@ -137,6 +162,7 @@ class TrainingController extends Controller
                 'type' => 'required|string',
                 'sponsor' => 'required|string',
                 'employee_ids' => 'required|array|min:1',
+                'employee_ids.*' => 'required|integer|exists:personnel,id',
             ]);
 
             if ($schoolId) {
@@ -150,6 +176,7 @@ class TrainingController extends Controller
             foreach ($validated['employee_ids'] as $personnelId) {
                 $training = PdsTraining::create([
                     'personnel_id' => $personnelId,
+                    'created_by' => $user->id,
                     'title' => $validated['title'],
                     'hours' => $validated['hours'],
                     'start_date' => $validated['start_date'],
@@ -161,52 +188,103 @@ class TrainingController extends Controller
                     'verified_at' => now(),
                     'rejection_reason' => null,
                 ]);
+
                 ActivityLog::log('CREATE', 'Training', "Created Training: {$training->title} for Personnel ID: {$personnelId}");
             }
         }
 
         return redirect('/training')->with('success', 'Training records saved.');
-
     }
 
-    // ADMIN: List all pending training requests
-    public function requests()
+    // Requests list: Personnel sees own requests; Admin/School sees personnel-created requests.
+    public function requests(Request $request)
     {
-        $pendingTrainings = PdsTraining::with(['personnel.pdsMain'])
-            ->where('verification_status', 'pending')
-            ->orderBy('created_at', 'desc')
-            ->get();
-        return view('training.requests', compact('pendingTrainings'));
+        $search = trim((string) $request->input('search'));
+        $user = Auth::user();
+        $schoolId = $this->schoolScopeId();
+        $isPersonnel = $user && $user->hasRole('personnel');
+
+        $query = PdsTraining::with(['personnel.pdsMain', 'creator']);
+
+        if ($isPersonnel) {
+            $query->where('created_by', $user->id);
+        } elseif ($schoolId) {
+            $query->whereHas('personnel', function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            });
+
+            $query->whereHas('creator.roles', function (Builder $q) {
+                $q->where('name', 'personnel');
+            });
+        } else {
+            $query->whereHas('creator.roles', function (Builder $q) {
+                $q->where('name', 'personnel');
+            });
+        }
+
+        $query->when($search !== '', function ($q) use ($search) {
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('title', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%")
+                    ->orWhere('sponsor', 'like', "%{$search}%")
+                    ->orWhereHas('personnel.pdsMain', function ($pdsQ) use ($search) {
+                        $pdsQ->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    });
+            });
+        });
+
+        $requests = $query
+            ->orderByRaw("CASE WHEN verification_status = 'pending' THEN 0 ELSE 1 END")
+            ->orderByDesc('created_at')
+            ->paginate(15)
+            ->appends(['search' => $search]);
+
+        return view('training.requests', compact('requests'));
     }
 
-    // ADMIN: Approve a training request
+    // ADMIN/SCHOOL: Approve a training request
     public function approveRequest(PdsTraining $training)
     {
+        $this->assertTrainingAccess($training);
+
         $training->update([
             'verification_status' => 'verified',
             'verified_by' => Auth::id(),
             'verified_at' => now(),
             'rejection_reason' => null,
         ]);
+
         return back()->with('success', 'Training request approved.');
     }
 
-    // ADMIN: Reject a training request
+    // ADMIN/SCHOOL: Reject a training request
     public function rejectRequest(Request $request, PdsTraining $training)
     {
+        $this->assertTrainingAccess($training);
+
         $training->update([
             'verification_status' => 'rejected',
             'verified_by' => Auth::id(),
             'verified_at' => now(),
             'rejection_reason' => $request->input('rejection_reason'),
         ]);
-        // Optionally, you can delete the record instead of marking as rejected
-        // $training->delete();
+
         return back()->with('success', 'Training request rejected.');
     }
+
+    public function show(PdsTraining $training)
+    {
+        $this->assertTrainingAccess($training);
+
+        return view('training.show', compact('training'));
+    }
+
     public function edit(PdsTraining $training)
     {
         $this->assertTrainingAccess($training);
+        $this->assertPersonnelCanModifyPending($training);
+        $this->assertNonPersonnelCanModifyVerified($training);
 
         return view('training.edit', compact('training'));
     }
@@ -214,9 +292,30 @@ class TrainingController extends Controller
     public function update(Request $request, PdsTraining $training)
     {
         $this->assertTrainingAccess($training);
+        $this->assertPersonnelCanModifyPending($training);
+        $this->assertNonPersonnelCanModifyVerified($training);
+
+        $validated = $request->validate([
+            'title' => 'required|string',
+            'hours' => 'required|integer',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'type' => 'required|string',
+            'sponsor' => 'required|string',
+        ]);
+
         $user = Auth::user();
         $isPersonnel = $user && $user->hasRole('personnel');
-        $data = $request->only(['title', 'hours', 'start_date', 'end_date', 'type', 'sponsor']);
+
+        $data = [
+            'title' => $validated['title'],
+            'hours' => $validated['hours'],
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'type' => $validated['type'],
+            'sponsor' => $validated['sponsor'],
+        ];
+
         if ($isPersonnel) {
             $data['verification_status'] = 'pending';
             $data['verified_by'] = null;
@@ -228,29 +327,32 @@ class TrainingController extends Controller
             $data['verified_at'] = now();
             $data['rejection_reason'] = null;
         }
+
         $training->update($data);
         ActivityLog::log('UPDATE', 'Training', "Updated Training: {$training->title}");
+
         return redirect('/training')->with('success', $isPersonnel ? 'Update request sent for approval.' : 'Training updated.');
     }
 
     public function destroy(PdsTraining $training)
     {
         $this->assertTrainingAccess($training);
+        $this->assertPersonnelCanModifyPending($training);
+        $this->assertNonPersonnelCanModifyVerified($training);
+
         $user = Auth::user();
         $isPersonnel = $user && $user->hasRole('personnel');
+
         if ($isPersonnel) {
-            $training->update([
-                'verification_status' => 'pending',
-                'verified_by' => null,
-                'verified_at' => null,
-                'rejection_reason' => null,
-            ]);
-            ActivityLog::log('DELETE', 'Training', "Requested delete for Training: {$training->title}");
-            return redirect('/training')->with('success', 'Delete request sent for approval.');
-        } else {
-            ActivityLog::log('DELETE', 'Training', "Deleted Training: {$training->title}");
+            ActivityLog::log('DELETE', 'Training', "Deleted pending Training request: {$training->title}");
             $training->delete();
-            return redirect('/training')->with('success', 'Training deleted.');
+
+            return redirect('/training/requests')->with('success', 'Pending training request deleted.');
         }
+
+        ActivityLog::log('DELETE', 'Training', "Deleted Training: {$training->title}");
+        $training->delete();
+
+        return redirect('/training')->with('success', 'Training deleted.');
     }
 }

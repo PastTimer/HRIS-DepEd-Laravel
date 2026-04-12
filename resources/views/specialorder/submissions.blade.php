@@ -87,21 +87,26 @@
                                         $isPersonnel = Auth::user() && Auth::user()->hasRole('personnel');
                                         $isPending = $so->status === 'Pending';
                                     @endphp
-                                    @if(!$isPersonnel || ($isPersonnel && $isPending))
+                                    @if($isPersonnel && $isPending)
                                         <a href="{{ route('specialorder.edit', $so) }}" class="btn btn-sm btn-info" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @if(in_array($so->id, $deletableOrderIds ?? [], true))
+                                            <form method="POST" action="{{ route('specialorder.destroy', $so) }}" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this request?')" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     @endif
-                                    @if((!$isPersonnel && in_array($so->id, $deletableOrderIds ?? [], true)) || ($isPersonnel && $isPending && in_array($so->id, $deletableOrderIds ?? [], true)))
-                                        <form method="POST" action="{{ route('specialorder.destroy', $so) }}" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this request?')" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    @endif
-                                    @if(!$isPersonnel)
+                                    {{-- Only show Edit/Delete if Pending and Personnel --}}
+
+                                    @php
+                                        $isAdminOrSchoolOrEO = Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('school') || Auth::user()->hasRole('encoding_officer'));
+                                    @endphp
+                                    @if($isAdminOrSchoolOrEO && $isPending && !$isPersonnel)
                                         <form method="POST" action="{{ route('specialorder.status.update', $so) }}" style="display:inline;">
                                             @csrf
                                             @method('PATCH')
@@ -110,13 +115,14 @@
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         </form>
-                                        <form method="POST" action="{{ route('specialorder.status.update', $so) }}" style="display:inline;">
+                                        <form method="POST" action="{{ route('specialorder.status.update', $so) }}" style="display:inline-flex; gap: 6px; align-items: center;">
                                             @csrf
                                             @method('PATCH')
                                             <input type="hidden" name="status" value="Rejected">
-                                            <button type="submit" class="btn btn-sm btn-warning" title="Reject">
-                                                <i class="fas fa-ban"></i>
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Reject">
+                                                <i class="fas fa-times"></i>
                                             </button>
+                                            <input type="text" name="rejection_reason" class="form-control form-control-sm" placeholder="Reason (optional)" style="min-width: 150px;">
                                         </form>
                                     @endif
                                 </td>

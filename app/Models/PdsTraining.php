@@ -19,6 +19,11 @@ class PdsTraining extends Model
 		return $this->belongsTo(User::class, 'verified_by');
 	}
 
+	public function creator()
+	{
+		return $this->belongsTo(User::class, 'created_by');
+	}
+
 	// Scope for pending requests
 	public function scopePending($query)
 	{

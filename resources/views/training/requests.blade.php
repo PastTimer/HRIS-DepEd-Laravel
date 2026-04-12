@@ -3,6 +3,9 @@
 
 @section('content')
 <div class="container-fluid mt-4" data-ajax-content>
+    @php
+        $isPersonnel = Auth::user() && Auth::user()->hasRole('personnel');
+    @endphp
     <div class="row">
         <div class="col">
             <div class="card shadow border-0">
@@ -79,19 +82,23 @@
                         @endpush
                         <thead class="thead-light">
                             <tr class="text-uppercase">
+                                @if(!$isPersonnel)
                                 <th>Personnel</th>
+                                @endif
                                 <th>Title</th>
                                 <th class="text-center">Type</th>
                                 <th class="text-center">Sponsor</th>
                                 <th class="text-center">Total Hours</th>
                                 <th class="text-center">Start Date</th>
                                 <th class="text-center">End Date</th>
+                                <th class="text-center">Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($pendingTrainings as $tr)
+                            @forelse($requests as $tr)
                             <tr>
+                                @if(!$isPersonnel)
                                 <td>
                                     @if($tr->personnel && $tr->personnel->pdsMain)
                                         <span class="font-weight-bold text-dark">
@@ -101,32 +108,71 @@
                                         <span class="text-muted">N/A</span>
                                     @endif
                                 </td>
+                                @endif
                                 <td class="font-weight-bold">{{ $tr->title }}</td>
                                 <td class="text-center">{{ $tr->type }}</td>
                                 <td class="text-center">{{ $tr->sponsor }}</td>
                                 <td class="text-center">{{ $tr->hours }}</td>
                                 <td class="text-center">{{ $tr->start_date ? \Carbon\Carbon::parse($tr->start_date)->format('M d, Y') : '' }}</td>
                                 <td class="text-center">{{ $tr->end_date ? \Carbon\Carbon::parse($tr->end_date)->format('M d, Y') : '' }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center" style="gap: 8px; min-width: 360px;">
-                                        <form action="{{ route('training.requests.approve', $tr->id) }}" method="POST" class="mb-0">
-                                            @csrf
-                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                                        </form>
-                                        <form action="{{ route('training.requests.reject', $tr->id) }}" method="POST" class="mb-0 d-flex align-items-center" style="gap: 8px;">
-                                            @csrf
-                                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                                            <input type="text" name="rejection_reason" class="form-control form-control-sm" placeholder="Reason (optional)" style="min-width: 180px;">
-                                        </form>
-                                    </div>
+                                <td class="text-center">
+                                    @if($tr->verification_status === 'pending')
+                                        <span class="badge badge-warning">Pending</span>
+                                    @elseif($tr->verification_status === 'verified')
+                                        <span class="badge badge-success">Approved</span>
+                                    @elseif($tr->verification_status === 'rejected')
+                                        <span class="badge badge-danger">Rejected</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($isPersonnel)
+                                        <a href="{{ route('training.show', $tr->id) }}" class="btn btn-sm btn-primary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @if($tr->verification_status === 'pending')
+                                            <a href="{{ route('training.edit', $tr->id) }}" class="btn btn-sm btn-info" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{{ route('training.destroy', $tr->id) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this training record?')" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @else
+                                        @if($tr->verification_status === 'pending')
+                                            <a href="{{ route('training.show', $tr->id) }}" class="btn btn-sm btn-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <form action="{{ route('training.requests.approve', $tr->id) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('training.requests.reject', $tr->id) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Reject">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                <input type="text" name="rejection_reason" class="form-control form-control-sm d-inline-block ml-2" placeholder="Reason (optional)" style="width: 160px; vertical-align: middle;">
+                                            </form>
+                                        @else
+                                            <a href="{{ route('training.show', $tr->id) }}" class="btn btn-sm btn-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        @endif
+                                    @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="{{ $isPersonnel ? 8 : 9 }}" class="text-center py-5">
                                     <div class="empty-state">
                                         <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                                        <h4 class="text-muted">No pending training requests</h4>
+                                        <h4 class="text-muted">No training requests found</h4>
                                     </div>
                                 </td>
                             </tr>
@@ -134,6 +180,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if($requests->hasPages())
+                <div class="card-footer py-4 d-flex justify-content-center">
+                    {{ $requests->links('pagination::bootstrap-4') }}
+                </div>
+                @endif
             </div>
         </div>
     </div>

@@ -2,6 +2,9 @@
 @section('title', 'Special Orders')
 @section('content')
 <div class="container-fluid mt-4" data-ajax-content>
+    @php
+        $isPersonnel = Auth::user() && Auth::user()->hasRole('personnel');
+    @endphp
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card card-stats h-100 shadow-sm">
@@ -50,7 +53,7 @@
                             <i class="fas fa-inbox mr-1"></i> Requests
                         </a>
 
-                        @if(Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('school')))
+                        @if(Auth::user() && Auth::user()->hasAnyRole(['admin', 'school', 'encoding_officer']))
                         <a href="{{ route('specialorder.types.index') }}" class="btn btn-sm btn-outline-secondary mr-2">
                             <i class="fas fa-tags mr-1"></i> Order Types
                         </a>
@@ -89,13 +92,15 @@
                                 <th class="text-center">SO Number</th>
                                 <th class="text-center">Series Year</th>
                                 <th class="text-center">Type</th>
-                                <th class="text-center">Personnel Included (Number)</th>
+                                <th class="text-center">Personnel Included</th>
+                                @if(!$isPersonnel)
                                 <th class="text-center">Action</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($orders as $so)
-                            <tr>
+                            <tr class="so-row" data-href="{{ route('specialorder.show', $so) }}" style="cursor: pointer;">
                                 <td class="font-weight-bold text-dark" style="white-space: normal;">
                                     {{ $so->title }}
                                 </td>
@@ -118,22 +123,17 @@
                                     </span>
                                 </td>
                                 
+                                @if(!$isPersonnel)
                                 <td class="text-center">
                                     <a href="{{ route('specialorder.show', $so) }}" class="btn btn-sm btn-primary" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @php
-                                        $isPersonnel = Auth::user() && Auth::user()->hasRole('personnel');
-                                        $isPending = $so->status === 'Pending';
-                                    @endphp
-                                    @if(!$isPersonnel || ($isPersonnel && $isPending))
-                                        <a href="{{ route('specialorder.edit', $so) }}" class="btn btn-sm btn-info" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    @endif
-                                    @if((!$isPersonnel && in_array($so->id, $deletableOrderIds ?? [], true)) || ($isPersonnel && $isPending && in_array($so->id, $deletableOrderIds ?? [], true)))
+                                    <a href="{{ route('specialorder.edit', $so) }}" class="btn btn-sm btn-info" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    @if(in_array($so->id, $deletableOrderIds ?? [], true))
                                         <form method="POST" action="{{ route('specialorder.destroy', $so) }}" style="display:inline;">
-                                            @csrf 
+                                            @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to permanently DELETE this record?')" title="Delete">
                                                 <i class="fas fa-trash"></i>
@@ -141,10 +141,11 @@
                                         </form>
                                     @endif
                                 </td>
+                                @endif
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="{{ $isPersonnel ? 5 : 6 }}" class="text-center py-5">
                                     <i class="ni ni-paper-diploma fa-3x text-muted mb-3 d-block"></i>
                                     <h4 class="text-muted mb-0">No Special Orders found.</h4>
                                 </td>
@@ -161,4 +162,17 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.so-row').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, form, input, textarea, select, label')) {
+                return;
+            }
+            window.location.href = row.dataset.href;
+        });
+    });
+});
+</script>
 @endsection

@@ -36,6 +36,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->foreignId('type_id')->constrained('so_types')->cascadeOnUpdate()->restrictOnDelete();
             $table->enum('status', ['Approved', 'Rejected', 'Pending'])->default('Pending');
+            $table->text('rejection_reason')->nullable()->after('status');
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

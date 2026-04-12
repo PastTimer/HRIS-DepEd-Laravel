@@ -225,8 +225,9 @@ return new class extends Migration
             $table->unsignedInteger('hours')->nullable();
             $table->string('type', 30)->nullable();
             $table->string('sponsor')->nullable();
+            $table->foreignId('created_by')->nullable()->after('sponsor')->constrained('users')->nullOnDelete();
 
-            $table->enum('verification_status', ['pending', 'verified', 'rejected'])->default('pending')->after('sponsor');
+            $table->enum('verification_status', ['pending', 'verified', 'rejected'])->default('pending')->after('created_by');
             $table->unsignedBigInteger('verified_by')->nullable()->after('verification_status');
             $table->timestamp('verified_at')->nullable()->after('verified_by');
             $table->text('rejection_reason')->nullable()->after('verified_at');
@@ -278,7 +279,7 @@ return new class extends Migration
         Schema::dropIfExists('pds_distinctions');
         Schema::dropIfExists('pds_skills');
         Schema::dropIfExists('pds_references');
-        Schema::dropIfExists('pds_training');
+        Schema::dropIfExists('pds_training'); // drops created_by as well
         Schema::dropIfExists('pds_work_experience');
         Schema::dropIfExists('pds_voluntary_work');
         Schema::dropIfExists('pds_eligibility');

@@ -30,7 +30,7 @@
                             <i class="fas fa-arrow-left mr-1"></i> Back to Orders
                         </a>
 
-                        @if(Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('school')))
+                        @if(Auth::user() && Auth::user()->hasRole('admin'))
                         <a href="{{ route('specialorder.types.create') }}" class="btn btn-sm btn-success">
                             <i class="fas fa-plus mr-1"></i> New Type
                         </a>
@@ -62,7 +62,7 @@
                                 <th>Name</th>
                                 <th class="text-center">Value</th>
                                 <th class="text-center">Usage Count</th>
-                                @if(Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('school')))
+                                @if(Auth::user() && Auth::user()->hasRole('admin'))
                                 <th class="text-center">Actions</th>
                                 @endif
                             </tr>
@@ -75,7 +75,7 @@
                                 <td class="text-center">
                                     <span class="badge badge-info badge-pill">{{ $type->special_orders_count }}</span>
                                 </td>
-                                @if(Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('school')))
+                                @if(Auth::user() && Auth::user()->hasRole('admin'))
                                 <td class="text-center">
                                     <a href="{{ route('specialorder.types.edit', $type) }}" class="btn btn-sm btn-info" title="Edit">
                                         <i class="fas fa-edit"></i>
@@ -92,7 +92,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="text-center py-5">
+                                <td colspan="{{ Auth::user() && Auth::user()->hasRole('admin') ? 4 : 3 }}" class="text-center py-5">
                                     <h4 class="text-muted mb-0">No order types found.</h4>
                                 </td>
                             </tr>

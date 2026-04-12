@@ -69,8 +69,8 @@
             </form>
 
 
-            {{-- REQUESTS BUTTON: Show only for Admin/School --}}
-            @if(!$isPersonnel && (Auth::user()?->hasRole('admin') || Auth::user()?->hasRole('school')))
+            {{-- REQUESTS BUTTON: Show for Admin/School/Personnel --}}
+            @if(Auth::user()?->hasRole('admin') || Auth::user()?->hasRole('school') || $isPersonnel)
             <a href="{{ route('training.requests') }}" class="btn btn-sm btn-outline-info mr-2">
                 <i class="fas fa-inbox mr-1"></i> Requests
             </a>
@@ -99,7 +99,9 @@
                     <th class="text-center">Start Date</th>
                     <th class="text-center">End Date</th>
                     <th class="text-center">Status</th>
+                    @if(!$isPersonnel)
                     <th class="text-right">Action</th>
+                    @endif
                 </tr>
             </thead>
 
@@ -108,7 +110,7 @@
 
                     @if(!$isPersonnel || ($isPersonnel && $tr->personnel_id == $user->personnel_id))
 
-                        <tr>
+                        <tr class="training-row" data-href="{{ route('training.show', $tr->id) }}" style="cursor: pointer;">
 
                             {{-- Personnel column only for admin --}}
                             @if(!$isPersonnel)
@@ -146,31 +148,32 @@
                                 @endif
                             </td>
 
+                            @if(!$isPersonnel)
                             <td class="text-right">
                                 <div class="d-flex justify-content-end align-items-center">
-
-
-                                    @php $canEdit = !$isPersonnel || ($isPersonnel && $tr->verification_status === 'pending'); @endphp
-                                    @if($canEdit)
-                                        <a href="{{ route('training.edit', $tr->id) }}"
-                                           class="btn btn-sm btn-info mr-2">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </a>
-                                        <form action="{{ route('training.destroy', $tr->id) }}"
-                                              method="POST"
-                                              class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-danger"
-                                                    onclick="return confirm('Are you sure you want to delete this training record?')">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                    @endif
-
+                                    <a href="{{ route('training.show', $tr->id) }}"
+                                       class="btn btn-sm btn-primary mr-2"
+                                       title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('training.edit', $tr->id) }}"
+                                       class="btn btn-sm btn-info mr-2">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <form action="{{ route('training.destroy', $tr->id) }}"
+                                          method="POST"
+                                          class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this training record?')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
+                            @endif
 
                         </tr>
 
@@ -178,7 +181,7 @@
 
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="{{ $isPersonnel ? 7 : 9 }}" class="text-center py-5">
                             <div class="empty-state">
                                 <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
                                 <h4 class="text-muted">No trainings found</h4>
@@ -201,5 +204,18 @@
 
 </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.training-row').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, form, input, textarea, select, label')) {
+                return;
+            }
+            window.location.href = row.dataset.href;
+        });
+    });
+});
+</script>
 
 @endsection

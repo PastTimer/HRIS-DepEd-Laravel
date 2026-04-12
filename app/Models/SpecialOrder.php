@@ -18,6 +18,7 @@ class SpecialOrder extends Model
         'description',
         'type_id',
         'status',
+        'rejection_reason',
         'approved_by',
         'approved_at',
         'created_by',

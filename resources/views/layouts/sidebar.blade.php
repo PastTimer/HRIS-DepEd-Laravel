@@ -108,8 +108,8 @@
                     @if($isAdmin || $isSchool || $isEO || $isPersonnel)
                     <li class="nav-item">
                         @php
-                            // Highlight SO tab for Personnel if on SO requests
-                            $isSOActive = request()->is('specialorder*') && (!request()->routeIs('specialorder.requests') || ($isPersonnel && request()->routeIs('specialorder.requests')));
+                            // Highlight SO/Training tabs only when not on requests pages
+                            $isSOActive = request()->is('specialorder*') && !request()->routeIs('specialorder.requests');
                             $isTrainingActive = request()->is('training*') && !request()->routeIs('training.requests') && !request()->routeIs('training.requests.*');
                         @endphp
                         <a class="nav-link {{ $isSOActive ? 'active' : '' }}" href="/specialorder">
@@ -129,7 +129,7 @@
                     @endif
 
                     <!-- Requests Menu -->
-                     @if($isAdmin || $isSchool)
+                     @if($isAdmin || $isSchool || $isPersonnel)
                     <li class="nav-item">
                         <a class="nav-link {{ $isRequestsOpen ? 'active' : '' }}" href="#navbar-requests" data-toggle="collapse" role="button" aria-expanded="{{ $isRequestsOpen ? 'true' : 'false' }}">
                             <i class="ni ni-archive-2 text-warning"></i>
