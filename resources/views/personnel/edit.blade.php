@@ -1,113 +1,35 @@
 @extends('layouts.app')
-@section('title', 'Edit Personnel')
+@section('title', 'Edit Personnel Details')
 @section('content')
+@php
+    $isPersonnelUser = auth()->user()?->hasRole('personnel') ?? false;
+@endphp
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-xl-10 col-lg-12 mx-auto">
             <div class="card shadow mb-4">
-                <div class="card-header border-0 bg-white">
-                    <h2 class="mb-0 text-primary"><i class="ni ni-badge mr-2"></i> EDIT PERSONNEL</h2>
+                <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0 text-primary"><i class="ni ni-badge mr-2"></i> EDIT PERSONNEL DETAILS</h2>
+                    <div>
+                        <a href="{{ route('personnel.pds.edit', $personnel) }}" class="btn btn-sm btn-info mr-2">
+                            <i class="fas fa-id-card mr-1"></i> Edit PDS
+                        </a>
+                        <a href="{{ route('personnel.show', $personnel) }}" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-arrow-left mr-1"></i> Back to Profile
+                        </a>
+                    </div>
                 </div>
-                
+
                 <div class="card-body bg-secondary">
-                    @php($pds = $personnel->pdsMain)
-                    <form method="POST" action="{{ route('personnel.update', $personnel->id) }}" enctype="multipart/form-data">
+                    @if($isPersonnelUser)
+                        <div class="alert alert-warning">
+                            Changing your assigned station is allowed, but it may affect which records you can access.
+                        </div>
+                    @endif
+
+                    <form id="personnel-details-form" method="POST" action="{{ route('personnel.update', $personnel->id) }}">
                         @csrf
-                        @method('PUT') <div class="card shadow-sm mb-4">
-                            <div class="card-header bg-white"><h5 class="mb-0 text-uppercase text-muted">Profile Photo</h5></div>
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-md-3 text-center">
-                                        @if($personnel->profile_photo)
-                                            <img id="photo-preview" src="{{ asset('storage/' . $personnel->profile_photo) }}" alt="Preview" class="img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
-                                        @else
-                                            <img id="photo-preview" src="{{ asset('uploads/default/defaultpic.png') }}" alt="Preview" class="img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
-                                        @endif
-                                    </div>
-                                    <div class="col-md-9">
-                                        <label for="photo" class="btn btn-warning">
-                                            <i class="ni ni-camera-compact mr-2"></i> CHANGE PHOTO
-                                        </label>
-                                        <input type="file" name="photo" id="photo" accept="image/*" onchange="previewPhoto();" style="display:none">
-                                        <p class="text-muted small mt-2">Leave blank to keep current photo. Recommended: Square image, max 500KB (JPG, PNG)</p>
-                                        @error('photo') <div class="text-danger small">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card shadow-sm mb-4">
-                            <div class="card-header bg-white"><h5 class="mb-0 text-uppercase text-muted">Personal Information</h5></div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3 form-group mb-3">
-                                        <label class="form-control-label">Last Name <span class="text-danger">*</span></label>
-                                        <input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror" value="{{ old('last_name', $pds->last_name ?? $personnel->last_name) }}" required>
-                                        @error('last_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">First Name <span class="text-danger">*</span></label>
-                                        <input type="text" name="first_name" class="form-control @error('first_name') is-invalid @enderror" value="{{ old('first_name', $pds->first_name ?? $personnel->first_name) }}" required>
-                                        @error('first_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-3 form-group mb-3">
-                                        <label class="form-control-label">Middle Name</label>
-                                        <input type="text" name="middle_name" class="form-control @error('middle_name') is-invalid @enderror" value="{{ old('middle_name', $pds->middle_name ?? $personnel->middle_name) }}">
-                                        @error('middle_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-2 form-group mb-3">
-                                        <label class="form-control-label">Ext. Name</label>
-                                        <input type="text" name="name_ext" class="form-control @error('name_ext') is-invalid @enderror" value="{{ old('name_ext', $pds->extension_name ?? $personnel->name_ext) }}" placeholder="Jr, III">
-                                        @error('name_ext') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-3 form-group mb-3">
-                                        <label class="form-control-label">Gender <span class="text-danger">*</span></label>
-                                        <select name="gender" class="form-control @error('gender') is-invalid @enderror" required>
-                                            @foreach(['Male', 'Female'] as $gender)
-                                                <option value="{{ $gender }}" {{ old('gender', ucfirst(strtolower($pds->birth_sex ?? $personnel->gender))) == $gender ? 'selected' : '' }}>{{ $gender }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('gender') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-3 form-group mb-3">
-                                        <label class="form-control-label">Date of Birth <span class="text-danger">*</span></label>
-                                        <input type="date" name="date_of_birth" class="form-control @error('date_of_birth') is-invalid @enderror" value="{{ old('date_of_birth', $pds->birth_date ?? $personnel->date_of_birth) }}" required>
-                                        @error('date_of_birth') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-6 form-group mb-3">
-                                        <label class="form-control-label">Place of Birth</label>
-                                        <input type="text" name="place_of_birth" class="form-control @error('place_of_birth') is-invalid @enderror" value="{{ old('place_of_birth', $pds->birth_place ?? $personnel->place_of_birth) }}">
-                                        @error('place_of_birth') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">Civil Status</label>
-                                        <select name="civil_status" class="form-control @error('civil_status') is-invalid @enderror">
-                                            <option value=""></option>
-                                            @foreach(['Single', 'Married', 'Divorced', 'Widowed'] as $status)
-                                                <option value="{{ $status }}" {{ old('civil_status', ucfirst(strtolower($pds->civil_status ?? $personnel->civil_status))) == $status ? 'selected' : '' }}>{{ $status }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('civil_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">Blood Type</label>
-                                        <select name="blood_type" class="form-control @error('blood_type') is-invalid @enderror">
-                                            <option value=""></option>
-                                            @foreach(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $blood)
-                                                <option value="{{ $blood }}" {{ old('blood_type', $pds->blood_type ?? $personnel->blood_type) == $blood ? 'selected' : '' }}>{{ $blood }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('blood_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        @method('PUT')
 
                         <div class="card shadow-sm mb-4">
                             <div class="card-header bg-white"><h5 class="mb-0 text-uppercase text-muted">Employment Information</h5></div>
@@ -115,16 +37,14 @@
                                 <div class="row">
                                     <div class="col-md-3 form-group mb-3">
                                         <label class="form-control-label">Employee ID</label>
-                                        <input type="text" name="employee_id" class="form-control @error('employee_id') is-invalid @enderror" value="{{ old('employee_id', $personnel->emp_id ?? ($pds->agency_employee_number ?? '')) }}">
+                                        <input type="text" name="employee_id" class="form-control @error('employee_id') is-invalid @enderror" value="{{ old('employee_id', $personnel->emp_id) }}">
                                         @error('employee_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-6 form-group mb-3">
                                         <label class="form-control-label">Position <span class="text-danger">*</span></label>
                                         <select name="position_id" class="form-control @error('position_id') is-invalid @enderror" required>
                                             @foreach($positions as $position)
-                                                <option value="{{ $position->id }}" {{ old('position_id', $personnel->position_id) == $position->id ? 'selected' : '' }}>
-                                                    {{ $position->title }}
-                                                </option>
+                                                <option value="{{ $position->id }}" {{ old('position_id', $personnel->position_id) == $position->id ? 'selected' : '' }}>{{ $position->title }}</option>
                                             @endforeach
                                         </select>
                                         @error('position_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -139,7 +59,7 @@
                                 <div class="row">
                                     <div class="col-md-3 form-group mb-3">
                                         <label class="form-control-label">Current Step <span class="text-danger">*</span></label>
-                                        <input type="number" name="step" class="form-control @error('step') is-invalid @enderror" value="{{ old('step', $personnel->current_step) }}" required>
+                                        <input type="number" name="step" class="form-control @error('step') is-invalid @enderror" value="{{ old('step', $personnel->current_step) }}" min="1" required>
                                         @error('step') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-3 form-group mb-3">
@@ -148,11 +68,24 @@
                                         @error('last_step') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-3 form-group mb-3">
-                                        <label class="form-control-label">Salary Grade (SG)</label>
+                                        <label class="form-control-label">Salary Grade</label>
                                         <input type="text" name="sg" class="form-control @error('sg') is-invalid @enderror" value="{{ old('sg', $personnel->salary_grade) }}">
                                         @error('sg') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-3 form-group mb-3">
+                                        <label class="form-control-label">Salary (Actual)</label>
+                                        <input type="number" step="0.01" name="salary_actual" class="form-control @error('salary_actual') is-invalid @enderror" value="{{ old('salary_actual', $personnel->salary_actual) }}">
+                                        @error('salary_actual') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 form-group mb-3">
+                                        <label class="form-control-label">Branch</label>
+                                        <input type="text" name="branch" class="form-control @error('branch') is-invalid @enderror" value="{{ old('branch', $personnel->branch) }}">
+                                        @error('branch') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-4 form-group mb-3">
                                         <label class="form-control-label">Employee Type <span class="text-danger">*</span></label>
                                         <select name="employee_type" class="form-control @error('employee_type') is-invalid @enderror" required>
                                             @foreach(['Regular', 'Contractual', 'Substitute'] as $type)
@@ -160,19 +93,6 @@
                                             @endforeach
                                         </select>
                                         @error('employee_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">Salary (Actual)</label>
-                                        <input type="number" step="0.01" name="salary_actual" class="form-control @error('salary_actual') is-invalid @enderror" value="{{ old('salary_actual', $personnel->salary_actual) }}">
-                                        @error('salary_actual') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">Branch</label>
-                                        <input type="text" name="branch" class="form-control @error('branch') is-invalid @enderror" value="{{ old('branch', $personnel->branch) }}">
-                                        @error('branch') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-4 form-group mb-3">
                                         <label class="form-control-label">Service Effective Date</label>
@@ -189,11 +109,9 @@
                                 <div class="row">
                                     <div class="col-md-6 form-group mb-3">
                                         <label class="form-control-label">Assigned Station <span class="text-danger">*</span></label>
-                                        <select name="assigned_school_id" class="form-control @error('assigned_school_id') is-invalid @enderror" required>
+                                        <select id="assigned_school_id" name="assigned_school_id" class="form-control @error('assigned_school_id') is-invalid @enderror" required>
                                             @foreach($schools as $school)
-                                                <option value="{{ $school->id }}" {{ old('assigned_school_id', $personnel->assigned_school_id) == $school->id ? 'selected' : '' }}>
-                                                    {{ $school->name }}
-                                                </option>
+                                                <option value="{{ $school->id }}" {{ old('assigned_school_id', $personnel->assigned_school_id) == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
                                             @endforeach
                                         </select>
                                         @error('assigned_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -203,9 +121,7 @@
                                         <select name="deployed_school_id" class="form-control @error('deployed_school_id') is-invalid @enderror">
                                             <option value="">Same as Assigned Station</option>
                                             @foreach($schools as $school)
-                                                <option value="{{ $school->id }}" {{ old('deployed_school_id', $personnel->deployed_school_id) == $school->id ? 'selected' : '' }}>
-                                                    {{ $school->name }}
-                                                </option>
+                                                <option value="{{ $school->id }}" {{ old('deployed_school_id', $personnel->deployed_school_id) == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
                                             @endforeach
                                         </select>
                                         @error('deployed_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -215,68 +131,14 @@
                         </div>
 
                         <div class="card shadow-sm mb-4">
-                            <div class="card-header bg-white"><h5 class="mb-0 text-uppercase text-muted">Identification Numbers</h5></div>
+                            <div class="card-header bg-white"><h5 class="mb-0 text-uppercase text-muted">Account Status</h5></div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">GSIS No.</label>
-                                        <input type="text" name="gsis_no" class="form-control @error('gsis_no') is-invalid @enderror" value="{{ old('gsis_no', $pds->umid_id_number ?? $personnel->gsis_no) }}">
-                                        @error('gsis_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">Pag-ibig No.</label>
-                                        <input type="text" name="pagibig_no" class="form-control @error('pagibig_no') is-invalid @enderror" value="{{ old('pagibig_no', $pds->pagibig_number ?? $personnel->pagibig_no) }}">
-                                        @error('pagibig_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">Philhealth No.</label>
-                                        <input type="text" name="philhealth_no" class="form-control @error('philhealth_no') is-invalid @enderror" value="{{ old('philhealth_no', $pds->philhealth_number ?? $personnel->philhealth_no) }}">
-                                        @error('philhealth_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">SSS No.</label>
-                                        <input type="text" name="sss_no" class="form-control @error('sss_no') is-invalid @enderror" value="{{ old('sss_no', $pds->sss_number ?? '') }}">
-                                        @error('sss_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">TIN No.</label>
-                                        <input type="text" name="tin_no" class="form-control @error('tin_no') is-invalid @enderror" value="{{ old('tin_no', $pds->tin_number ?? $personnel->tin_no) }}">
-                                        @error('tin_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card shadow-sm mb-4">
-                            <div class="card-header bg-white"><h5 class="mb-0 text-uppercase text-muted">Contact Details</h5></div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4 form-group mb-3">
-                                        <label class="form-control-label">Contact No.</label>
-                                        <input type="text" name="contact_no" class="form-control @error('contact_no') is-invalid @enderror" value="{{ old('contact_no', $pds->mobile ?? $personnel->contact_no) }}">
-                                        @error('contact_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-8 form-group mb-3">
-                                        <label class="form-control-label">Email Address</label>
-                                        <input type="email" name="email_address" class="form-control @error('email_address') is-invalid @enderror" value="{{ old('email_address', $pds->email_address ?? $personnel->email_address) }}">
-                                        @error('email_address') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 form-group mb-3">
-                                        <label class="form-control-label">Residential Address</label>
-                                        <textarea name="address" class="form-control @error('address') is-invalid @enderror" rows="2">{{ old('address', $pds->residential_address ?? $personnel->address) }}</textarea>
-                                        @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
-                                <div class="row mt-2">
-                                    <div class="col-md-6 form-group">
-                                        <label class="form-control-label">Account Status</label>
+                                    <div class="col-md-4 form-group mb-0">
+                                        <label class="form-control-label">Status</label>
                                         <select name="is_active" class="form-control @error('is_active') is-invalid @enderror">
                                             @foreach([1 => 'Active', 0 => 'Inactive'] as $val => $label)
-                                                <option value="{{ $val }}" {{ old('is_active', $personnel->is_active) == (string)$val ? 'selected' : '' }}>{{ $label }}</option>
+                                                <option value="{{ $val }}" {{ old('is_active', (string) $personnel->is_active) == (string) $val ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
                                         </select>
                                         @error('is_active') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -286,8 +148,8 @@
                         </div>
 
                         <div class="d-flex justify-content-between mt-4 mb-3 px-3">
-                            <a href="{{ route('personnel.index') }}" class="btn btn-secondary px-5">Cancel</a>
-                            <button type="submit" class="btn btn-success px-5"><i class="ni ni-check-bold mr-2"></i> Update Personnel</button>
+                            <a href="{{ route('personnel.show', $personnel) }}" class="btn btn-secondary px-5">Cancel</a>
+                            <button type="submit" class="btn btn-success px-5"><i class="ni ni-check-bold mr-2"></i> Update Personnel Details</button>
                         </div>
                     </form>
                 </div>
@@ -296,19 +158,26 @@
     </div>
 </div>
 
+@if($isPersonnelUser)
 <script>
-    function previewPhoto() {
-        var preview = document.querySelector('#photo-preview');
-        var file    = document.querySelector('#photo').files[0];
-        var reader  = new FileReader();
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('personnel-details-form');
+        const stationSelect = document.getElementById('assigned_school_id');
+        const originalStation = '{{ (string) $personnel->assigned_school_id }}';
 
-        reader.onloadend = function () {
-            preview.src = reader.result;
+        if (!form || !stationSelect) {
+            return;
         }
 
-        if (file) {
-            reader.readAsDataURL(file);
-        }
-    }
+        form.addEventListener('submit', function (e) {
+            if ((stationSelect.value || '') !== originalStation) {
+                const confirmed = window.confirm('You are changing your assigned station. Continue?');
+                if (!confirmed) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
 </script>
+@endif
 @endsection

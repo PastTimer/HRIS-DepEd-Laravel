@@ -6,19 +6,13 @@ use Illuminate\Database\Seeder;
 use App\Models\School;
 use App\Models\Position;
 use App\Models\Personnel;
-use App\Models\PdsMain;
-use App\Models\PdsSubmission;
-use App\Models\PdsChild;
-use App\Models\PdsEducation;
-use App\Models\PdsEligibility;
-use App\Models\PdsWorkExperience;
-use App\Models\PdsTraining;
-use App\Models\PdsReference;
 use App\Models\District; 
 use Faker\Factory as Faker;
 
 class PersonnelSeeder extends Seeder
 {
+    // Creates dummy schools, positions, and personnel.
+
     public function run(): void
     {
         $faker = Faker::create();
@@ -31,9 +25,9 @@ class PersonnelSeeder extends Seeder
             ]);
         }
 
-        // 2. Create 5 Dummy Schools
+        // 2. Create 10 Dummy Schools
         $schools = [];
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
             $schools[] = School::create([
                 'school_id' => '1011' . $faker->unique()->numerify('##'),
                 'name' => $faker->city() . ' National High School',
@@ -133,8 +127,8 @@ class PersonnelSeeder extends Seeder
             ]);
         }
 
-        // 4. Generate 50 Fake Personnel
-        for ($i = 0; $i < 50; $i++) {
+        // 4. Generate 20 Fake Personnel
+        for ($i = 0; $i < 20; $i++) {
             $employeeId = $faker->unique()->numerify('######');
             $assignedSchoolId = $schools[array_rand($schools)]->id;
             $deployedSchoolId = $faker->boolean(25) ? $schools[array_rand($schools)]->id : $assignedSchoolId;

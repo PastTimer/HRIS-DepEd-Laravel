@@ -18,13 +18,10 @@ return new class extends Migration
             $table->string('password');
             $table->string('email')->nullable()->unique();
             $table->string('contact_no')->nullable();
-            $table->string('office')->nullable();
-            
             $table->enum('status', ['active', 'inactive', 'locked'])->default('active');
             $table->integer('failed_login_attempts')->default(0);
             $table->timestamp('locked_until')->nullable();
             $table->timestamp('last_login')->nullable();
-            
             $table->rememberToken();
             $table->timestamps(); 
             $table->softDeletes(); 

@@ -30,6 +30,9 @@ return new class extends Migration
             $table->decimal('salary_actual', 15, 2)->nullable();
             $table->string('branch')->nullable();
 
+            $table->decimal('system_generated_credits', 12, 2)->default(0)->after('branch');
+            $table->decimal('manually_added_credits', 12, 2)->default(0)->after('system_generated_credits');
+
             $table->timestamps();
         });
     }

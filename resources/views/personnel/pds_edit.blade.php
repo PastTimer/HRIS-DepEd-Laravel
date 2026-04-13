@@ -122,9 +122,14 @@
     <div class="card shadow">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h3 class="mb-0"><i class="fas fa-user-edit mr-2 text-primary"></i> Edit PDS</h3>
-            <a href="{{ route('personnel.show', $personnel) }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-arrow-left mr-1"></i> Back to Profile
-            </a>
+            <div>
+                <a href="{{ route('personnel.edit', $personnel) }}" class="btn btn-sm btn-info mr-2">
+                    <i class="fas fa-id-card mr-1"></i> Edit Details
+                </a>
+                <a href="{{ route('personnel.show', $personnel) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Profile
+                </a>
+            </div>
         </div>
 
         <div class="card-body">

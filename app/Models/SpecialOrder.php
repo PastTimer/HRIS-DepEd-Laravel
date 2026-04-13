@@ -50,7 +50,7 @@ class SpecialOrder extends Model
             'so_personnel',
             'special_order_id',
             'personnel_id'
-        )->withPivot('units')->withTimestamps();
+        )->withTimestamps();
     }
 
     public function employees()

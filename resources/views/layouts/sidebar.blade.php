@@ -76,6 +76,15 @@
                     </li>
                     @endif
 
+                    @if($isEO || $isPersonnel)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('users.account.*') ? 'active' : '' }}" href="{{ route('users.account.show') }}">
+                            <i class="ni ni-circle-08 text-primary"></i>
+                            <span class="nav-link-text">My Account</span>
+                        </a>
+                    </li>
+                    @endif
+
                     @if($isAdmin)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('positions*') ? 'active' : '' }}" href="/positions">

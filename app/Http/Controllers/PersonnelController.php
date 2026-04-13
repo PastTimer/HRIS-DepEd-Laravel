@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
-use App\Models\PdsMain;
 use App\Models\Personnel;
 use App\Models\Position;
 use App\Models\School;
@@ -20,18 +19,31 @@ class PersonnelController extends Controller
     {
         $user = Auth::user();
 
-        if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer'))) {
-            return $user->school_id ? (int) $user->school_id : null;
+        if ($user && $user->hasRole('school') && $user->school_id) {
+            return (int) $user->school_id;
+        }
+
+        if ($user && $user->hasRole('encoding_officer') && !$user->isGlobalEncodingOfficer() && $user->school_id) {
+            return (int) $user->school_id;
         }
 
         return null;
     }
 
-    private function assertCanWritePersonnel(): void
+    private function assertCanCreateOrDeletePersonnel(): void
     {
         $user = Auth::user();
 
         if ($user && ($user->hasRole('encoding_officer') || $user->hasRole('personnel'))) {
+            abort(403);
+        }
+    }
+
+    private function assertCanEditPersonnelDetails(): void
+    {
+        $user = Auth::user();
+
+        if ($user && $user->hasRole('encoding_officer')) {
             abort(403);
         }
     }
@@ -103,30 +115,6 @@ class PersonnelController extends Controller
         );
     }
 
-    private function pdsMainPayload(array $validatedData): array
-    {
-        return [
-            'last_name' => $validatedData['last_name'] ?? null,
-            'first_name' => $validatedData['first_name'] ?? null,
-            'middle_name' => $validatedData['middle_name'] ?? null,
-            'extension_name' => $validatedData['name_ext'] ?? null,
-            'birth_date' => $validatedData['date_of_birth'] ?? null,
-            'birth_place' => $validatedData['place_of_birth'] ?? null,
-            'birth_sex' => isset($validatedData['gender']) ? strtoupper($validatedData['gender']) : null,
-            'civil_status' => isset($validatedData['civil_status']) ? strtoupper($validatedData['civil_status']) : null,
-            'blood_type' => $validatedData['blood_type'] ?? null,
-            'umid_id_number' => $validatedData['gsis_no'] ?? null,
-            'pagibig_number' => $validatedData['pagibig_no'] ?? null,
-            'philhealth_number' => $validatedData['philhealth_no'] ?? null,
-            'sss_number' => $validatedData['sss_no'] ?? null,
-            'tin_number' => $validatedData['tin_no'] ?? null,
-            'agency_employee_number' => $validatedData['employee_id'] ?? null,
-            'mobile' => $validatedData['contact_no'] ?? null,
-            'email_address' => $validatedData['email_address'] ?? null,
-            'residential_address' => $validatedData['address'] ?? null,
-        ];
-    }
-
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -169,7 +157,7 @@ class PersonnelController extends Controller
 
     public function create()
     {
-        $this->assertCanWritePersonnel();
+        $this->assertCanCreateOrDeletePersonnel();
 
         $schoolId = $this->schoolScopeId();
         $schools = School::where('is_active', true)->orderBy('name')->get();
@@ -184,22 +172,10 @@ class PersonnelController extends Controller
 
     public function store(Request $request)
     {
-        $this->assertCanWritePersonnel();
+        $this->assertCanCreateOrDeletePersonnel();
 
         $schoolId = $this->schoolScopeId();
         $validatedData = $request->validate([
-            // Personal (PDS)
-            'last_name' => 'required|string|max:255',
-            'first_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'name_ext' => 'nullable|string|max:10',
-            'gender' => 'required|in:Male,Female',
-            'date_of_birth' => 'required|date',
-            'place_of_birth' => 'nullable|string|max:255',
-            'civil_status' => 'nullable|string|max:50',
-            'blood_type' => 'nullable|string|max:10',
-
-            // Operational Personnel
             'employee_id' => 'nullable|string|max:255|unique:personnel,emp_id',
             'position_id' => 'required|exists:positions,id',
             'item_no' => 'nullable|string|max:255',
@@ -212,21 +188,7 @@ class PersonnelController extends Controller
             'assigned_school_id' => 'required|exists:schools,id',
             'deployed_school_id' => 'nullable|exists:schools,id',
             'service_start_date' => 'nullable|date',
-
-            // IDs (PDS)
-            'gsis_no' => 'nullable|string|max:100',
-            'pagibig_no' => 'nullable|string|max:100',
-            'philhealth_no' => 'nullable|string|max:100',
-            'sss_no' => 'nullable|string|max:100',
-            'tin_no' => 'nullable|string|max:100',
-
-            // Contact (PDS)
-            'contact_no' => 'nullable|string|max:50',
-            'email_address' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-
             'is_active' => 'required|boolean',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
         if ($schoolId) {
@@ -236,18 +198,8 @@ class PersonnelController extends Controller
             }
         }
 
-        $photoPath = null;
-        if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('employee_photos', 'public');
-        }
-
-        DB::transaction(function () use ($validatedData, $photoPath) {
-            $personnel = Personnel::create($this->personnelPayload($validatedData, $photoPath));
-
-            PdsMain::updateOrCreate(
-                ['personnel_id' => $personnel->id],
-                $this->pdsMainPayload($validatedData)
-            );
+        DB::transaction(function () use ($validatedData) {
+            $personnel = Personnel::create($this->personnelPayload($validatedData, null));
 
             $this->createServiceRecordFromPersonnel(
                 $personnel,
@@ -258,7 +210,7 @@ class PersonnelController extends Controller
         ActivityLog::log(
             'CREATE',
             'Personnel',
-            "Created new personnel record: {$validatedData['first_name']} {$validatedData['last_name']}"
+            'Created new personnel details record.'
         );
 
         return redirect()->route('personnel.index')->with('success', 'Personnel record added successfully.');
@@ -293,10 +245,9 @@ class PersonnelController extends Controller
 
     public function edit(Personnel $personnel)
     {
-        $this->assertCanWritePersonnel();
+        $this->assertCanEditPersonnelDetails();
         $this->assertPersonnelRecordAccess($personnel);
 
-        $personnel->load('pdsMain');
         $schoolId = $this->schoolScopeId();
         $schools = School::orderBy('name')->get();
         if ($schoolId) {
@@ -310,23 +261,11 @@ class PersonnelController extends Controller
 
     public function update(Request $request, Personnel $personnel)
     {
-        $this->assertCanWritePersonnel();
+        $this->assertCanEditPersonnelDetails();
         $this->assertPersonnelRecordAccess($personnel);
 
         $schoolId = $this->schoolScopeId();
         $validatedData = $request->validate([
-            // Personal (PDS)
-            'last_name' => 'required|string|max:255',
-            'first_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'name_ext' => 'nullable|string|max:10',
-            'gender' => 'required|in:Male,Female',
-            'date_of_birth' => 'required|date',
-            'place_of_birth' => 'nullable|string|max:255',
-            'civil_status' => 'nullable|string|max:50',
-            'blood_type' => 'nullable|string|max:10',
-
-            // Operational Personnel
             'employee_id' => 'nullable|string|max:255|unique:personnel,emp_id,' . $personnel->id,
             'position_id' => 'required|exists:positions,id',
             'item_no' => 'nullable|string|max:255',
@@ -339,21 +278,7 @@ class PersonnelController extends Controller
             'assigned_school_id' => 'required|exists:schools,id',
             'deployed_school_id' => 'nullable|exists:schools,id',
             'service_effective_date' => 'nullable|date',
-
-            // IDs (PDS)
-            'gsis_no' => 'nullable|string|max:100',
-            'pagibig_no' => 'nullable|string|max:100',
-            'philhealth_no' => 'nullable|string|max:100',
-            'sss_no' => 'nullable|string|max:100',
-            'tin_no' => 'nullable|string|max:100',
-
-            // Contact (PDS)
-            'contact_no' => 'nullable|string|max:50',
-            'email_address' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-
             'is_active' => 'required|boolean',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
         if ($schoolId) {
@@ -363,24 +288,11 @@ class PersonnelController extends Controller
             }
         }
 
-        $photoPath = $personnel->profile_photo;
-
-        if ($request->hasFile('photo')) {
-            if ($photoPath && Storage::disk('public')->exists($photoPath)) {
-                Storage::disk('public')->delete($photoPath);
-            }
-            $photoPath = $request->file('photo')->store('employee_photos', 'public');
-        }
-
         $original = $personnel->getOriginal();
+        $oldAssignedSchoolId = (int) $personnel->assigned_school_id;
 
-        DB::transaction(function () use ($personnel, $validatedData, $photoPath) {
-            $personnel->update($this->personnelPayload($validatedData, $photoPath));
-
-            PdsMain::updateOrCreate(
-                ['personnel_id' => $personnel->id],
-                $this->pdsMainPayload($validatedData)
-            );
+        DB::transaction(function () use ($personnel, $validatedData) {
+            $personnel->update($this->personnelPayload($validatedData, $personnel->profile_photo));
 
             if ($personnel->wasChanged(['position_id', 'employee_type', 'assigned_school_id', 'deployed_school_id', 'salary_actual', 'branch'])) {
                 $this->createServiceRecordFromPersonnel(
@@ -409,12 +321,55 @@ class PersonnelController extends Controller
             );
         }
 
-        return redirect()->route('personnel.index')->with('success', 'Personnel record updated successfully.');
+        $stationChanged = $oldAssignedSchoolId !== (int) $personnel->assigned_school_id;
+        $isPersonnelUser = Auth::user()?->hasRole('personnel') ?? false;
+
+        $redirectRoute = $isPersonnelUser
+            ? route('personnel.show', $personnel)
+            : route('personnel.index');
+
+        $response = redirect($redirectRoute)->with('success', 'Personnel details updated successfully.');
+
+        if ($isPersonnelUser && $stationChanged) {
+            $response->with('warning', 'You changed your station assignment. Please verify your profile scope and related records.');
+        }
+
+        return $response;
+    }
+
+    public function updateManualLeaveCredits(Request $request, Personnel $personnel)
+    {
+        $this->assertPersonnelRecordAccess($personnel);
+
+        $user = Auth::user();
+        abort_unless($user && $user->hasAnyRole(['admin', 'school', 'encoding_officer']), 403);
+
+        $validated = $request->validate([
+            'manually_added_credits' => 'required|numeric',
+        ]);
+
+        $oldValue = (float) ($personnel->manually_added_credits ?? 0);
+        $personnel->manually_added_credits = (float) $validated['manually_added_credits'];
+        $personnel->save();
+
+        ActivityLog::log(
+            'UPDATE',
+            'Leave Credits',
+            "Updated manually added credits for personnel ID: {$personnel->id}",
+            [
+                'manually_added_credits' => [
+                    'old' => $oldValue,
+                    'new' => (float) $personnel->manually_added_credits,
+                ],
+            ]
+        );
+
+        return back()->with('success', 'Manually added leave credits updated successfully.');
     }
 
     public function destroy(Personnel $personnel)
     {
-        $this->assertCanWritePersonnel();
+        $this->assertCanCreateOrDeletePersonnel();
         $this->assertPersonnelRecordAccess($personnel);
 
         if ($personnel->profile_photo && Storage::disk('public')->exists($personnel->profile_photo)) {

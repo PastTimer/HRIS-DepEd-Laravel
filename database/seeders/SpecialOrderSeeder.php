@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 use App\Models\SpecialOrder;
 use App\Models\SoType;
 use App\Models\Personnel;
-use Illuminate\Support\Facades\DB;
 
 class SpecialOrderSeeder extends Seeder
 {
@@ -34,11 +33,7 @@ class SpecialOrderSeeder extends Seeder
             ]);
             // Attach random personnel (2-5 per SO)
             $selected = collect($personnel)->shuffle()->take(rand(2, 5))->all();
-            $pivotData = [];
-            foreach ($selected as $pid) {
-                $pivotData[$pid] = ['units' => $type->value];
-            }
-            $so->personnel()->attach($pivotData);
+            $so->personnel()->attach($selected);
         }
     }
 }

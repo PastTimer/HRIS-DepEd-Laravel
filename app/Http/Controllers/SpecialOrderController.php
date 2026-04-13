@@ -9,6 +9,7 @@ use App\Models\ActivityLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -27,7 +28,11 @@ class SpecialOrderController extends Controller
             return $query;
         }
 
-        if (($user->hasRole('school') || $user->hasRole('encoding_officer')) && $user->school_id) {
+        if ($user->isGlobalEncodingOfficer()) {
+            return $query;
+        }
+
+        if ($this->isScopedSchoolUser($user)) {
             return $query
                 ->whereHas('personnel', function (Builder $q) use ($user) {
                     $q->where('assigned_school_id', $user->school_id);
@@ -63,7 +68,11 @@ class SpecialOrderController extends Controller
             return $query;
         }
 
-        if (($user->hasRole('school') || $user->hasRole('encoding_officer')) && $user->school_id) {
+        if ($user->isGlobalEncodingOfficer()) {
+            return $query;
+        }
+
+        if ($this->isScopedSchoolUser($user)) {
             return $query->where('assigned_school_id', $user->school_id);
         }
 
@@ -131,23 +140,44 @@ class SpecialOrderController extends Controller
         }
     }
 
-    private function resolveUnits(Request $request, SoType $type): float
+    private function isScopedSchoolUser($user): bool
     {
-        if ($request->filled('units')) {
-            return (float) $request->input('units');
+        if (!$user) {
+            return false;
         }
 
-        return (float) $type->value;
+        if ($user->hasRole('school')) {
+            return (bool) $user->school_id;
+        }
+
+        if ($user->hasRole('encoding_officer')) {
+            return (bool) $user->school_id && !$user->isHqAssigned();
+        }
+
+        return false;
     }
 
-    private function buildPivotData(array $employeeIds, float $units): array
+    private function recalculateSystemGeneratedCredits(array $personnelIds): void
     {
-        $syncData = [];
-        foreach ($employeeIds as $id) {
-            $syncData[(int) $id] = ['units' => $units];
+        $personnelIds = array_values(array_unique(array_map('intval', $personnelIds)));
+        if (empty($personnelIds)) {
+            return;
         }
 
-        return $syncData;
+        $credits = DB::table('so_personnel')
+            ->join('special_orders', 'so_personnel.special_order_id', '=', 'special_orders.id')
+            ->join('so_types', 'special_orders.type_id', '=', 'so_types.id')
+            ->whereIn('so_personnel.personnel_id', $personnelIds)
+            ->where('special_orders.status', 'Approved')
+            ->groupBy('so_personnel.personnel_id')
+            ->selectRaw('so_personnel.personnel_id, COALESCE(SUM(so_types.value), 0) as credits')
+            ->pluck('credits', 'personnel_id');
+
+        foreach ($personnelIds as $personnelId) {
+            Personnel::whereKey($personnelId)->update([
+                'system_generated_credits' => (float) ($credits[$personnelId] ?? 0),
+            ]);
+        }
     }
 
     public function index(Request $request)
@@ -242,7 +272,6 @@ class SpecialOrderController extends Controller
             'so_number'    => 'required|string|max:255',
             'series_year'  => 'required|string|size:4',
             'type_id'      => 'required|exists:so_types,id',
-            'units'        => 'nullable|numeric',
             'employee_ids' => 'required|array|min:1',
             'employee_ids.*' => 'required|integer|exists:personnel,id',
         ]);
@@ -250,9 +279,6 @@ class SpecialOrderController extends Controller
 
         $employeeIds = array_map('intval', $validated['employee_ids']);
         $this->ensureSelectedPersonnelAllowed($employeeIds);
-
-        $type = SoType::findOrFail((int) $validated['type_id']);
-        $unitsPerPersonnel = $request->input('units_per_personnel', []);
 
         // Auto-approve if creator is Admin, School, or EO
         $user = Auth::user();
@@ -273,13 +299,9 @@ class SpecialOrderController extends Controller
             'approved_at' => $approvedAt,
         ]);
 
-        $pivotData = [];
-        foreach ($employeeIds as $id) {
-            $pivotData[$id] = [
-                'units' => isset($unitsPerPersonnel[$id]) && is_numeric($unitsPerPersonnel[$id]) ? (float)$unitsPerPersonnel[$id] : (float)$type->value
-            ];
-        }
-        $specialorder->personnel()->attach($pivotData);
+        $specialorder->personnel()->attach($employeeIds);
+
+        $this->recalculateSystemGeneratedCredits($employeeIds);
 
         ActivityLog::log('CREATE', 'Special Order', "Created SO: {$specialorder->title} (SO#: {$specialorder->so_number})");
 
@@ -314,13 +336,14 @@ class SpecialOrderController extends Controller
         $this->assertPersonnelCanModifyPending($specialorder);
         $this->assertNonPersonnelCanModifyApproved($specialorder);
 
+        $previousPersonnelIds = $specialorder->personnel()->pluck('personnel.id')->map(fn ($id) => (int) $id)->all();
+
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
             'so_number'    => 'required|string|max:255',
             'series_year'  => 'required|string|size:4',
             'type_id'      => 'required|exists:so_types,id',
-            'units'        => 'nullable|numeric',
             'employee_ids' => 'required|array|min:1',
             'employee_ids.*' => 'required|integer|exists:personnel,id',
         ]);
@@ -331,9 +354,6 @@ class SpecialOrderController extends Controller
 
         $original = $specialorder->getOriginal();
 
-        $type = SoType::findOrFail((int) $validated['type_id']);
-        $unitsPerPersonnel = $request->input('units_per_personnel', []);
-
         $specialorder->update([
             'title'       => $validated['title'],
             'description' => $validated['description'] ?? null,
@@ -342,13 +362,10 @@ class SpecialOrderController extends Controller
             'type_id'     => (int) $validated['type_id'],
         ]);
 
-        $pivotData = [];
-        foreach ($employeeIds as $id) {
-            $pivotData[$id] = [
-                'units' => isset($unitsPerPersonnel[$id]) && is_numeric($unitsPerPersonnel[$id]) ? (float)$unitsPerPersonnel[$id] : (float)$type->value
-            ];
-        }
-        $specialorder->personnel()->sync($pivotData);
+        $specialorder->personnel()->sync($employeeIds);
+
+        $affectedPersonnelIds = array_values(array_unique(array_merge($previousPersonnelIds, $employeeIds)));
+        $this->recalculateSystemGeneratedCredits($affectedPersonnelIds);
 
         $changes = [];
         foreach ($specialorder->getChanges() as $key => $val) {
@@ -374,6 +391,8 @@ class SpecialOrderController extends Controller
             'rejection_reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        $personnelIds = $specialorder->personnel()->pluck('personnel.id')->map(fn ($id) => (int) $id)->all();
+
         $specialorder->status = $validated['status'];
         if ($validated['status'] === 'Pending') {
             $specialorder->approved_by = null;
@@ -390,6 +409,7 @@ class SpecialOrderController extends Controller
         }
 
         $specialorder->save();
+        $this->recalculateSystemGeneratedCredits($personnelIds);
 
         ActivityLog::log('UPDATE', 'Special Order', "Updated status of SO {$specialorder->so_number} to {$specialorder->status}");
 
@@ -403,9 +423,12 @@ class SpecialOrderController extends Controller
         $this->assertNonPersonnelCanModifyApproved($specialorder);
         abort_unless($this->canDelete($specialorder), 403);
 
+        $personnelIds = $specialorder->personnel()->pluck('personnel.id')->map(fn ($id) => (int) $id)->all();
+
         ActivityLog::log('DELETE', 'Special Order', "Deleted SO: {$specialorder->title}");
 
         $specialorder->delete();
+        $this->recalculateSystemGeneratedCredits($personnelIds);
 
         return redirect()->route('specialorder.index')->with('success', 'Special Order deleted.');
     }
@@ -460,6 +483,15 @@ class SpecialOrderController extends Controller
 
         $original = $soType->getOriginal();
         $soType->update($validated);
+
+        $affectedPersonnelIds = DB::table('so_personnel')
+            ->join('special_orders', 'so_personnel.special_order_id', '=', 'special_orders.id')
+            ->where('special_orders.type_id', $soType->id)
+            ->pluck('so_personnel.personnel_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $this->recalculateSystemGeneratedCredits($affectedPersonnelIds);
 
         $changes = [];
         foreach ($soType->getChanges() as $key => $val) {

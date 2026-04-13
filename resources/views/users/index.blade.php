@@ -49,7 +49,6 @@
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Contact</th>
-                                <th>Office</th>
                                 <th>Type</th>
                                 <th>Status</th>
                                 <th>Last Login</th>
@@ -91,9 +90,6 @@
                                         {{ $user->contact_no ?? 'N/A' }}
                                     @endif
                                 </td>
-
-                                <td>{{ $user->office }}</td>
-                                
                                 <td>
                                     @if($roleName === 'admin')
                                         <span class="badge badge-danger">ADMINISTRATOR</span>

@@ -22,7 +22,6 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
-        'office',
         'school_id',
         'personnel_id',
         'status',
@@ -66,5 +65,24 @@ class User extends Authenticatable
     public function personnel()
     {
         return $this->belongsTo(Personnel::class, 'personnel_id');
+    }
+
+    public function isHqAssigned(): bool
+    {
+        if (!$this->school_id) {
+            return false;
+        }
+
+        $school = $this->relationLoaded('school') ? $this->school : $this->school()->first();
+        if (!$school) {
+            return false;
+        }
+
+        return strtoupper((string) $school->name) === 'HQ' || strtoupper((string) $school->school_id) === 'HQ-0000';
+    }
+
+    public function isGlobalEncodingOfficer(): bool
+    {
+        return $this->hasRole('encoding_officer') && $this->isHqAssigned();
     }
 }

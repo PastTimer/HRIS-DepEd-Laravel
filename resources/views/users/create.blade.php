@@ -8,7 +8,7 @@
                 <div class="card-header border-0 bg-white">
                     <h2 class="mb-0 text-primary"><i class="ni ni-single-02 mr-2"></i> ADD USER ACCOUNT</h2>
                 </div>
-                
+
                 <div class="card-body bg-secondary">
                     <form method="POST" action="{{ route('users.store') }}">
                         @csrf
@@ -28,28 +28,19 @@
                                         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-12 form-group mb-3">
-                                        <label class="form-control-label">Office / Assignment <span class="text-danger">*</span></label>
-                                        <select name="office" class="form-control @error('office') is-invalid @enderror" required>
-                                            <option value="" disabled {{ old('office') === null ? 'selected' : '' }}>-- Select Office --</option>
-                                            @foreach(['SDO', 'ASDS', 'SDS', 'SCHOOL', 'PERSONNEL', 'CID', 'LEGAL', 'ACCTG', 'ITO', 'SGOD', 'CASH', 'BUDGET', 'SUPPLY', 'RECORDS', 'BAC'] as $officeOption)
-                                                <option value="{{ $officeOption }}" {{ old('office') == $officeOption ? 'selected' : '' }}>{{ $officeOption }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('office') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                </div>
+
                                 <div class="row">
                                     <div class="col-md-6 form-group mb-3">
                                         <label class="form-control-label">User Type (Role) <span class="text-danger">*</span></label>
                                         <select id="role" name="role" class="form-control @error('role') is-invalid @enderror" onchange="updateLinkTargets()" required>
                                             <option value="" disabled {{ old('role') === null ? 'selected' : '' }}>-- Select User Type --</option>
                                             @foreach($roles as $role)
-                                                <option value="{{ $role }}" {{ old('role') == $role ? 'selected' : '' }}>{{ $role === 'encoding_officer' ? 'ENCODING OFFICER' : strtoupper(str_replace('_', ' ', $role)) }}</option>
+                                                <option value="{{ $role }}" {{ old('role') == $role ? 'selected' : '' }}>
+                                                    {{ $role === 'encoding_officer' ? 'ENCODING OFFICER' : strtoupper(str_replace('_', ' ', $role)) }}
+                                                </option>
                                             @endforeach
                                         </select>
-                                        <small class="form-text text-muted">Role is managed by Spatie roles and permissions.</small>
+                                        <small class="form-text text-muted">Role is fixed on create. Editing does not allow role changes.</small>
                                         @error('role') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
 
@@ -79,7 +70,7 @@
                                     <div class="col-md-6 form-group mb-3" id="schoolLinkWrap" style="display:none;">
                                         <label class="form-control-label">Linked School</label>
                                         <select id="school_id" name="school_id" class="form-control @error('school_id') is-invalid @enderror">
-                                            <option value="">-- Select School --</option>
+                                            <option value="">-- Leave Blank to Auto-Create/Assign --</option>
                                             @foreach($schoolOptions as $school)
                                                 <option
                                                     value="{{ $school['id'] }}"
@@ -89,14 +80,14 @@
                                                 >{{ $school['name'] }}</option>
                                             @endforeach
                                         </select>
-                                        <small class="form-text text-muted">Required for School role. Optional for Encoding Officer.</small>
+                                        <small class="form-text text-muted">If blank: School role gets a blank school; EO defaults to HQ.</small>
                                         @error('school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div class="col-md-6 form-group mb-3" id="personnelLinkWrap" style="display:none;">
-                                        <label class="form-control-label">Linked Personnel <span class="text-danger">*</span></label>
+                                        <label class="form-control-label">Linked Personnel</label>
                                         <select id="personnel_id" name="personnel_id" class="form-control @error('personnel_id') is-invalid @enderror">
-                                            <option value="">-- Select Personnel --</option>
+                                            <option value="">-- Leave Blank to Auto-Create --</option>
                                             @foreach($personnelList as $personnel)
                                                 @php($profile = $personnel->pdsMain)
                                                 <option value="{{ $personnel->id }}" {{ old('personnel_id') == $personnel->id ? 'selected' : '' }}>
@@ -104,13 +95,15 @@
                                                 </option>
                                             @endforeach
                                         </select>
+                                        <small class="form-text text-muted">If blank: a placeholder personnel record is auto-created.</small>
                                         @error('personnel_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
+
                                 <div class="row">
                                     <div class="col-md-12 form-group mb-0">
                                         <div class="alert alert-light border mb-0">
-                                            Account status is automatically synced with the linked school or personnel status.
+                                            Admin accounts are linked to HQ for structure consistency and remain globally scoped.
                                         </div>
                                     </div>
                                 </div>
@@ -160,10 +153,6 @@
         schoolWrap.style.display = (isSchool || isEncodingOfficer) ? '' : 'none';
         personnelWrap.style.display = isPersonnel ? '' : 'none';
 
-        schoolSelect.required = isSchool;
-        personnelSelect.required = isPersonnel;
-
-        // Filter school options per selected role.
         Array.from(schoolSelect.options).forEach(opt => {
             if (!opt.value) {
                 opt.style.display = '';

@@ -51,7 +51,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('special_order_id')->constrained('special_orders')->cascadeOnDelete();
             $table->foreignId('personnel_id')->constrained('personnel')->cascadeOnDelete();
-            $table->decimal('units', 8, 2)->default(0);
             $table->timestamps();
 
             $table->unique(['special_order_id', 'personnel_id']);

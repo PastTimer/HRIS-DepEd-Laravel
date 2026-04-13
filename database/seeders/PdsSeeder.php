@@ -22,6 +22,10 @@ use Illuminate\Support\Facades\DB;
 
 class PdsSeeder extends Seeder
 {
+    // Creates sample PDS data for existing personnel
+    // Ensure each personnel has a corresponding user account
+    // Creates submissions with random sections changed and random approval status
+
     public function run(): void
     {
         $faker = Faker::create();
@@ -50,7 +54,6 @@ class PdsSeeder extends Seeder
                 $user = User::create([
                     'username' => 'personnel_' . $personnel->id,
                     'password' => bcrypt('1234'),
-                    'office' => 'PERSONNEL',
                     'personnel_id' => $personnel->id,
                     'status' => 'active',
                 ]);

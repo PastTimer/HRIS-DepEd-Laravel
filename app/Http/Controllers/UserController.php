@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\School;
 use App\Models\ActivityLog;
 use App\Models\Personnel;
+use App\Models\Position;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,8 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    private const SUPPORTED_ROLES = ['admin', 'school', 'encoding_officer', 'personnel'];
+
     public function activate(User $user)
     {
         // Admin can activate anyone; school can activate users under their school
@@ -51,7 +54,86 @@ class UserController extends Controller
         ActivityLog::log('UPDATE', 'User Management', "Deactivated user account: {$user->username}");
         return back()->with('success', 'User account deactivated.');
     }
-    private const SUPPORTED_ROLES = ['admin', 'school', 'encoding_officer', 'personnel'];
+
+    private function ensureHqSchool(): School
+    {
+        $hq = School::where('name', 'HQ')
+            ->orWhere('school_id', 'HQ-0000')
+            ->first();
+
+        if ($hq) {
+            return $hq;
+        }
+
+        return School::create([
+            'school_id' => 'HQ-0000',
+            'name' => 'HQ',
+            'district_id' => null,
+            'is_active' => true,
+        ]);
+    }
+
+    private function ensurePlaceholderPosition(): Position
+    {
+        return Position::firstOrCreate(
+            ['title' => 'Unassigned Position'],
+            [
+                'description' => 'Auto-generated placeholder position.',
+                'type' => 'Non-teaching',
+                'is_active' => true,
+            ]
+        );
+    }
+
+    private function createPlaceholderSchool(): School
+    {
+        $base = 'AUTO-SCHOOL-';
+        $counter = 1;
+
+        do {
+            $code = $base . str_pad((string) $counter, 4, '0', STR_PAD_LEFT);
+            $counter++;
+        } while (School::where('school_id', $code)->exists());
+
+        return School::create([
+            'school_id' => $code,
+            'name' => 'Blank School ' . substr($code, -4),
+            'district_id' => null,
+            'is_active' => true,
+        ]);
+    }
+
+    private function createPlaceholderPersonnel(?int $preferredSchoolId = null): Personnel
+    {
+        $position = $this->ensurePlaceholderPosition();
+        $schoolId = $preferredSchoolId ?: $this->ensureHqSchool()->id;
+
+        return Personnel::create([
+            'position_id' => $position->id,
+            'assigned_school_id' => $schoolId,
+            'deployed_school_id' => $schoolId,
+            'is_active' => true,
+            'current_step' => 1,
+            'last_step_increment_date' => now()->toDateString(),
+            'employee_type' => 'Regular',
+            'salary_grade' => null,
+            'salary_actual' => null,
+            'branch' => null,
+            'emp_id' => null,
+            'item_number' => null,
+            'profile_photo' => null,
+        ]);
+    }
+
+    private function defaultPersonnelSchoolId(): int
+    {
+        $schoolUserId = $this->schoolUserId();
+        if ($schoolUserId) {
+            return $schoolUserId;
+        }
+
+        return $this->ensureHqSchool()->id;
+    }
 
     private function isSchoolUser(): bool
     {
@@ -102,9 +184,13 @@ class UserController extends Controller
         return $fallback;
     }
 
-    private function normalizeLinking(array &$validatedData, ?User $currentUser = null): ?array
+    private function normalizeLinking(array &$validatedData, ?User $currentUser = null, ?string $forcedRole = null): ?array
     {
-        $role = $validatedData['role'];
+        $role = $forcedRole ?? ($validatedData['role'] ?? null);
+        if (!$role) {
+            return ['role' => 'Role is required.'];
+        }
+
         $currentUserId = $currentUser?->id;
 
         if (!empty($validatedData['school_id']) && !empty($validatedData['personnel_id'])) {
@@ -113,7 +199,7 @@ class UserController extends Controller
 
         if ($role === 'school') {
             if (empty($validatedData['school_id'])) {
-                return ['school_id' => 'School role requires a linked school.'];
+                $validatedData['school_id'] = $this->createPlaceholderSchool()->id;
             }
 
             $schoolAlreadyLinked = User::role('school')
@@ -130,7 +216,7 @@ class UserController extends Controller
 
         if ($role === 'personnel') {
             if (empty($validatedData['personnel_id'])) {
-                return ['personnel_id' => 'Personnel role requires a linked personnel record.'];
+                $validatedData['personnel_id'] = $this->createPlaceholderPersonnel($this->defaultPersonnelSchoolId())->id;
             }
 
             $personnelAlreadyLinked = User::role('personnel')
@@ -149,8 +235,11 @@ class UserController extends Controller
             if (!empty($validatedData['personnel_id'])) {
                 return ['personnel_id' => 'Encoding Officer cannot be linked to personnel.'];
             }
-            // Encoding officer may optionally pick a school.
             $validatedData['personnel_id'] = null;
+
+            if (empty($validatedData['school_id'])) {
+                $validatedData['school_id'] = $this->ensureHqSchool()->id;
+            }
 
             if (!empty($validatedData['school_id'])) {
                 $eoForSchoolExists = User::role('encoding_officer')
@@ -162,21 +251,10 @@ class UserController extends Controller
                     return ['school_id' => 'This school already has an Encoding Officer linked.'];
                 }
             }
-
-            // Only allow one encoding officer with no school
-            if (empty($validatedData['school_id'])) {
-                $eoNoSchoolExists = User::role('encoding_officer')
-                    ->whereNull('school_id')
-                    ->when($currentUserId, fn($q) => $q->where('id', '!=', $currentUserId));
-
-                if ($eoNoSchoolExists->exists()) {
-                    return ['school_id' => 'There is already an Encoding Officer with no school.'];
-                }
-            }
         }
 
         if ($role === 'admin') {
-            $validatedData['school_id'] = null;
+            $validatedData['school_id'] = $this->ensureHqSchool()->id;
             $validatedData['personnel_id'] = null;
         }
 
@@ -201,7 +279,6 @@ class UserController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('office', 'like', "%{$search}%")
                         ->orWhereHas('roles', function ($rq) use ($search) {
                             $rq->where('name', 'like', "%{$search}%");
                         })
@@ -262,7 +339,6 @@ class UserController extends Controller
             'email'        => 'nullable|email|max:255|unique:users,email',
             'password'     => 'required|string|min:4|confirmed',
             'role'         => ['required', Rule::in(self::SUPPORTED_ROLES)],
-            'office'       => 'required|string|max:255',
             'school_id'    => 'nullable|exists:schools,id',
             'personnel_id' => 'nullable|exists:personnel,id',
         ]);
@@ -295,7 +371,6 @@ class UserController extends Controller
             'username'     => $validatedData['username'],
             'email'        => $validatedData['email'],
             'password'     => Hash::make($validatedData['password']),
-            'office'       => $validatedData['office'],
             'school_id'    => $validatedData['school_id'] ?? null,
             'personnel_id' => $validatedData['personnel_id'] ?? null,
             'status'       => $status,
@@ -362,8 +437,6 @@ class UserController extends Controller
             })
             ->orderBy('id', 'desc')->get(['id', 'emp_id']);
 
-        $roles = $this->isSchoolUser() ? ['personnel'] : self::SUPPORTED_ROLES;
-
         if ($schoolId) {
             $availableSchoolUsers = collect();
             $availableEncodingOfficerSchools = collect();
@@ -398,8 +471,9 @@ class UserController extends Controller
             'availableEncodingOfficerSchools' => $availableEncodingOfficerSchools,
             'schoolOptions' => $schoolOptions,
             'personnelList' => $personnelList,
-            'roles' => $roles,
             'currentRole' => $currentRole,
+            'isSelfAccount' => false,
+            'cancelRoute' => 'users.index',
         ]);
     }
 
@@ -408,23 +482,23 @@ class UserController extends Controller
         $this->assertSchoolUserCanManageTarget($user);
 
         $schoolId = $this->schoolUserId();
+        $currentRole = $user->getRoleNames()->first();
+
         $validatedData = $request->validate([
-            'office'       => 'required|string|max:255',
             'username'     => 'required|string|max:255|unique:users,username,' . $user->id,
             'email'        => 'nullable|email|max:255|unique:users,email,' . $user->id,
-            'role'         => ['required', Rule::in(self::SUPPORTED_ROLES)],
             'school_id'    => 'nullable|exists:schools,id',
             'personnel_id' => 'nullable|exists:personnel,id',
             'password'     => 'nullable|string|min:4|confirmed',
         ]);
 
-        $linkErrors = $this->normalizeLinking($validatedData, $user);
+        $linkErrors = $this->normalizeLinking($validatedData, $user, $currentRole);
         if ($linkErrors) {
             return back()->withErrors($linkErrors)->withInput();
         }
 
         if ($schoolId) {
-            if (($validatedData['role'] ?? null) !== 'personnel' || empty($validatedData['personnel_id'])) {
+            if ($currentRole !== 'personnel' || empty($validatedData['personnel_id'])) {
                 return back()->withErrors(['role' => 'School users can only manage personnel-linked accounts for their school.'])->withInput();
             }
 
@@ -443,7 +517,6 @@ class UserController extends Controller
         );
 
         $updateData = [
-            'office'       => $validatedData['office'],
             'username'     => $validatedData['username'],
             'email'        => $validatedData['email'],
             'school_id'    => $validatedData['school_id'] ?? null,
@@ -468,7 +541,9 @@ class UserController extends Controller
             }
         }
 
-        $user->syncRoles([$validatedData['role']]);
+        if ($currentRole) {
+            $user->syncRoles([$currentRole]);
+        }
 
         if (!empty($changes)) {
             ActivityLog::log(
@@ -480,6 +555,62 @@ class UserController extends Controller
         }
 
         return redirect('/users')->with('success', 'User account updated successfully.');
+    }
+
+    public function myAccount()
+    {
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        $user->load(['roles', 'school', 'personnel.pdsMain']);
+
+        return view('users.my_account', compact('user'));
+    }
+
+    public function editOwnAccount()
+    {
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        $user->load(['roles', 'school', 'personnel.pdsMain']);
+
+        return view('users.edit', [
+            'user' => $user,
+            'availableSchoolUsers' => collect(),
+            'availableEncodingOfficerSchools' => collect(),
+            'schoolOptions' => [],
+            'personnelList' => collect(),
+            'currentRole' => $user->getRoleNames()->first(),
+            'isSelfAccount' => true,
+            'cancelRoute' => 'users.account.show',
+        ]);
+    }
+
+    public function updateOwnAccount(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        $validatedData = $request->validate([
+            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:4|confirmed',
+        ]);
+
+        $updateData = [
+            'username' => $validatedData['username'],
+            'email' => $validatedData['email'] ?? null,
+        ];
+
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($validatedData['password']);
+        }
+
+        $user->update($updateData);
+
+        ActivityLog::log('UPDATE', 'User Management', "Updated own account: {$user->username}");
+
+        return redirect()->route('users.account.show')->with('success', 'Account updated successfully.');
     }
 
     public function destroy(User $user)

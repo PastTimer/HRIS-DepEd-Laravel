@@ -12,12 +12,30 @@
     $canManageServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school']);
     $canExportServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school', 'encoding_officer', 'personnel']);
     $showBackToList = !($user && $user->hasRole('personnel'));
+    $canEditDetails = $user && (
+        $user->hasAnyRole(['admin', 'school']) ||
+        ($user->hasRole('personnel') && (int) $user->personnel_id === (int) $personnel->id)
+    );
     $canEditPds = $user && (
         $user->hasAnyRole(['admin', 'school']) ||
         ($user->hasRole('personnel') && (int) $user->personnel_id === (int) $personnel->id)
     );
+    $canViewLeaveCredits = $user && (
+        $user->hasAnyRole(['admin', 'school', 'encoding_officer']) ||
+        ($user->hasRole('personnel') && (int) $user->personnel_id === (int) $personnel->id)
+    );
+    $canEditManualLeaveCredits = $user && $user->hasAnyRole(['admin', 'school', 'encoding_officer']);
+    $systemGeneratedCredits = (float) ($personnel->system_generated_credits ?? 0);
+    $manuallyAddedCredits = (float) ($personnel->manually_added_credits ?? 0);
+    $totalLeaveCredits = $systemGeneratedCredits + $manuallyAddedCredits;
 @endphp
 <div class="container-fluid mt-4">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('warning'))
+        <div class="alert alert-warning">{{ session('warning') }}</div>
+    @endif
     <div class="row">
         <div class="col-xl-4">
             <div class="card card-profile shadow mb-4">
@@ -32,19 +50,52 @@
                         {{ $personnel->employee_type ?? '--' }}
                     </div>
 
-                    <div class="row text-left mt-2">
-                        <div class="col-12 mb-2">
-                            <small class="text-uppercase text-muted font-weight-bold">Station</small>
-                            <div class="h5">{{ $personnel->school->name ?? 'Unassigned' }}</div>
+                    <div class="text-left mt-3">
+                        <h6 class="text-uppercase text-muted font-weight-bold mb-3">Personnel Details</h6>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <small class="text-uppercase text-muted">Employee ID</small>
+                                <div class="h6 mb-0">{{ $personnel->emp_id ?? '--' }}</div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-uppercase text-muted">Item No.</small>
+                                <div class="h6 mb-0">{{ $personnel->item_number ?? '--' }}</div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-uppercase text-muted">Assigned Station</small>
+                                <div class="h6 mb-0">{{ $personnel->school->name ?? 'Unassigned' }}</div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-uppercase text-muted">Deployed Station</small>
+                                <div class="h6 mb-0">{{ $personnel->deployedSchool->name ?? ($personnel->school->name ?? '--') }}</div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-uppercase text-muted">Current Step</small>
+                                <div class="h6 mb-0">{{ $personnel->current_step ?? '--' }}</div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-uppercase text-muted">Last Step Increment</small>
+                                <div class="h6 mb-0">{{ $personnel->last_step_increment_date ?? '--' }}</div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-uppercase text-muted">Salary Grade</small>
+                                <div class="h6 mb-0">{{ $personnel->salary_grade ?? '--' }}</div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-uppercase text-muted">Salary (Actual)</small>
+                                <div class="h6 mb-0">{{ $personnel->salary_actual ?? '--' }}</div>
+                            </div>
+                            <div class="col-12 mb-1">
+                                <small class="text-uppercase text-muted">Branch</small>
+                                <div class="h6 mb-0">{{ $personnel->branch ?? '--' }}</div>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <small class="text-uppercase text-muted font-weight-bold">Gender</small>
-                            <div class="h5">{{ $gender }}</div>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-uppercase text-muted font-weight-bold">Civil Status</small>
-                            <div class="h5">{{ $civilStatus ?? '---' }}</div>
-                        </div>
+
+                        @if($canEditDetails)
+                            <a href="{{ route('personnel.edit', $personnel) }}" class="btn btn-sm btn-info mt-3">
+                                <i class="fas fa-edit mr-1"></i> Edit Details
+                            </a>
+                        @endif
                     </div>
                     
                     <hr class="my-4">
@@ -62,6 +113,42 @@
                     </div>
                 </div>
             </div>
+
+            @if($canViewLeaveCredits)
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Leave Credits</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <small class="text-uppercase text-muted">System-Generated Credits</small>
+                                <div class="h5 mb-0">{{ number_format($systemGeneratedCredits, 2) }}</div>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <small class="text-uppercase text-muted">Manually Added Credits</small>
+                                <div class="h5 mb-0">{{ number_format($manuallyAddedCredits, 2) }}</div>
+                            </div>
+                        </div>
+                        <hr>
+
+                        @if($canEditManualLeaveCredits)
+                            <form method="POST" action="{{ route('personnel.leave_credits.manual.update', $personnel) }}" class="mt-3">
+                                @csrf
+                                <label class="form-control-label">Update Manually Added Credits</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" name="manually_added_credits" class="form-control" value="{{ old('manually_added_credits', $manuallyAddedCredits) }}" required>
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-outline-primary">Save</button>
+                                    </div>
+                                </div>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
 
         <div class="col-xl-8">

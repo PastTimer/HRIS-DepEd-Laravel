@@ -54,10 +54,12 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin|school')->group(function () {
         Route::get('/personnel/create', [PersonnelController::class, 'create'])->name('personnel.create');
         Route::post('/personnel', [PersonnelController::class, 'store'])->name('personnel.store');
+        Route::delete('/personnel/{personnel}', [PersonnelController::class, 'destroy'])->name('personnel.destroy');
+    });
+    Route::middleware('role:admin|school|personnel')->group(function () {
         Route::get('/personnel/{personnel}/edit', [PersonnelController::class, 'edit'])->name('personnel.edit');
         Route::put('/personnel/{personnel}', [PersonnelController::class, 'update'])->name('personnel.update');
         Route::patch('/personnel/{personnel}', [PersonnelController::class, 'update']);
-        Route::delete('/personnel/{personnel}', [PersonnelController::class, 'destroy'])->name('personnel.destroy');
     });
     Route::middleware('role:admin|school|encoding_officer')->group(function () {
         Route::get('/personnel', [PersonnelController::class, 'index'])->name('personnel.index');
@@ -73,6 +75,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/personnel/{personnel}', [PersonnelController::class, 'show'])->name('personnel.show');
         Route::get('/personnel/{personnel}/pds/export', [PersonnelController::class, 'exportPds'])->name('personnel.pds.export');
+    });
+    Route::middleware('role:admin|school|encoding_officer')->group(function () {
+        Route::post('/personnel/{personnel}/leave-credits/manual', [PersonnelController::class, 'updateManualLeaveCredits'])->name('personnel.leave_credits.manual.update');
     });
 
     // PDS edit requests
@@ -121,6 +126,13 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         Route::post('/users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
         Route::post('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('users.deactivate');
+    });
+
+    // Self account management for EO and Personnel
+    Route::middleware('role:encoding_officer|personnel')->group(function () {
+        Route::get('/account', [UserController::class, 'myAccount'])->name('users.account.show');
+        Route::get('/account/edit', [UserController::class, 'editOwnAccount'])->name('users.account.edit');
+        Route::put('/account', [UserController::class, 'updateOwnAccount'])->name('users.account.update');
     });
 
     // Equipment (Admin + School)

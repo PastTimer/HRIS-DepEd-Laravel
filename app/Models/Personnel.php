@@ -20,6 +20,8 @@ class Personnel extends Model
         'salary_grade',
         'salary_actual',
         'branch',
+        'system_generated_credits',
+        'manually_added_credits',
         'employee_type',
     ];
 
@@ -46,7 +48,6 @@ class Personnel extends Model
 
     public function specialOrders() {
         return $this->belongsToMany(SpecialOrder::class, 'so_personnel', 'personnel_id', 'special_order_id')
-            ->withPivot('units')
             ->withTimestamps();
     }
 

@@ -15,7 +15,11 @@ class TrainingController extends Controller
     {
         $user = Auth::user();
 
-        if ($user && ($user->hasRole('school') || $user->hasRole('encoding_officer')) && $user->school_id) {
+        if ($user && $user->hasRole('school') && $user->school_id) {
+            return (int) $user->school_id;
+        }
+
+        if ($user && $user->hasRole('encoding_officer') && !$user->isGlobalEncodingOfficer() && $user->school_id) {
             return (int) $user->school_id;
         }
 

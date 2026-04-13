@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             PersonnelSeeder::class,
             PdsSeeder::class,
             UserSeeder::class,
+            BlankRoleUsersSeeder::class,
             InternetAndIspSeeder::class,
             EquipmentSeeder::class,
             ServiceRecordSeeder::class,
