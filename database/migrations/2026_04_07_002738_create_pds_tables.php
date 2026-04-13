@@ -56,7 +56,7 @@ return new class extends Migration
             $table->string('agency_employee_number')->nullable()->unique();
 
             // C1 - 16 [Citizenship]
-            $table->string('citizenship_type', 20)->default('FILIPINO');
+            $table->string('citizenship_type', 20)->nullable();
             $table->string('citizenship_mode', 20)->nullable();
             $table->string('dual_citizenship_country')->nullable();
             $table->text('dual_citizenship_details')->nullable();

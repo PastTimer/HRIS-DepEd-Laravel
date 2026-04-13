@@ -17,7 +17,6 @@ class BlankRoleUsersSeeder extends Seeder
         $hq = School::where('name', 'HQ')
             ->orWhere('school_id', 'HQ-0000')
             ->first();
-
         if ($hq) {
             return $hq;
         }
@@ -58,7 +57,7 @@ class BlankRoleUsersSeeder extends Seeder
         ]);
     }
 
-    private function createBlankPersonnelRecord(int $schoolId): Personnel
+    private function createBlankPersonnelRecord(?int $schoolId = null): Personnel
     {
         $position = $this->ensurePlaceholderPosition();
 
@@ -87,39 +86,59 @@ class BlankRoleUsersSeeder extends Seeder
 
         $hq = $this->ensureHqSchool();
 
-        $blankSchoolUser = User::where('username', 'blank_school_user')->first();
-        if (!$blankSchoolUser) {
-            $blankSchool = $this->createBlankSchoolRecord();
-            $blankSchoolUser = User::create([
-                'username' => 'blank_school_user',
-                'password' => Hash::make('1234'),
-                'school_id' => $blankSchool->id,
-                'status' => 'active',
-            ]);
-        }
-        $blankSchoolUser->syncRoles(['school']);
+        // Create 5 blank schools and users, and 5 blank encoding officers (one per blank school)
+        $blankSchoolIds = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $schoolUsername = 'blank_school_user_' . $i;
+            $eoUsername = 'blank_eo_user_' . $i;
 
-        $blankEoUser = User::where('username', 'blank_eo_user')->first();
-        if (!$blankEoUser) {
-            $blankEoUser = User::create([
-                'username' => 'blank_eo_user',
-                'password' => Hash::make('1234'),
-                'school_id' => $hq->id,
-                'status' => 'active',
-            ]);
-        }
-        $blankEoUser->syncRoles(['encoding_officer']);
+            $blankSchoolUser = User::where('username', $schoolUsername)->first();
+            $blankEoUser = User::where('username', $eoUsername)->first();
+            $blankSchool = null;
 
-        $blankPersonnelUser = User::where('username', 'blank_personnel_user')->first();
-        if (!$blankPersonnelUser) {
-            $blankPersonnel = $this->createBlankPersonnelRecord($hq->id);
-            $blankPersonnelUser = User::create([
-                'username' => 'blank_personnel_user',
-                'password' => Hash::make('1234'),
-                'personnel_id' => $blankPersonnel->id,
-                'status' => 'active',
-            ]);
+            if (!$blankSchoolUser || !$blankEoUser) {
+                $blankSchool = $this->createBlankSchoolRecord();
+                $blankSchoolIds[] = $blankSchool->id;
+            } else {
+                $blankSchool = School::find($blankSchoolUser ? $blankSchoolUser->school_id : $blankEoUser->school_id);
+                $blankSchoolIds[] = $blankSchool->id;
+            }
+
+            if (!$blankSchoolUser) {
+                $blankSchoolUser = User::create([
+                    'username' => $schoolUsername,
+                    'password' => Hash::make('1234'),
+                    'school_id' => $blankSchool->id,
+                    'status' => 'active',
+                ]);
+            }
+            $blankSchoolUser->syncRoles(['school']);
+
+            if (!$blankEoUser) {
+                $blankEoUser = User::create([
+                    'username' => $eoUsername,
+                    'password' => Hash::make('1234'),
+                    'school_id' => $blankSchool->id,
+                    'status' => 'active',
+                ]);
+            }
+            $blankEoUser->syncRoles(['encoding_officer']);
         }
-        $blankPersonnelUser->syncRoles(['personnel']);
+
+        // Create 10 blank personnel and users (no station/school)
+        for ($i = 1; $i <= 10; $i++) {
+            $username = 'blank_personnel_user_' . $i;
+            $blankPersonnelUser = User::where('username', $username)->first();
+            if (!$blankPersonnelUser) {
+                $blankPersonnel = $this->createBlankPersonnelRecord(null);
+                $blankPersonnelUser = User::create([
+                    'username' => $username,
+                    'password' => Hash::make('1234'),
+                    'personnel_id' => $blankPersonnel->id,
+                    'status' => 'active',
+                ]);
+            }
+            $blankPersonnelUser->syncRoles(['personnel']);
+        }
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
 
             // Operational personnel attributes (HRIZZ-aligned)
             $table->foreignId('position_id')->constrained('positions')->onDelete('restrict');
-            $table->foreignId('assigned_school_id')->constrained('schools')->onDelete('restrict');
+            $table->foreignId('assigned_school_id')->nullable()->constrained('schools')->onDelete('restrict');
             $table->unsignedBigInteger('deployed_school_id')->nullable();
             $table->foreign('deployed_school_id')->references('id')->on('schools')->onDelete('restrict');
 

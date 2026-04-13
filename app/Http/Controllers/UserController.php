@@ -106,7 +106,8 @@ class UserController extends Controller
     private function createPlaceholderPersonnel(?int $preferredSchoolId = null): Personnel
     {
         $position = $this->ensurePlaceholderPosition();
-        $schoolId = $preferredSchoolId ?: $this->ensureHqSchool()->id;
+        // If preferredSchoolId is explicitly null, create unassigned personnel
+        $schoolId = ($preferredSchoolId === null) ? null : $preferredSchoolId;
 
         return Personnel::create([
             'position_id' => $position->id,
@@ -216,7 +217,9 @@ class UserController extends Controller
 
         if ($role === 'personnel') {
             if (empty($validatedData['personnel_id'])) {
-                $validatedData['personnel_id'] = $this->createPlaceholderPersonnel($this->defaultPersonnelSchoolId())->id;
+                // If admin, create unassigned personnel; if school user, use their school
+                $schoolId = $this->isSchoolUser() ? $this->defaultPersonnelSchoolId() : null;
+                $validatedData['personnel_id'] = $this->createPlaceholderPersonnel($schoolId)->id;
             }
 
             $personnelAlreadyLinked = User::role('personnel')

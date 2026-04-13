@@ -167,7 +167,9 @@ class PersonnelController extends Controller
 
         $positions = Position::orderBy('title')->get();
 
-        return view('personnel.create', compact('schools', 'positions'));
+        // If admin, allow unassigned (null) as a school option
+        $isAdmin = auth()->user() && auth()->user()->hasRole('admin');
+        return view('personnel.create', compact('schools', 'positions', 'isAdmin'));
     }
 
     public function store(Request $request)
@@ -175,6 +177,7 @@ class PersonnelController extends Controller
         $this->assertCanCreateOrDeletePersonnel();
 
         $schoolId = $this->schoolScopeId();
+        $isAdmin = auth()->user() && auth()->user()->hasRole('admin');
         $validatedData = $request->validate([
             'employee_id' => 'nullable|string|max:255|unique:personnel,emp_id',
             'position_id' => 'required|exists:positions,id',
@@ -185,7 +188,7 @@ class PersonnelController extends Controller
             'salary_actual' => 'nullable|numeric|min:0',
             'branch' => 'nullable|string|max:255',
             'employee_type' => 'required|string|max:100',
-            'assigned_school_id' => 'required|exists:schools,id',
+            'assigned_school_id' => $isAdmin ? 'nullable|exists:schools,id' : 'required|exists:schools,id',
             'deployed_school_id' => 'nullable|exists:schools,id',
             'service_start_date' => 'nullable|date',
             'is_active' => 'required|boolean',
@@ -196,6 +199,11 @@ class PersonnelController extends Controller
             if (!empty($validatedData['deployed_school_id'])) {
                 abort_if((int) $validatedData['deployed_school_id'] !== $schoolId, 403);
             }
+        }
+        // If admin and no school selected, set both assigned and deployed school to null
+        if ($isAdmin && empty($validatedData['assigned_school_id'])) {
+            $validatedData['assigned_school_id'] = null;
+            $validatedData['deployed_school_id'] = null;
         }
 
         DB::transaction(function () use ($validatedData) {
