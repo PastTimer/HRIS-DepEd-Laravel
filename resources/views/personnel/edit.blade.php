@@ -106,12 +106,26 @@
                         <div class="card shadow-sm mb-4">
                             <div class="card-header bg-white"><h5 class="mb-0 text-uppercase text-muted">Station Assignment</h5></div>
                             <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <strong>Note:</strong> If you move this personnel to a different school, you will no longer be able to view or edit their information after saving, as they will be assigned to another school.
+                                </div>
                                 <div class="row">
+                                    @php
+                                        $user = Auth::user();
+                                        $isSchoolUser = $user && $user->hasRole('school') && $user->school;
+                                        $userSchoolId = $isSchoolUser ? $user->school->id : null;
+                                    @endphp
                                     <div class="col-md-6 form-group mb-3">
                                         <label class="form-control-label">Assigned Station <span class="text-danger">*</span></label>
                                         <select id="assigned_school_id" name="assigned_school_id" class="form-control @error('assigned_school_id') is-invalid @enderror" required>
                                             @foreach($schools as $school)
-                                                <option value="{{ $school->id }}" {{ old('assigned_school_id', $personnel->assigned_school_id) == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                <option value="{{ $school->id }}"
+                                                    @if(old('assigned_school_id', $personnel->assigned_school_id))
+                                                        {{ old('assigned_school_id', $personnel->assigned_school_id) == $school->id ? 'selected' : '' }}
+                                                    @elseif($isSchoolUser && $userSchoolId == $school->id)
+                                                        selected
+                                                    @endif
+                                                >{{ $school->name }}</option>
                                             @endforeach
                                         </select>
                                         @error('assigned_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -121,7 +135,13 @@
                                         <select name="deployed_school_id" class="form-control @error('deployed_school_id') is-invalid @enderror">
                                             <option value="">Same as Assigned Station</option>
                                             @foreach($schools as $school)
-                                                <option value="{{ $school->id }}" {{ old('deployed_school_id', $personnel->deployed_school_id) == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                <option value="{{ $school->id }}"
+                                                    @if(old('deployed_school_id', $personnel->deployed_school_id))
+                                                        {{ old('deployed_school_id', $personnel->deployed_school_id) == $school->id ? 'selected' : '' }}
+                                                    @elseif($isSchoolUser && $userSchoolId == $school->id)
+                                                        selected
+                                                    @endif
+                                                >{{ $school->name }}</option>
                                             @endforeach
                                         </select>
                                         @error('deployed_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror

@@ -13,6 +13,10 @@
 </style>
 
 <div class="container-fluid mt-4" data-ajax-content>
+    @php
+        $user = Auth::user();
+        $canManagePersonnel = $user && ($user->hasRole('admin') || $user->hasRole('school'));
+    @endphp
     <div class="row">
         <div class="col">
             <div class="card shadow">
@@ -50,8 +54,7 @@
                             </div>
                         </form>
 
-                        @php $user = Auth::user(); @endphp
-                        @if($user && ($user->hasRole('admin') || $user->hasRole('school')))
+                        @if($canManagePersonnel)
                         <a href="{{ route('personnel.create') }}" class="btn btn-sm btn-success">
                             <i class="fas fa-plus mr-1"></i> Add Personnel
                         </a>
@@ -69,6 +72,16 @@
                     </div>
                 @endif
 
+                @if(session('warning'))
+                    <div class="alert alert-warning m-3 alert-dismissible fade show" role="alert">
+                        <span class="alert-icon"><i class="ni ni-bell-55"></i></span>
+                        <span class="alert-text"><strong>Notice:</strong> {{ session('warning') }}</span>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
                 <div class="table-responsive">
                     <table class="table align-items-center table-flush table-hover">
                         <thead class="thead-light">
@@ -79,7 +92,9 @@
                                 <th>Position</th>
                                 <th>Station</th>
                                 <th>Status</th>
+                                @if($canManagePersonnel)
                                 <th class="text-center">Actions</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -112,8 +127,8 @@
                                     @endif
                                 </td>
                                 
+                                @if($canManagePersonnel)
                                 <td class="text-center" onclick="event.stopPropagation();">
-                                    @if($user && ($user->hasRole('admin') || $user->hasRole('school')))
                                     <a href="/personnel/{{ $personnel->id }}/edit" class="btn btn-sm btn-info" title="Edit">
                                         Edit
                                     </a>
@@ -124,14 +139,16 @@
                                             Delete
                                         </button>
                                     </form>
-                                    @endif
                                 </td>
+                                @endif
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4">
+                                <td colspan="{{ $canManagePersonnel ? 7 : 6 }}" class="text-center py-4">
                                     <h4 class="text-muted mb-0">No personnel found.</h4>
-                                    <p class="text-sm">Click "Add Personnel" to register a new personnel record.</p>
+                                    @if($canManagePersonnel)
+                                        <p class="text-sm">Click "Add Personnel" to register a new personnel record.</p>
+                                    @endif
                                 </td>
                             </tr>
                             @endforelse

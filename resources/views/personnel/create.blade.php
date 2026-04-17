@@ -90,26 +90,39 @@
                             <div class="card-header bg-white"><h5 class="mb-0 text-uppercase text-muted">Station Assignment</h5></div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6 form-group mb-3">
-                                        <label class="form-control-label">Assigned Station <span class="text-danger">*</span></label>
-                                        <select name="assigned_school_id" class="form-control @error('assigned_school_id') is-invalid @enderror" required>
-                                            <option value="" disabled {{ old('assigned_school_id') === null ? 'selected' : '' }}>Select Assigned Station</option>
-                                            @foreach($schools as $school)
-                                                <option value="{{ $school->id }}" {{ old('assigned_school_id') == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('assigned_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
-                                    <div class="col-md-6 form-group mb-3">
-                                        <label class="form-control-label">Deployed Station</label>
-                                        <select name="deployed_school_id" class="form-control @error('deployed_school_id') is-invalid @enderror">
-                                            <option value="">Same as Assigned Station</option>
-                                            @foreach($schools as $school)
-                                                <option value="{{ $school->id }}" {{ old('deployed_school_id') == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('deployed_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </div>
+                                    @if(Auth::user()->hasRole('school') && Auth::user()->school)
+                                        <div class="col-md-6 form-group mb-3">
+                                            <label class="form-control-label">Assigned Station <span class="text-danger">*</span></label>
+                                            <input type="hidden" name="assigned_school_id" value="{{ Auth::user()->school->id }}">
+                                            <input type="text" class="form-control" value="{{ Auth::user()->school->name }}" readonly>
+                                        </div>
+                                        <div class="col-md-6 form-group mb-3">
+                                            <label class="form-control-label">Deployed Station</label>
+                                            <input type="hidden" name="deployed_school_id" value="{{ Auth::user()->school->id }}">
+                                            <input type="text" class="form-control" value="{{ Auth::user()->school->name }}" readonly>
+                                        </div>
+                                    @else
+                                        <div class="col-md-6 form-group mb-3">
+                                            <label class="form-control-label">Assigned Station <span class="text-danger">*</span></label>
+                                            <select name="assigned_school_id" class="form-control @error('assigned_school_id') is-invalid @enderror" required>
+                                                <option value="" disabled {{ old('assigned_school_id') === null ? 'selected' : '' }}>Select Assigned Station</option>
+                                                @foreach($schools as $school)
+                                                    <option value="{{ $school->id }}" {{ old('assigned_school_id') == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('assigned_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        </div>
+                                        <div class="col-md-6 form-group mb-3">
+                                            <label class="form-control-label">Deployed Station</label>
+                                            <select name="deployed_school_id" class="form-control @error('deployed_school_id') is-invalid @enderror">
+                                                <option value="">Same as Assigned Station</option>
+                                                @foreach($schools as $school)
+                                                    <option value="{{ $school->id }}" {{ old('deployed_school_id') == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('deployed_school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>

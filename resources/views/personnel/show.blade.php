@@ -10,7 +10,8 @@
     $gender = $pds?->birth_sex ? ucfirst(strtolower($pds->birth_sex)) : '--';
     $civilStatus = $pds?->civil_status ? ucfirst(strtolower($pds->civil_status)) : null;
     $canManageServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school']);
-    $canExportServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school', 'encoding_officer', 'personnel']);
+    $canExportServiceRecords = auth()->user()?->hasAnyRole(['admin', 'school', 'personnel']);
+    $canExportPds = auth()->user()?->hasAnyRole(['admin', 'school', 'personnel']);
     $showBackToList = !($user && $user->hasRole('personnel'));
     $canEditDetails = $user && (
         $user->hasAnyRole(['admin', 'school']) ||
@@ -104,7 +105,9 @@
                         @if($showBackToList)
                             <a href="{{ route('personnel.index') }}" class="btn btn-sm btn-secondary">Back to List</a>
                         @endif
-                        <a href="{{ route('personnel.pds.export', $personnel->id) }}" class="btn btn-sm btn-primary">Export PDS PDF</a>
+                        @if($canExportPds)
+                            <a href="{{ route('personnel.pds.export', $personnel->id) }}" class="btn btn-sm btn-primary">Export PDS PDF</a>
+                        @endif
                         @if($personnel->is_active)
                             <span class="text-success font-weight-bold"><i class="fas fa-circle mr-1"></i> Active</span>
                         @else

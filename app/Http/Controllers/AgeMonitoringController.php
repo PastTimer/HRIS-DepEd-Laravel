@@ -24,6 +24,27 @@ class AgeMonitoringController extends Controller
         return null;
     }
 
+    private function baseMonitoringPersonnelQuery()
+    {
+        $schoolId = $this->schoolScopeId();
+
+        return Personnel::with(['pdsMain', 'position', 'school'])
+            ->where('is_active', true)
+            ->whereNotNull('emp_id')
+            ->where('emp_id', '!=', '')
+            ->whereNotNull('position_id')
+            ->whereNotNull('last_step_increment_date')
+            ->when($schoolId, function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            })
+            ->whereHas('pdsMain', function ($q) {
+                $q->whereNotNull('first_name')
+                    ->where('first_name', '!=', '')
+                    ->whereNotNull('last_name')
+                    ->where('last_name', '!=', '');
+            });
+    }
+
     /**
      * Show age monitoring using actual age calculation.
      */
@@ -32,13 +53,8 @@ class AgeMonitoringController extends Controller
 
         $perPage = 10;
         $page = $request->input('page', 1);
-        $schoolId = $this->schoolScopeId();
         $today = now();
-        $query = Personnel::with(['pdsMain', 'position', 'school'])
-            ->where('is_active', true)
-            ->when($schoolId, function ($q) use ($schoolId) {
-                $q->where('assigned_school_id', $schoolId);
-            })
+        $query = $this->baseMonitoringPersonnelQuery()
             ->whereHas('pdsMain', function ($q) {
                 $q->whereNotNull('birth_date');
             });
@@ -87,12 +103,7 @@ class AgeMonitoringController extends Controller
         $perPage = 10;
         $page = $request->input('page', 1);
         $today = now();
-        $schoolId = $this->schoolScopeId();
-        $query = Personnel::with(['pdsMain', 'position', 'school'])
-            ->where('is_active', true)
-            ->when($schoolId, function ($q) use ($schoolId) {
-                $q->where('assigned_school_id', $schoolId);
-            })
+        $query = $this->baseMonitoringPersonnelQuery()
             ->whereHas('pdsMain', function ($q) {
                 $q->whereNotNull('birth_date');
             });
@@ -175,13 +186,8 @@ class AgeMonitoringController extends Controller
     private function buildAgeRows(string $mode)
     {
         $today = now();
-        $schoolId = $this->schoolScopeId();
 
-        return Personnel::with(['pdsMain', 'position', 'school'])
-            ->where('is_active', true)
-            ->when($schoolId, function ($q) use ($schoolId) {
-                $q->where('assigned_school_id', $schoolId);
-            })
+        return $this->baseMonitoringPersonnelQuery()
             ->get()
             ->filter(fn (Personnel $person) => $person->pdsMain && $person->pdsMain->birth_date)
             ->map(function (Personnel $person) use ($mode, $today) {

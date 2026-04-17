@@ -59,7 +59,7 @@
                         </a>
                     </li>
                     @endif
-                    @if($isAdmin || $isSchool)
+                    @if($isAdmin || $isSchool || $isEO)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('personnel*') || request()->is('employees*') || request()->is('my-profile') ? 'active' : '' }}" href="{{ $personnelUrl }}">
                             <i class="ni ni-single-02 text-yellow"></i>

@@ -265,41 +265,7 @@
                             </div>
                         </div>
 
-                        <div class="form-section shadow-sm border-warning">
-                            <h5 class="text-warning"><i class="fas fa-exchange-alt mr-2"></i> Movement Tracking</h5>
-                            <p class="text-muted small">Update this section if the equipment is being transferred to new personnel or disposed of.</p>
-                            <div class="row">
-                                <div class="col-md-6 form-group mb-3">
-                                    <label class="form-control-label">Received by (New Accountable Officer / Custodian)</label>
-                                    <select name="new_accountable_id" class="form-control">
-                                        <option value="">-- Select Personnel --</option>
-                                        @foreach($employees as $personnel)
-                                            @php($pds = $personnel->pdsMain)
-                                            <option value="{{ $personnel->id }}" {{ old('new_accountable_id') == $personnel->id ? 'selected' : '' }}>{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-6 form-group mb-3">
-                                    <label class="form-control-label">Date received by New Personnel</label>
-                                    <input type="date" name="new_accountable_date" class="form-control" value="{{ old('new_accountable_date') }}">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-8 form-group mb-3">
-                                    <label class="form-control-label">Supporting Documents for Movement</label>
-                                    <select name="new_supporting_doc_type" class="form-control">
-                                        <option value="">-- Select --</option>
-                                        @foreach(['Property Acknowledgment Receipt (PAR)', 'Inventory Custodian Slip (ICS)', 'Report of Receipt and Stock Position (RRSP)', 'Return and Receipt of Property/Equipment (RRPE)', 'Waste Material Report (WMR)'] as $doc)
-                                            <option value="{{ $doc }}" {{ old('new_supporting_doc_type') == $doc ? 'selected' : '' }}>{{ $doc }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-4 form-group mb-3">
-                                    <label class="form-control-label">Document No.</label>
-                                    <input type="text" name="new_supporting_doc_no" class="form-control" value="{{ old('new_supporting_doc_no') }}">
-                                </div>
-                            </div>
-                        </div>
+                        <!-- MOVEMENT TRACKING SECTION MOVED TO BOTTOM -->
 
                         <div class="form-section shadow-sm">
                             <h5>Supplier & Warranty</h5>
@@ -386,6 +352,43 @@
                                         </select>
                                     @endif
                                     @error('school_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MOVEMENT TRACKING SECTION -->
+                        <div class="form-section shadow-sm border-warning">
+                            <h5 class="text-warning"><i class="fas fa-exchange-alt mr-2"></i> Movement Tracking</h5>
+                            <p class="text-muted small">Update this section if the equipment is being transferred to new personnel or disposed of.</p>
+                            <div class="row">
+                                <div class="col-md-6 form-group mb-3">
+                                    <label class="form-control-label">Received by (New Accountable Officer / Custodian)</label>
+                                    <select name="new_accountable_id" class="form-control">
+                                        <option value="">-- Select Personnel --</option>
+                                        @foreach($employees as $personnel)
+                                            @php($pds = $personnel->pdsMain)
+                                            <option value="{{ $personnel->id }}" {{ old('new_accountable_id') == $personnel->id ? 'selected' : '' }}>{{ $pds->last_name ?? 'N/A' }}, {{ $pds->first_name ?? '' }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 form-group mb-3">
+                                    <label class="form-control-label">Date received by New Personnel</label>
+                                    <input type="date" name="new_accountable_date" class="form-control" value="{{ old('new_accountable_date') }}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8 form-group mb-3">
+                                    <label class="form-control-label">Supporting Documents for Movement</label>
+                                    <select name="new_supporting_doc_type" class="form-control">
+                                        <option value="">-- Select --</option>
+                                        @foreach(['Property Acknowledgment Receipt (PAR)', 'Inventory Custodian Slip (ICS)', 'Report of Receipt and Stock Position (RRSP)', 'Return and Receipt of Property/Equipment (RRPE)', 'Waste Material Report (WMR)'] as $doc)
+                                            <option value="{{ $doc }}" {{ old('new_supporting_doc_type') == $doc ? 'selected' : '' }}>{{ $doc }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group mb-3">
+                                    <label class="form-control-label">Document No.</label>
+                                    <input type="text" name="new_supporting_doc_no" class="form-control" value="{{ old('new_supporting_doc_no') }}">
                                 </div>
                             </div>
                         </div>

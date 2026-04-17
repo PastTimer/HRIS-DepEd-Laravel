@@ -113,8 +113,18 @@ class StepMonitoringController extends Controller
 
         return Personnel::with(['pdsMain', 'position', 'school'])
             ->where('is_active', true)
+            ->whereNotNull('emp_id')
+            ->where('emp_id', '!=', '')
+            ->whereNotNull('position_id')
+            ->whereNotNull('last_step_increment_date')
             ->when($schoolId, function ($query) use ($schoolId) {
                 $query->where('assigned_school_id', $schoolId);
+            })
+            ->whereHas('pdsMain', function ($query) {
+                $query->whereNotNull('first_name')
+                    ->where('first_name', '!=', '')
+                    ->whereNotNull('last_name')
+                    ->where('last_name', '!=', '');
             })
             ->orderBy('emp_id');
     }

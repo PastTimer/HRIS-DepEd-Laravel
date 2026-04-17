@@ -11,10 +11,18 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PersonnelController extends Controller
 {
+    private function denyWithRedirect(string $routeName, string $message): void
+    {
+        throw new HttpResponseException(
+            redirect()->route($routeName)->with('warning', $message)
+        );
+    }
+
     private function schoolScopeId(): ?int
     {
         $user = Auth::user();
@@ -23,7 +31,7 @@ class PersonnelController extends Controller
             return (int) $user->school_id;
         }
 
-        if ($user && $user->hasRole('encoding_officer') && !$user->isGlobalEncodingOfficer() && $user->school_id) {
+        if ($user && $user->hasRole('encoding_officer') && $user->school_id) {
             return (int) $user->school_id;
         }
 
@@ -53,13 +61,17 @@ class PersonnelController extends Controller
         $user = Auth::user();
 
         if ($user && $user->hasRole('personnel')) {
-            abort_if((int) $user->personnel_id !== (int) $personnel->id, 403);
+            if ((int) $user->personnel_id !== (int) $personnel->id) {
+                $this->denyWithRedirect('personnel.me', 'You do not have access to that personnel record.');
+            }
             return;
         }
 
         $schoolId = $this->schoolScopeId();
         if ($schoolId) {
-            abort_if((int) $personnel->assigned_school_id !== $schoolId, 403);
+            if ((int) $personnel->assigned_school_id !== $schoolId) {
+                $this->denyWithRedirect('personnel.index', 'You no longer have access to that personnel record.');
+            }
         }
     }
 
@@ -312,12 +324,8 @@ class PersonnelController extends Controller
         $this->assertCanEditPersonnelDetails();
         $this->assertPersonnelRecordAccess($personnel);
 
-        $schoolId = $this->schoolScopeId();
-        $schools = School::orderBy('name')->get();
-        if ($schoolId) {
-            $schools = $schools->where('id', $schoolId)->values();
-        }
-
+        // For edit: always show all schools for school users (for transfer)
+        $schools = School::where('is_active', true)->orderBy('name')->get();
         $positions = Position::orderBy('title')->get();
 
         return view('personnel.edit', compact('personnel', 'schools', 'positions'));
@@ -328,7 +336,6 @@ class PersonnelController extends Controller
         $this->assertCanEditPersonnelDetails();
         $this->assertPersonnelRecordAccess($personnel);
 
-        $schoolId = $this->schoolScopeId();
         $validatedData = $request->validate([
             'employee_id' => 'nullable|string|max:255|unique:personnel,emp_id,' . $personnel->id,
             'position_id' => 'required|exists:positions,id',
@@ -345,12 +352,7 @@ class PersonnelController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
-        if ($schoolId) {
-            abort_if((int) $validatedData['assigned_school_id'] !== $schoolId, 403);
-            if (!empty($validatedData['deployed_school_id'])) {
-                abort_if((int) $validatedData['deployed_school_id'] !== $schoolId, 403);
-            }
-        }
+        // School users are allowed to transfer personnel to other schools during edit.
 
         $original = $personnel->getOriginal();
         $oldAssignedSchoolId = (int) $personnel->assigned_school_id;

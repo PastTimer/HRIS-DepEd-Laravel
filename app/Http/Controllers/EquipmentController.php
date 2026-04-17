@@ -66,12 +66,14 @@ class EquipmentController extends Controller
     public function create()
     {
         $schools = $this->schoolsForCurrentUser();
-        $employees = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
+        $query = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
             ->where('is_active', true)
             ->orderBy('id')
-            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type'])
-            ->limit(100)
-            ->get();
+            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type']);
+        if (Auth::check() && Auth::user()->hasRole('school') && Auth::user()->school_id) {
+            $query->where('assigned_school_id', Auth::user()->school_id);
+        }
+        $employees = $query->limit(100)->get();
         $items = self::ITEM_OPTIONS;
         $brands = self::BRAND_OPTIONS;
         $packages = self::PACKAGE_OPTIONS;
@@ -104,12 +106,14 @@ class EquipmentController extends Controller
     {
         $schools = $this->schoolsForCurrentUser();
         // For large datasets, consider AJAX search instead of loading all
-        $employees = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
+        $query = Personnel::with(['pdsMain:id,personnel_id,last_name,first_name'])
             ->where('is_active', true)
             ->orderBy('id')
-            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type'])
-            ->limit(100)
-            ->get();
+            ->select(['id', 'emp_id', 'assigned_school_id', 'position_id', 'employee_type']);
+        if (Auth::check() && Auth::user()->hasRole('school') && Auth::user()->school_id) {
+            $query->where('assigned_school_id', Auth::user()->school_id);
+        }
+        $employees = $query->limit(100)->get();
         $items = self::ITEM_OPTIONS;
         $brands = self::BRAND_OPTIONS;
         $packages = self::PACKAGE_OPTIONS;

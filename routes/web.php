@@ -63,17 +63,20 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('role:admin|school|encoding_officer')->group(function () {
         Route::get('/personnel', [PersonnelController::class, 'index'])->name('personnel.index');
-   
+    });
+    Route::middleware('role:admin|school')->group(function () {
         // Service Records CRUD (nested under personnel)
-           Route::prefix('personnel/{personnel}/service-records')->name('service-records.')->group(function () {
-               Route::post('/', [\App\Http\Controllers\ServiceRecordController::class, 'store'])->name('store');
-               Route::put('{service_record}', [\App\Http\Controllers\ServiceRecordController::class, 'update'])->name('update');
-               Route::delete('{service_record}', [\App\Http\Controllers\ServiceRecordController::class, 'destroy'])->name('destroy');
-           });
+        Route::prefix('personnel/{personnel}/service-records')->name('service-records.')->group(function () {
+            Route::post('/', [\App\Http\Controllers\ServiceRecordController::class, 'store'])->name('store');
+            Route::put('{service_record}', [\App\Http\Controllers\ServiceRecordController::class, 'update'])->name('update');
+            Route::delete('{service_record}', [\App\Http\Controllers\ServiceRecordController::class, 'destroy'])->name('destroy');
+        });
         Route::get('/personnel/{personnel}/service-records/export/xlsx-format', [\App\Http\Controllers\ServiceRecordController::class, 'exportXlsxFormat'])->name('service-records.export.xlsx-format');
     });
     Route::middleware('role:admin|school|encoding_officer|personnel')->group(function () {
         Route::get('/personnel/{personnel}', [PersonnelController::class, 'show'])->name('personnel.show');
+    });
+    Route::middleware('role:admin|school|personnel')->group(function () {
         Route::get('/personnel/{personnel}/pds/export', [PersonnelController::class, 'exportPds'])->name('personnel.pds.export');
     });
     Route::middleware('role:admin|school|encoding_officer')->group(function () {
