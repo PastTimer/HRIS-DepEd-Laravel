@@ -97,9 +97,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/pds/requests/{submission}/reject', [PdsEditRequestController::class, 'reject'])->name('pds.requests.reject');
     });
 
-    // Positions (Admin only)
+    // Positions (Admin only) and Division/Cluster (Admin only)
     Route::middleware('role:admin')->group(function () {
         Route::resource('positions', PositionController::class);
+        Route::resource('divisions', App\Http\Controllers\DivisionController::class);
+        Route::resource('clusters', App\Http\Controllers\ClusterController::class);
     });
 
     // School Profile

@@ -1,24 +1,24 @@
 @extends('layouts.app')
-@section('title', 'Districts')
+@section('title', 'Divisions')
 @section('content')
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col">
             <div class="card ppc-card">
                 <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0"><i class="fas fa-map-marker-alt mr-2 text-primary"></i> District Directory</h3>
+                    <h3 class="mb-0"><i class="fas fa-building mr-2 text-primary"></i> Division Directory</h3>
                     <div class="d-flex align-items-center">
                         <a href="{{ route('schools.index') }}" class="btn btn-outline-secondary btn-sm mr-2">
                             <i class="fas fa-arrow-left mr-1"></i> Back to School Directory
                         </a>
-                        <a href="{{ route('divisions.index') }}" class="btn btn-outline-secondary btn-sm mr-2">
-                            Divisions
+                        <a href="{{ route('districts.index') }}" class="btn btn-outline-secondary btn-sm mr-2">
+                            Districts
                         </a>
                         <a href="{{ route('clusters.index') }}" class="btn btn-outline-secondary btn-sm mr-2">
                             Clusters
                         </a>
-                        <a href="{{ route('districts.create') }}" class="btn btn-sm btn-success mr-2">
-                            <i class="fas fa-plus mr-1"></i> New District
+                        <a href="{{ route('divisions.create') }}" class="btn btn-sm btn-success mr-2">
+                            <i class="fas fa-plus mr-1"></i> New Division
                         </a>
                     </div>
                 </div>
@@ -33,29 +33,32 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
+                                <th>Districts</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($districts as $district)
+                            @foreach($divisions as $division)
                             <tr>
-                                <td>{{ $district->id }}</td>
-                                <td><strong>{{ $district->name }}</strong></td>
+                                <td>{{ $division->id }}</td>
+                                <td><strong>{{ $division->name }}</strong></td>
                                 <td>
-                                    <a href="{{ route('districts.edit', $district->id) }}" class="btn btn-sm btn-info">Edit</a>
-                                    <form method="POST" action="{{ route('districts.destroy', $district->id) }}" style="display:inline;">
+                                    @foreach($division->districts as $district)
+                                        <span class="badge badge-info">{{ $district->name }}</span>
+                                    @endforeach
+                                </td>
+                                <td>
+                                    <a href="{{ route('divisions.edit', $division->id) }}" class="btn btn-sm btn-info">Edit</a>
+                                    <form method="POST" action="{{ route('divisions.destroy', $division->id) }}" style="display:inline;">
                                         @csrf 
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this district?')">Delete</button>
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this division?')">Delete</button>
                                     </form>
                                 </td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
-                </div>
-                <div class="card-footer py-4">
-                    {{ $districts->links('pagination::bootstrap-4') }}
                 </div>
             </div>
         </div>

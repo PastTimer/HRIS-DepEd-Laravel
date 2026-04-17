@@ -16,17 +16,31 @@ class UserSeeder extends Seeder
     private function ensureHqSchool(): School
     {
         $hq = School::where('name', 'HQ')
-            ->orWhere('school_id', 'HQ-0000')
+            ->orWhere('school_id', 'HQ')
             ->first();
 
         if ($hq) {
             return $hq;
         }
 
+        // Create Division, Cluster, District for HQ if not exist
+        $division = \App\Models\Division::firstOrCreate(['name' => 'HQ Division']);
+        $cluster = \App\Models\Cluster::firstOrCreate(['name' => 'HQ Cluster']);
+        $district = \App\Models\District::firstOrCreate(
+            ['name' => 'HQ District'],
+            ['division_id' => $division->id, 'cluster_id' => $cluster->id]
+        );
+        $district->division_id = $division->id;
+        $district->cluster_id = $cluster->id;
+        $district->save();
+
         return School::create([
-            'school_id' => 'HQ-0000',
+            'school_id' => 'HQ',
             'name' => 'HQ',
-            'district_id' => null,
+            'district_id' => $district->id,
+            'address_street' => 'HQ Street',
+            'address_city' => 'HQ City',
+            'address_province' => 'HQ Province',
             'is_active' => true,
         ]);
     }

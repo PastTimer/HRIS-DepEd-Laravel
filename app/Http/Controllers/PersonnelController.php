@@ -125,6 +125,7 @@ class PersonnelController extends Controller
         $search = $request->input('search');
         $schoolId = $this->schoolScopeId();
 
+        // Sort: assigned first, unassigned last
         $personnelList = Personnel::with(['school', 'position', 'pdsMain'])
             ->when($schoolId, function ($query) use ($schoolId) {
                 $query->where('assigned_school_id', $schoolId);
@@ -148,11 +149,62 @@ class PersonnelController extends Controller
                         });
                 });
             })
-            ->orderByDesc('id')
-            ->paginate(15)
-            ->appends(['search' => $search]);
+            ->get()
+            ->sortByDesc(function ($personnel) {
+                // Assigned: has assigned_school_id, position_id, emp_id, and pdsMain with first/last name
+                $hasSchool = !is_null($personnel->assigned_school_id);
+                $hasPosition = !is_null($personnel->position_id);
+                $hasEmpId = !is_null($personnel->emp_id) && $personnel->emp_id !== '';
+                $hasName = $personnel->pdsMain && $personnel->pdsMain->first_name && $personnel->pdsMain->last_name;
+                return $hasSchool && $hasPosition && $hasEmpId && $hasName ? 1 : 0;
+            })
+            ->values();
 
-        return view('personnel.index', ['personnelList' => $personnelList]);
+        // Paginate manually since we used get() and sortByDesc
+        $perPage = 15;
+        $currentPage = request()->input('page', 1);
+        $personnelList = new \Illuminate\Pagination\LengthAwarePaginator(
+            $personnelList->forPage($currentPage, $perPage),
+            $personnelList->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        // Assigned: has assigned_school_id, position_id, emp_id, first_name, and last_name
+        // Unassigned: missing any of those
+        $assignedCount = Personnel::when($schoolId, function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            })
+            ->whereNotNull('assigned_school_id')
+            ->whereNotNull('position_id')
+            ->whereNotNull('emp_id')
+            ->where('emp_id', '!=', '')
+            ->whereHas('pdsMain', function ($q) {
+                $q->whereNotNull('first_name')->where('first_name', '!=', '')
+                  ->whereNotNull('last_name')->where('last_name', '!=', '');
+            })
+            ->count();
+        $unassignedCount = Personnel::when($schoolId, function ($q) use ($schoolId) {
+                $q->where('assigned_school_id', $schoolId);
+            })
+            ->where(function ($q) {
+                $q->whereNull('assigned_school_id')
+                  ->orWhereNull('position_id')
+                  ->orWhereNull('emp_id')
+                  ->orWhere('emp_id', '=','')
+                  ->orWhereDoesntHave('pdsMain', function ($sub) {
+                      $sub->whereNotNull('first_name')->where('first_name', '!=', '')
+                          ->whereNotNull('last_name')->where('last_name', '!=', '');
+                  });
+            })
+            ->count();
+
+        return view('personnel.index', [
+            'personnelList' => $personnelList,
+            'assignedCount' => $assignedCount,
+            'unassignedCount' => $unassignedCount,
+        ]);
     }
 
     public function create()
@@ -176,8 +228,15 @@ class PersonnelController extends Controller
     {
         $this->assertCanCreateOrDeletePersonnel();
 
+
         $schoolId = $this->schoolScopeId();
         $isAdmin = auth()->user() && auth()->user()->hasRole('admin');
+        $input = $request->all();
+        // If admin and no school selected, set both assigned and deployed school to null
+        if ($isAdmin && (empty($input['assigned_school_id']) || $input['assigned_school_id'] === '')) {
+            $input['assigned_school_id'] = null;
+            $input['deployed_school_id'] = null;
+        }
         $validatedData = $request->validate([
             'employee_id' => 'nullable|string|max:255|unique:personnel,emp_id',
             'position_id' => 'required|exists:positions,id',
@@ -193,17 +252,14 @@ class PersonnelController extends Controller
             'service_start_date' => 'nullable|date',
             'is_active' => 'required|boolean',
         ]);
+        $validatedData['assigned_school_id'] = $input['assigned_school_id'];
+        $validatedData['deployed_school_id'] = $input['deployed_school_id'];
 
         if ($schoolId) {
             abort_if((int) $validatedData['assigned_school_id'] !== $schoolId, 403);
             if (!empty($validatedData['deployed_school_id'])) {
                 abort_if((int) $validatedData['deployed_school_id'] !== $schoolId, 403);
             }
-        }
-        // If admin and no school selected, set both assigned and deployed school to null
-        if ($isAdmin && empty($validatedData['assigned_school_id'])) {
-            $validatedData['assigned_school_id'] = null;
-            $validatedData['deployed_school_id'] = null;
         }
 
         DB::transaction(function () use ($validatedData) {

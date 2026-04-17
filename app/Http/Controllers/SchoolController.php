@@ -57,7 +57,7 @@ class SchoolController extends Controller
 
         $search = $request->input('search');
 
-        $schools = School::query()
+        $schools = School::with('district')
             ->when($search, function ($query, $search) {
                 $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -71,11 +71,42 @@ class SchoolController extends Controller
                       ->orWhere('address_province', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('name', 'asc')
-            ->paginate(15)
-            ->appends(['search' => $search]);
+            ->get();
 
-        return view('schools.index', compact('schools'));
+        // Assigned: has school_id, name, district, and address (any address field)
+        $assigned = $schools->filter(function($school) {
+            return $school->school_id && $school->name && $school->district && (
+                $school->address_street || $school->address_barangay || $school->address_city || $school->address_province
+            );
+        });
+        $unassigned = $schools->filter(function($school) {
+            return !$school->school_id || !$school->name || !$school->district || !(
+                $school->address_street || $school->address_barangay || $school->address_city || $school->address_province
+            );
+        });
+
+        // Merge assigned first, then unassigned
+        $sortedSchools = $assigned->concat($unassigned)->values();
+
+        // Paginate manually
+        $perPage = 15;
+        $currentPage = $request->input('page', 1);
+        $paginatedSchools = new \Illuminate\Pagination\LengthAwarePaginator(
+            $sortedSchools->forPage($currentPage, $perPage),
+            $sortedSchools->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $assignedCount = $assigned->count();
+        $unassignedCount = $unassigned->count();
+
+        return view('schools.index', [
+            'schools' => $paginatedSchools,
+            'assignedCount' => $assignedCount,
+            'unassignedCount' => $unassignedCount,
+        ]);
     }
 
     public function create()
@@ -90,11 +121,36 @@ class SchoolController extends Controller
     {
         $this->assertAdminOnly();
 
+        $input = $request->all();
+        // If blank school (no school_id and no name), generate only school_id and name, nothing else
+        if (empty($input['school_id']) && empty($input['name'])) {
+            $counter = 1;
+            do {
+                $id = str_pad((string) $counter, 4, '0', STR_PAD_LEFT);
+                $code = 'SCHOOL-' . $id;
+                $counter++;
+            } while (School::where('school_id', $code)->exists());
+            $school = School::create([
+                'school_id' => $code,
+                'name' => 'School ' . $id,
+                'is_active' => true,
+            ]);
+            ActivityLog::log(
+                'CREATE', 
+                'School', 
+                "Created new blank school: School $id"
+            );
+            return redirect('/schools')->with('success', 'Blank school added successfully.');
+        }
+
+        // Otherwise, normal validation/creation
         $validatedData = $request->validate([
             'school_id'   => 'required|string|max:255|unique:schools,school_id',
             'name'        => 'required|string|max:255',
             'district_id' => 'required|exists:districts,id',
         ]);
+        $validatedData['school_id'] = $input['school_id'];
+        $validatedData['name'] = $input['name'];
 
         School::create($validatedData);
 

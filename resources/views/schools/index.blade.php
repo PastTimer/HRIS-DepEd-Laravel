@@ -17,7 +17,20 @@
         <div class="col">
             <div class="card shadow">
                 <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0"><i class="fas fa-school mr-2 text-primary"></i> School Directory</h3>
+                    <h3 class="mb-0">
+                        <i class="fas fa-school mr-2 text-primary"></i> School Directory
+                        <span class="ml-3" style="font-size:1rem;">
+                            <span class="badge badge-pill badge-info" style="color:#222;background:#e3f2fd;">
+                                Assigned: <strong>{{ $assignedCount }}</strong>
+                            </span>
+                            <span class="badge badge-pill badge-warning ml-2" style="color:#222;background:#fff3cd;">
+                                Unassigned: <strong>{{ $unassignedCount }}</strong>
+                            </span>
+                            <span class="ml-2" data-toggle="tooltip" title="Assigned: Has school ID, name, district, and address. Unassigned: Missing any of those.">
+                                <i class="fas fa-info-circle text-muted"></i>
+                            </span>
+                        </span>
+                    </h3>
                     
                     <div class="d-flex align-items-center">
                         <form action="{{ route('schools.index') }}" method="GET" class="mr-3 mb-0" data-ajax-search-form>
@@ -37,8 +50,14 @@
                             </div>
                         </form>
 
+                        <a href="{{ route('divisions.index') }}" class="btn btn-sm btn-secondary mr-2">
+                            <i class="fas fa-building mr-1"></i> Divisions
+                        </a>
                         <a href="{{ route('districts.index') }}" class="btn btn-sm btn-secondary mr-2">
                             <i class="fas fa-map-marker-alt mr-1"></i> Districts
+                        </a>
+                        <a href="{{ route('clusters.index') }}" class="btn btn-sm btn-secondary mr-2">
+                            <i class="fas fa-layer-group mr-1"></i> Clusters
                         </a>
                         <a href="{{ route('schools.create') }}" class="btn btn-sm btn-success">
                             <i class="fas fa-plus mr-1"></i> New School

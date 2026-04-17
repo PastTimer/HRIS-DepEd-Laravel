@@ -9,8 +9,13 @@ return new class extends Migration
     {
         Schema::create('districts', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); 
+            $table->string('name');
+            $table->unsignedBigInteger('division_id');
+            $table->unsignedBigInteger('cluster_id')->nullable();
             $table->timestamps();
+
+            $table->foreign('division_id')->references('id')->on('divisions')->onDelete('cascade');
+            $table->foreign('cluster_id')->references('id')->on('clusters')->onDelete('set null');
         });
     }
 

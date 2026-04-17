@@ -17,21 +17,40 @@ class PersonnelSeeder extends Seeder
     {
         $faker = Faker::create();
 
-        // 1. Create Districts FIRST 
-        $districts = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $districts[] = District::create([
-                'name' => 'District ' . $i
+        // 1. Create Divisions and Clusters FIRST
+        $divisions = [];
+        for ($i = 1; $i <= 2; $i++) {
+            $divisions[] = \App\Models\Division::create([
+                'name' => 'Division ' . $i
+            ]);
+        }
+        $clusters = [];
+        for ($i = 1; $i <= 2; $i++) {
+            $clusters[] = \App\Models\Cluster::create([
+                'name' => 'Cluster ' . $i
             ]);
         }
 
-        // 2. Create 10 Dummy Schools
+        // 2. Create Districts and assign to Division and Cluster
+        $districts = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $division = $divisions[array_rand($divisions)];
+            $cluster = $clusters[array_rand($clusters)];
+            $districts[] = District::create([
+                'name' => 'District ' . $i,
+                'division_id' => $division->id,
+                'cluster_id' => $cluster->id
+            ]);
+        }
+
+        // 3. Create 10 Dummy Schools
         $schools = [];
         for ($i = 1; $i <= 10; $i++) {
+            $district = $districts[array_rand($districts)];
             $schools[] = School::create([
                 'school_id' => '1011' . $faker->unique()->numerify('##'),
                 'name' => $faker->city() . ' National High School',
-                'district_id' => $districts[array_rand($districts)]->id,
+                'district_id' => $district->id,
                 'governance_level' => $faker->randomElement(['Elementary', 'Secondary', 'Integrated']),
                 'ro' => 'RO ' . $faker->randomElement(['I', 'II', 'III', 'IV-A', 'NCR']),
                 'sdo' => 'SDO ' . $faker->citySuffix(),

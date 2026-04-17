@@ -16,4 +16,14 @@ class District extends Model
     {
         return $this->hasMany(School::class, 'district_id');
     }
+
+    public function division()
+    {
+        return $this->belongsTo(Division::class);
+    }
+
+    public function cluster()
+    {
+        return $this->belongsTo(Cluster::class);
+    }
 }

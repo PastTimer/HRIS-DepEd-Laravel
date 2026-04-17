@@ -833,7 +833,7 @@
                         <div class="tab-pane fade" id="history">
                             <div class="row">
                                 <div class="col-lg-6">
-                                    <h4 class="mb-3 text-primary"><i class="ni ni-books mr-2"></i> Seminar History</h4>
+                                    <h4 class="mb-3 text-primary"><i class="ni ni-books mr-2"></i> Training & Seminar History</h4>
                                     <div class="timeline timeline-one-side">
                                         @forelse($personnel->pdsTraining as $tr)
                                         <div class="timeline-block mb-3">

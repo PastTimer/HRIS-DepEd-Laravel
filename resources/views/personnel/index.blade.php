@@ -17,7 +17,20 @@
         <div class="col">
             <div class="card shadow">
                 <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0"><i class="fas fa-user-tie mr-2 text-primary"></i> Personnel Directory</h3>
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-tie mr-2 text-primary"></i> Personnel Directory
+                        <span class="ml-3" style="font-size:1rem;">
+                            <span class="badge badge-pill badge-info" style="color:#222;background:#e3f2fd;">
+                                Assigned: <strong>{{ $assignedCount }}</strong>
+                            </span>
+                            <span class="badge badge-pill badge-warning ml-2" style="color:#222;background:#fff3cd;">
+                                Unassigned: <strong>{{ $unassignedCount }}</strong>
+                            </span>
+                            <span class="ml-2" data-toggle="tooltip" title="Assigned: Has school, position, employee ID, and full name. Unassigned: Missing any of those.">
+                                <i class="fas fa-info-circle text-muted"></i>
+                            </span>
+                        </span>
+                    </h3>
                     
                     <div class="d-flex align-items-center">
                         <form action="{{ route('personnel.index') }}" method="GET" class="mr-3 mb-0" data-ajax-search-form>
